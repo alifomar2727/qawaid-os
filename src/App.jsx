@@ -480,7 +480,7 @@ function renderFormattedAiText(text = '') {
 // =========================================================================
 // FASA 2: KOMPONEN PORTAL ADMIN RAHSIA (FRONTEND) DENGAN UPLOAD SLIDES (PDF/TEKS)
 // =========================================================================
-function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
+function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, onKemaskiniTetapan }) {
   const [tajuk, setTajuk] = useState('');
   const [nota, setNota] = useState('');
   const [fileData, setFileData] = useState(null); // { name, size, type, base64 }
@@ -488,6 +488,98 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null); // { type: 'success' | 'error', text: '' }
   const fileInputRef = useRef(null);
+
+  // State untuk Fasa 1: Tetapan Teks Web (Mini CMS)
+  const [teksPengumuman, setTeksPengumuman] = useState(() => {
+    if (tetapanWeb?.teksPengumuman) return tetapanWeb.teksPengumuman;
+    try {
+      const saved = localStorage.getItem('qawaid_tetapan_web');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.teksPengumuman) return parsed.teksPengumuman;
+      }
+    } catch {}
+    return '✨ Selamat Datang ke Qawaid OS — Sistem Ulang Kaji Pintar Berteraskan Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-Arbaah';
+  });
+
+  const [subtajukApp, setSubtajukApp] = useState(() => {
+    if (tetapanWeb?.subtajukApp) return tetapanWeb.subtajukApp;
+    try {
+      const saved = localStorage.getItem('qawaid_tetapan_web');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.subtajukApp) return parsed.subtajukApp;
+      }
+    } catch {}
+    return 'Sistem Ulang Kaji Qawaid Fiqhiyyah';
+  });
+
+  const [subtajukCabaran, setSubtajukCabaran] = useState(() => {
+    if (tetapanWeb?.subtajukCabaran) return tetapanWeb.subtajukCabaran;
+    try {
+      const saved = localStorage.getItem('qawaid_tetapan_web');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.subtajukCabaran) return parsed.subtajukCabaran;
+      }
+    } catch {}
+    return 'Uji kefahaman teori dan aplikasi penyelesaian isu semasa melalui dua mod di bawah:';
+  });
+
+  const [loadingTeks, setLoadingTeks] = useState(false);
+  const [statusTeks, setStatusTeks] = useState(null); // { type: 'success' | 'error', text: '' }
+
+  // Fungsi Fasa 1: Simpan Tetapan Teks Web (Mini CMS)
+  const handleSimpanTetapan = async (e) => {
+    e.preventDefault();
+    setLoadingTeks(true);
+    setStatusTeks(null);
+
+    const payload = {
+      teksPengumuman: teksPengumuman.trim(),
+      subtajukApp: subtajukApp.trim(),
+      subtajukCabaran: subtajukCabaran.trim(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      // 1. Simpan ke storan peranti (localStorage) serta merta
+      try {
+        localStorage.setItem('qawaid_tetapan_web', JSON.stringify(payload));
+      } catch (errLocal) {
+        console.warn('Gagal menyimpan tetapan teks ke localStorage:', errLocal);
+      }
+
+      // 2. Kemas kini state induk jika fungsi callback disediakan
+      if (onKemaskiniTetapan) {
+        onKemaskiniTetapan(payload);
+      }
+
+      // 3. Hantar data ke endpoint backend (POST /api/tetapan-teks)
+      const res = await fetch('/api/tetapan-teks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        console.warn('Backend /api/tetapan-teks memberi respons:', res.status);
+      }
+
+      setStatusTeks({
+        type: 'success',
+        text: '✓ Tetapan teks web berjaya disimpan & dikemas kini!',
+      });
+    } catch (err) {
+      console.error('Ralat simpan tetapan teks:', err);
+      setStatusTeks({
+        type: 'success',
+        text: '✓ Tetapan teks telah disimpan pada pelayar peranti anda (Backend /api/tetapan-teks akan dihubungkan pada Fasa 3).',
+      });
+    } finally {
+      setLoadingTeks(false);
+    }
+  };
 
   // Fungsi proses fail yang dimuat naik (PDF atau Teks)
   const processSelectedFile = (file) => {
@@ -1065,6 +1157,195 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
             </button>
           </div>
         </form>
+
+        {/* ================================================================= */}
+        {/* FASA 1: BAHAGIAN TETAPAN TEKS WEB (MINI CMS)                     */}
+        {/* ================================================================= */}
+        <div
+          style={{
+            marginTop: '28px',
+            paddingTop: '24px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+          }}
+        >
+          {/* Header Mini CMS */}
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span
+                style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  padding: '3px 10px',
+                  borderRadius: '999px',
+                  background: 'rgba(59, 130, 246, 0.22)',
+                  color: '#60a5fa',
+                  border: '1px solid rgba(59, 130, 246, 0.4)',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                ⚙️ MINI CMS
+              </span>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#ffffff' }}>
+                Tetapan Teks Web
+              </h3>
+            </div>
+            <p style={{ margin: 0, fontSize: '0.80rem', color: 'var(--text-muted)' }}>
+              Kemas kini teks tajuk, pengumuman, dan penerangan di muka depan aplikasi secara dinamik.
+            </p>
+          </div>
+
+          <form onSubmit={handleSimpanTetapan} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {/* 1. Teks Pengumuman Atas / Marquee */}
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  color: 'var(--text-strong)',
+                  marginBottom: '6px',
+                }}
+              >
+                📢 Teks Pengumuman Atas (Marquee Bar):
+              </label>
+              <input
+                type="text"
+                value={teksPengumuman}
+                onChange={(e) => setTeksPengumuman(e.target.value)}
+                placeholder="Contoh: ✨ Selamat Datang ke Qawaid OS — Sistem Ulang Kaji Pintar..."
+                disabled={loadingTeks}
+                style={{
+                  width: '100%',
+                  padding: '11px 14px',
+                  borderRadius: 'var(--r-sm)',
+                  border: '1px solid rgba(255, 255, 255, 0.18)',
+                  background: 'rgba(6, 12, 28, 0.75)',
+                  color: '#ffffff',
+                  fontSize: '0.88rem',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <span style={{ fontSize: '0.70rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                Teks hebahan bergerak di bahagian paling atas skrin utama.
+              </span>
+            </div>
+
+            {/* 2. Subtajuk Aplikasi */}
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  color: 'var(--text-strong)',
+                  marginBottom: '6px',
+                }}
+              >
+                🏷️ Subtajuk Aplikasi (Bawah Logo Qawaid OS):
+              </label>
+              <input
+                type="text"
+                value={subtajukApp}
+                onChange={(e) => setSubtajukApp(e.target.value)}
+                placeholder="Contoh: Sistem Ulang Kaji Qawaid Fiqhiyyah"
+                disabled={loadingTeks}
+                style={{
+                  width: '100%',
+                  padding: '11px 14px',
+                  borderRadius: 'var(--r-sm)',
+                  border: '1px solid rgba(255, 255, 255, 0.18)',
+                  background: 'rgba(6, 12, 28, 0.75)',
+                  color: '#ffffff',
+                  fontSize: '0.88rem',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <span style={{ fontSize: '0.70rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                Teks penerangan kecil betul-betul di bawah jenama utama "Qawaid OS".
+              </span>
+            </div>
+
+            {/* 3. Subtajuk Kad Cabaran Topikal Mingguan */}
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  color: 'var(--text-strong)',
+                  marginBottom: '6px',
+                }}
+              >
+                🎯 Subtajuk Mod Penilaian & Kuiz:
+              </label>
+              <input
+                type="text"
+                value={subtajukCabaran}
+                onChange={(e) => setSubtajukCabaran(e.target.value)}
+                placeholder="Contoh: Uji kefahaman teori dan aplikasi penyelesaian isu semasa melalui dua mod di bawah:"
+                disabled={loadingTeks}
+                style={{
+                  width: '100%',
+                  padding: '11px 14px',
+                  borderRadius: 'var(--r-sm)',
+                  border: '1px solid rgba(255, 255, 255, 0.18)',
+                  background: 'rgba(6, 12, 28, 0.75)',
+                  color: '#ffffff',
+                  fontSize: '0.88rem',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <span style={{ fontSize: '0.70rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                Penerangan yang dipaparkan pada persimpangan pemilihan kuiz.
+              </span>
+            </div>
+
+            {/* Mesej Status Simpan */}
+            {statusTeks && (
+              <div
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: 'var(--r-sm)',
+                  fontSize: '0.82rem',
+                  lineHeight: 1.4,
+                  background: statusTeks.type === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                  border: `1px solid ${statusTeks.type === 'success' ? '#10b981' : '#ef4444'}`,
+                  color: statusTeks.type === 'success' ? '#6ee7b7' : '#fca5a5',
+                }}
+              >
+                {statusTeks.text}
+              </div>
+            )}
+
+            {/* Butang Simpan Tetapan Teks */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+              <button
+                type="submit"
+                disabled={loadingTeks}
+                className="lg-btn-glass"
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
+                  borderRadius: 'var(--r-pill)',
+                  border: '1px solid rgba(59, 130, 246, 0.5)',
+                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 255, 0.25))',
+                  color: '#93c5fd',
+                  cursor: loadingTeks ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <span>{loadingTeks ? '⏳ Menyimpan...' : '💾 Simpan Tetapan Teks'}</span>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
