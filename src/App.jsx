@@ -1442,7 +1442,7 @@ function AdminPasswordModal({ isOpen, onClose, onSuccess }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (password === 'AdminQawaid2026') {
+    if (password.trim() === 'Admin') {
       onSuccess();
       onClose();
     } else {
@@ -1854,7 +1854,8 @@ export default function App() {
 
   useEffect(() => {
     const onScroll = () => {
-      setIsCondensed(window.scrollY > 24);
+      const isPast = window.scrollY > 24;
+      setIsCondensed((prev) => (prev !== isPast ? isPast : prev));
       updateStickyOffset();
     };
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -1864,7 +1865,7 @@ export default function App() {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', updateStickyOffset);
     };
-  }, [updateStickyOffset, isCondensed]);
+  }, [updateStickyOffset]);
 
   useEffect(() => {
     if (viewMode === 'AI_CHAT') {
@@ -1930,7 +1931,7 @@ export default function App() {
   }, [data, selectedAsasi, searchQuery]);
 
   // Measure & position sliding glass capsule indicator in Header Nav
-  const updateNavIndicator = useCallback(() => {
+  const updateNavIndicator = useCallback((shouldScrollNav = false) => {
     if (!navContainerRef.current) return;
     const activeBtn = navContainerRef.current.querySelector('.lg-nav-btn.is-active');
     if (activeBtn) {
@@ -1939,9 +1940,12 @@ export default function App() {
         transform: `translateX(${activeBtn.offsetLeft}px)`,
         opacity: 1,
       });
-      // Scroll into view gently on mobile if partially off-screen
-      if (typeof window !== 'undefined' && window.innerWidth <= 680) {
-        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      // Scroll secara horizontal SAHAJA di dalam bekas tab jika butang berada di luar pandangan.
+      // DILARANG guna scrollIntoView kerana ia menarik tetingkap vertikal telefon secara mengejut!
+      if (shouldScrollNav && typeof window !== 'undefined' && window.innerWidth <= 680) {
+        const container = navContainerRef.current;
+        const targetScrollLeft = activeBtn.offsetLeft - (container.clientWidth / 2) + (activeBtn.clientWidth / 2);
+        container.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
       }
     } else {
       setNavPillStyle((prev) => ({ ...prev, opacity: 0 }));
@@ -1949,9 +1953,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    updateNavIndicator();
-    window.addEventListener('resize', updateNavIndicator);
-    return () => window.removeEventListener('resize', updateNavIndicator);
+    updateNavIndicator(true);
   }, [viewMode, bookmarks.length, updateNavIndicator]);
 
   // Measure & position sliding glass capsule indicator in Filter Bar
@@ -1968,14 +1970,14 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    updateFilterIndicator();
-    updateNavIndicator();
-    document.fonts?.ready?.then(() => {
+    const handleResize = () => {
       updateFilterIndicator();
-      updateNavIndicator();
-    });
-    window.addEventListener('resize', updateFilterIndicator);
-    return () => window.removeEventListener('resize', updateFilterIndicator);
+      updateNavIndicator(false);
+    };
+    handleResize();
+    document.fonts?.ready?.then(handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [selectedAsasi, viewMode, updateFilterIndicator, updateNavIndicator]);
 
   const currentQuizItem = dataKuiz50[quizIndex % dataKuiz50.length];
