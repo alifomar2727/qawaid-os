@@ -1,30 +1,247 @@
 {
-  "tajuk_mingguan": "Kaedah Asasi 1: Al-Umur bi Maqasidiha & Isu Kontemporari",
-  "tarikh_kemaskini": "11 Mac 2026",
+  "tajuk_mingguan": "Kaedah: اليقين لا يزول بالشك",
+  "tarikh_kemaskini": "10 November 2026",
   "soalan_objektif": [
     {
       "id": 1,
-      "soalan": "Apakah maksud kaedah \"الأمور بمقاصدها\" dalam konteks transaksi perbankan Islam moden?",
+      "soalan": "Apakah maksud 'اليقين لا يزول بالشك' dalam bahasa Melayu?",
       "pilihan": [
-        "Setiap kontrak dinilai berdasarkan lafaz zahir semata-mata",
-        "Niat dan objektif ekonomi sebenar menentukan status syarak sesuatu akad",
-        "Semua transaksi moden adalah harus tanpa perlu melihat motif",
-        "Hanya ibadat khusus yang memerlukan penentuan niat dan maqasid"
+        "Keraguan tidak boleh mengatasi keyakinan",
+        "Keyakinan tidak boleh diatasi oleh keraguan",
+        "Keraguan adalah sebahagian daripada keyakinan",
+        "Keyakinan akan hilang jika ada keraguan"
       ],
-      "jawapan_betul": "Niat dan objektif ekonomi sebenar menentukan status syarak sesuatu akad",
-      "huraian": "Dalam fiqh muamalat kontemporari, substansi dan maqasid ekonomi sebenar mengatasi sekadar helah lafaz zahir."
+      "jawapan_betul": "Keyakinan tidak boleh diatasi oleh keraguan",
+      "huraian": "Ini adalah terjemahan langsung bagi kaedah fiqh tersebut yang bermaksud sesuatu yang yakin tidak boleh dihilangkan dengan keraguan."
     },
     {
       "id": 2,
-      "soalan": "Antara berikut, manakah contoh aplikasi kaedah Al-Umur bi Maqasidiha dalam amalan perubatan?",
+      "soalan": "Menurut Imam al-Suyuti, berapakah anggaran bahagian hukum fiqh yang melibatkan kaedah 'اليقين لا يزول بالشك'?",
       "pilihan": [
-        "Pembedahan kosmetik semata-mata untuk kecantikan",
-        "Pembedahan rekonstruktif bertujuan memulihkan fungsi anggota yang rosak",
-        "Pengambilan ubat tanpa preskripsi doktor",
-        "Menolak rawatan kecemasan tanpa sebab munasabah"
+        "Satu perempat",
+        "Satu pertiga",
+        "Tiga perempat atau lebih",
+        "Separuh"
       ],
-      "jawapan_betul": "Pembedahan rekonstruktif bertujuan memulihkan fungsi anggota yang rosak",
-      "huraian": "Pembedahan pemulihan fungsi bertujuan رفع الضرر (menghilangkan kemudaratan), berbeza dengan tujuan tabarruj melampau."
+      "jawapan_betul": "Tiga perempat atau lebih",
+      "huraian": "Imam al-Suyuti menyatakan bahawa kaedah ini merangkumi hampir semua bab fiqh dan masalah yang terbit daripadanya mencapai tiga perempat fiqh atau lebih."
+    },
+    {
+      "id": 3,
+      "soalan": "Apakah maksud 'اليقين' (Yakin) dari sudut istilah fuqaha?",
+      "pilihan": [
+        "Ilmu yang tiada keraguan padanya",
+        "Ilmu yang disertai dengan sangkaan",
+        "Ilmu yang masih boleh berubah",
+        "Ilmu yang berdasarkan andaian"
+      ],
+      "jawapan_betul": "Ilmu yang tiada keraguan padanya",
+      "huraian": "Dari sudut istilah fuqaha, yakin bermaksud ilmu yang tidak disertai dengan syak atau keraguan."
+    },
+    {
+      "id": 4,
+      "soalan": "Apakah maksud 'الشك' (Syak) dari sudut istilah fuqaha?",
+      "pilihan": [
+        "Keyakinan yang kuat",
+        "Sangkaan yang hampir pasti",
+        "Teragak-agak antara dua perkara",
+        "Ketidaktentuan yang tiada jalan penyelesaian"
+      ],
+      "jawapan_betul": "Teragak-agak antara dua perkara",
+      "huraian": "Syak bermaksud teragak-agak antara dua perkara (berlaku atau tidak) di mana tiada satu pun yang lebih kuat atau boleh ditarjihkan."
+    },
+    {
+      "id": 5,
+      "soalan": "Apakah hukum asal bagi sesuatu perkara yang telah yakin berlaku?",
+      "pilihan": [
+        "Ia akan hilang dengan syak",
+        "Ia kekal sehingga ada bukti baru",
+        "Ia perlu diulang semula",
+        "Ia bergantung kepada sangkaan"
+      ],
+      "jawapan_betul": "Ia kekal sehingga ada bukti baru",
+      "huraian": "Sesuatu yang yakin tidak boleh dihilangkan dengan syak, maka hukum asalnya kekal sehingga ada bukti yang meyakinkan untuk mengubahnya."
+    },
+    {
+      "id": 6,
+      "soalan": "Jika seseorang ragu-ragu sama ada dia telah berhadas atau tidak selepas yakin bersuci, apakah hukumnya?",
+      "pilihan": [
+        "Dia dikira berhadas",
+        "Dia dikira masih suci",
+        "Dia perlu mengambil wuduk semula secara automatik",
+        "Dia perlu bertanya kepada orang lain"
+      ],
+      "jawapan_betul": "Dia dikira masih suci",
+      "huraian": "Berdasarkan kaedah ini, keyakinan (bersuci) tidak boleh dihilangkan dengan syak (berhadas), maka dia kekal dalam keadaan suci."
+    },
+    {
+      "id": 7,
+      "soalan": "Apakah dalil al-Quran yang menyokong kaedah 'اليقين لا يزول بالشك'?",
+      "pilihan": [
+        "Surah al-Baqarah: 286",
+        "Surah al-Nisa': 23",
+        "Surah Yunus: 36",
+        "Surah al-Ma'idah: 1"
+      ],
+      "jawapan_betul": "Surah Yunus: 36",
+      "huraian": "Ayat tersebut bermaksud: 'Dan kebanyakan mereka tidak menurut melainkan sangkaan sahaja, (padahal) sesungguhnya sangkaan itu tidak dapat menolak sedikitpun daripada kebenaran (yang yakin)'."
+    },
+    {
+      "id": 8,
+      "soalan": "Apakah kaedah pecahan yang bermaksud 'Asal bagi sesuatu adalah kekal sebagaimana keadaannya'?",
+      "pilihan": [
+        "الأصل براءة الذمة",
+        "الأصل بقاء ما كان على ما كان",
+        "الأصل في الأشياء الإباحة",
+        "لا عبرة للتوهم"
+      ],
+      "jawapan_betul": "الأصل بقاء ما كان على ما كان",
+      "huraian": "Ini adalah kaedah pecahan yang menjelaskan bahawa sesuatu yang telah sabit pada masa lalu kekal pada masa sekarang kecuali ada bukti yang mengubahnya."
+    },
+    {
+      "id": 9,
+      "soalan": "Apakah hukum asal bagi sesuatu benda di dunia ini sebelum ada dalil yang mengharamkannya?",
+      "pilihan": [
+        "Haram",
+        "Makruh",
+        "Harus/Ibahah",
+        "Sunat"
+      ],
+      "jawapan_betul": "Harus/Ibahah",
+      "huraian": "Kaedah 'الأصل في الأشياء الإباحة' menjelaskan bahawa asal bagi segala ciptaan Allah adalah harus kecuali ada dalil yang mengharamkannya."
+    },
+    {
+      "id": 10,
+      "soalan": "Apakah hukum asal bagi ibadat?",
+      "pilihan": [
+        "Harus",
+        "Haram/Tawaqquf",
+        "Sunat",
+        "Wajib"
+      ],
+      "jawapan_betul": "Haram/Tawaqquf",
+      "huraian": "Kaedah 'الأصل في العبادات الحظر' bermaksud ibadat bersifat tawaqquf (terhenti pada dalil), tidak boleh dilakukan melainkan ada syariat yang menetapkannya."
+    },
+    {
+      "id": 11,
+      "soalan": "Apakah maksud 'الأصل براءة الذمة'?",
+      "pilihan": [
+        "Asal bagi manusia adalah berdosa",
+        "Asal bagi manusia adalah bebas daripada tanggungan",
+        "Asal bagi manusia adalah terikat dengan hutang",
+        "Asal bagi manusia adalah bersalah"
+      ],
+      "jawapan_betul": "Asal bagi manusia adalah bebas daripada tanggungan",
+      "huraian": "Kaedah ini bermaksud seseorang itu dianggap bebas daripada sebarang tanggungan atau kesalahan sehingga terbukti sebaliknya dengan dalil."
+    },
+    {
+      "id": 12,
+      "soalan": "Jika seseorang mendakwa orang lain berhutang dengannya, siapakah yang perlu membawa bukti?",
+      "pilihan": [
+        "Orang yang didakwa",
+        "Orang yang mendakwa",
+        "Hakim",
+        "Saksi"
+      ],
+      "jawapan_betul": "Orang yang mendakwa",
+      "huraian": "Berdasarkan kaedah 'الأصل براءة الذمة', orang yang mendakwa perlu membawa bukti kerana asal bagi orang yang didakwa adalah bebas daripada hutang."
+    },
+    {
+      "id": 13,
+      "soalan": "Apakah hukum asal bagi hubungan kelamin (al-abda')?",
+      "pilihan": [
+        "Harus",
+        "Haram",
+        "Sunat",
+        "Makruh"
+      ],
+      "jawapan_betul": "Haram",
+      "huraian": "Kaedah 'الأصل في الأبضاع التحريم' bermaksud asal bagi hubungan kelamin adalah haram kecuali melalui perkahwinan yang sah."
+    },
+    {
+      "id": 14,
+      "soalan": "Apakah maksud 'الأصل في الكلام الحقيقة'?",
+      "pilihan": [
+        "Asal bagi perkataan adalah majaz",
+        "Asal bagi perkataan adalah hakikat",
+        "Asal bagi perkataan adalah kiasan",
+        "Asal bagi perkataan adalah sindiran"
+      ],
+      "jawapan_betul": "Asal bagi perkataan adalah hakikat",
+      "huraian": "Kaedah ini bermaksud sesuatu perkataan hendaklah dibawa kepada makna hakikatnya (makna asal) selagi tidak ada bukti yang menunjukkan ia bermaksud majaz (kiasan)."
+    },
+    {
+      "id": 15,
+      "soalan": "Jika seseorang ragu-ragu sama ada dia telah solat 3 atau 4 rakaat, apakah yang perlu dilakukan?",
+      "pilihan": [
+        "Membina di atas bilangan yang lebih banyak",
+        "Membina di atas bilangan yang lebih sedikit (yakin)",
+        "Mengulang semula solat",
+        "Bertanya kepada makmum"
+      ],
+      "jawapan_betul": "Membina di atas bilangan yang lebih sedikit (yakin)",
+      "huraian": "Berdasarkan kaedah 'ما ثبت بيقين لا يرتفع إلا بيقين', dia perlu mengambil bilangan yang yakin (3 rakaat) dan menambah satu lagi rakaat."
+    },
+    {
+      "id": 16,
+      "soalan": "Apakah maksud 'الأصل في الصفات والأمور العارضة العدم'?",
+      "pilihan": [
+        "Sifat baru dianggap wujud",
+        "Sifat baru dianggap tiada",
+        "Sifat asal dianggap tiada",
+        "Sifat asal dianggap baru"
+      ],
+      "jawapan_betul": "Sifat baru dianggap tiada",
+      "huraian": "Kaedah ini bermaksud sifat atau perkara yang datang kemudian (bukan asal) dianggap tidak wujud sehingga ada bukti yang menunjukkan ia wujud."
+    },
+    {
+      "id": 17,
+      "soalan": "Apakah maksud 'الأصل إضافة الحادث إلى أقرب أوقاته'?",
+      "pilihan": [
+        "Perkara baru dikaitkan dengan waktu yang paling jauh",
+        "Perkara baru dikaitkan dengan waktu yang paling dekat",
+        "Perkara baru tidak perlu dikaitkan dengan waktu",
+        "Perkara baru dikaitkan dengan waktu yang tidak pasti"
+      ],
+      "jawapan_betul": "Perkara baru dikaitkan dengan waktu yang paling dekat",
+      "huraian": "Jika berlaku sesuatu perkara dan tidak pasti bila ia berlaku, ia dikaitkan dengan waktu yang paling hampir/dekat dengan masa sekarang."
+    },
+    {
+      "id": 18,
+      "soalan": "Apakah hukum diam seseorang dalam sesuatu keadaan?",
+      "pilihan": [
+        "Diam adalah persetujuan",
+        "Diam adalah penolakan",
+        "Diam tidak dianggap sebagai perkataan (kecuali ada keperluan)",
+        "Diam adalah wajib"
+      ],
+      "jawapan_betul": "Diam tidak dianggap sebagai perkataan (kecuali ada keperluan)",
+      "huraian": "Kaedah 'لا ينسب إلى ساكت قول' bermaksud diam tidak boleh dianggap sebagai persetujuan atau penolakan, kecuali jika diam itu berlaku dalam keadaan yang memerlukan penjelasan."
+    },
+    {
+      "id": 19,
+      "soalan": "Apakah maksud 'لا عبرة للتوهم'?",
+      "pilihan": [
+        "Tanggapan/khayalan tidak diambil kira",
+        "Tanggapan/khayalan adalah bukti",
+        "Tanggapan/khayalan boleh mengubah hukum",
+        "Tanggapan/khayalan adalah yakin"
+      ],
+      "jawapan_betul": "Tanggapan/khayalan tidak diambil kira",
+      "huraian": "Tawwahum (tanggapan/khayalan) adalah lemah dan tidak boleh mengubah hukum yang telah yakin."
+    },
+    {
+      "id": 20,
+      "soalan": "Apakah maksud 'لا عبرة بالظن البين خطؤه'?",
+      "pilihan": [
+        "Sangkaan yang terbukti salah tidak diambil kira",
+        "Sangkaan yang terbukti salah boleh menjadi bukti",
+        "Sangkaan yang terbukti salah adalah yakin",
+        "Sangkaan yang terbukti salah perlu diikuti"
+      ],
+      "jawapan_betul": "Sangkaan yang terbukti salah tidak diambil kira",
+      "huraian": "Sangkaan (zann) yang telah jelas kesalahannya tidak boleh dijadikan asas untuk mengubah hukum yang yakin."
     }
-  ]
+  ],
+  "model_penjana": "gemini-3.1-flash-lite"
 }
