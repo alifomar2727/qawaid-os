@@ -668,9 +668,16 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
         text: `🎉 Berjaya! Kuiz "${tajuk}" dengan ${result.data?.soalan_objektif?.length || 20} soalan telah dijana dan dikemas kini.`,
       });
 
-      // Kemas kini state kuiz di frontend
-      if (result.data && onKemaskiniKuiz) {
-        onKemaskiniKuiz(result.data);
+      // Kemas kini state kuiz di frontend & simpan ke storan peranti (localStorage)
+      if (result.data) {
+        try {
+          localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(result.data));
+        } catch (e) {
+          console.warn('Gagal menyimpan ke localStorage:', e);
+        }
+        if (onKemaskiniKuiz) {
+          onKemaskiniKuiz(result.data);
+        }
       }
     } catch (err) {
       console.error('Ralat Admin:', err);
@@ -1090,12 +1097,12 @@ export default function App() {
   // FASA 2: PORTAL ADMIN RAHSIA (SECRET 5 CLICKS & PASSWORD AUTH)
   // =========================================================================
   const [isAdmin, setIsAdmin] = useState(false);
-  const [logoClicks, setLogoClicks] = useState(0);
-  const clickTimeoutRef = useRef(null);
+  const clickCountRef = useRef(0);
+  const clickTimerRef = useRef(null);
 
   const handleLogoClick = () => {
-    // 1. Pergi ke Home Screen (Matriks) serta merta
-    setViewMode('MATRIKS');
+    // 1. Pergi ke Home Screen (Matriks / EXPLORER) serta-merta tanpa blank
+    setViewMode('EXPLORER');
     setQuizSubMode('SELECTION');
     setSelectedAsasi('ALL');
     setSearchQuery('');
@@ -1105,65 +1112,83 @@ export default function App() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 2. Kira klik berturut-turut untuk Portal Admin (5x)
-    if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
-    clickTimeoutRef.current = setTimeout(() => {
-      setLogoClicks(0);
+    // 2. Kira 5 klik berturut-turut untuk Portal Admin (kalis re-render)
+    clickCountRef.current = (clickCountRef.current || 0) + 1;
+    if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+    clickTimerRef.current = setTimeout(() => {
+      clickCountRef.current = 0;
     }, 2500);
 
-    const newClicks = logoClicks + 1;
-    setLogoClicks(newClicks);
+    if (clickCountRef.current >= 5) {
+      clickCountRef.current = 0;
+      if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
 
-    if (newClicks >= 5) {
-      setLogoClicks(0);
-      if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
-
-      const password = window.prompt(
-        '🔒 PORTAL ADMIN RAHSIA QAWAID OS\n\nSila masukkan kata laluan pentadbir untuk menjana kuiz mingguan:'
-      );
-      if (password === 'AdminQawaid2026') {
-        setIsAdmin(true);
-      } else if (password !== null) {
-        alert('❌ Kata laluan salah! Akses pentadbir dinafikan.');
-      }
+      // Gunakan setTimeout supaya kitaran render klik selesai sebelum modal muncul
+      setTimeout(() => {
+        const password = window.prompt(
+          '🔒 PORTAL ADMIN RAHSIA QAWAID OS\n\nSila masukkan kata laluan pentadbir untuk menjana kuiz mingguan:'
+        );
+        if (password === 'AdminQawaid2026') {
+          setIsAdmin(true);
+        } else if (password !== null) {
+          alert('❌ Kata laluan salah! Akses pentadbir dinafikan.');
+        }
+      }, 60);
     }
   };
-  const [kuizMingguan, setKuizMingguan] = useState({
-    tajuk_mingguan: 'Kaedah Asasi 1: Al-Umur bi Maqasidiha & Isu Kontemporari',
-    tarikh_kemaskini: new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }),
-    soalan_objektif: [
-      {
-        id: 1,
-        soalan: 'Apakah maksud kaedah "الأمور بمقاصدها" dalam konteks transaksi perbankan Islam moden?',
-        pilihan: [
-          'Setiap kontrak dinilai berdasarkan lafaz zahir semata-mata',
-          'Niat dan objektif ekonomi sebenar menentukan status syarak sesuatu akad',
-          'Semua transaksi moden adalah harus tanpa perlu melihat motif',
-          'Hanya ibadat khusus yang memerlukan penentuan niat dan maqasid'
-        ],
-        jawapan_betul: 'Niat dan objektif ekonomi sebenar menentukan status syarak sesuatu akad',
-        huraian: 'Dalam fiqh muamalat kontemporari, substansi dan maqasid ekonomi sebenar mengatasi sekadar helah lafaz zahir.'
-      },
-      {
-        id: 2,
-        soalan: 'Antara berikut, manakah contoh aplikasi kaedah Al-Umur bi Maqasidiha dalam amalan perubatan?',
-        pilihan: [
-          'Pembedahan kosmetik semata-mata untuk kecantikan',
-          'Pembedahan rekonstruktif bertujuan memulihkan fungsi anggota yang rosak',
-          'Pengambilan ubat tanpa preskripsi doktor',
-          'Menolak rawatan kecemasan tanpa sebab munasabah'
-        ],
-        jawapan_betul: 'Pembedahan rekonstruktif bertujuan memulihkan fungsi anggota yang rosak',
-        huraian: 'Pembedahan pemulihan fungsi bertujuan رفع الضرر (menghilangkan kemudaratan), berbeza dengan tujuan tabarruj melampau.'
+
+  // Muat data kuiz mingguan daripada localStorage jika ada, agar tidak hilang selepas refresh/deploy
+  const [kuizMingguan, setKuizMingguan] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('qawaid_kuiz_mingguan');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.tajuk_mingguan && Array.isArray(parsed.soalan_objektif) && parsed.soalan_objektif.length > 0) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.warn('Ralat membaca kuiz dari localStorage:', e);
       }
-    ]
+    }
+    return {
+      tajuk_mingguan: 'Kaedah Asasi 1: Al-Umur bi Maqasidiha & Isu Kontemporari',
+      tarikh_kemaskini: new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }),
+      soalan_objektif: [
+        {
+          id: 1,
+          soalan: 'Apakah maksud kaedah "الأمور بمقاصدها" dalam konteks transaksi perbankan Islam moden?',
+          pilihan: [
+            'Setiap kontrak dinilai berdasarkan lafaz zahir semata-mata',
+            'Niat dan objektif ekonomi sebenar menentukan status syarak sesuatu akad',
+            'Semua transaksi moden adalah harus tanpa perlu melihat motif',
+            'Hanya ibadat khusus yang memerlukan penentuan niat dan maqasid'
+          ],
+          jawapan_betul: 'Niat dan objektif ekonomi sebenar menentukan status syarak sesuatu akad',
+          huraian: 'Dalam fiqh muamalat kontemporari, substansi dan maqasid ekonomi sebenar mengatasi sekadar helah lafaz zahir.'
+        },
+        {
+          id: 2,
+          soalan: 'Antara berikut, manakah contoh aplikasi kaedah Al-Umur bi Maqasidiha dalam amalan perubatan?',
+          pilihan: [
+            'Pembedahan kosmetik semata-mata untuk kecantikan',
+            'Pembedahan rekonstruktif bertujuan memulihkan fungsi anggota yang rosak',
+            'Pengambilan ubat tanpa preskripsi doktor',
+            'Menolak rawatan kecemasan tanpa sebab munasabah'
+          ],
+          jawapan_betul: 'Pembedahan rekonstruktif bertujuan memulihkan fungsi anggota yang rosak',
+          huraian: 'Pembedahan pemulihan fungsi bertujuan رفع الضرر (menghilangkan kemudaratan), berbeza dengan tujuan tabarruj melampau.'
+        }
+      ]
+    };
   });
 
   const [weeklyQuizIndex, setWeeklyQuizIndex] = useState(0);
   const [weeklySelectedAnswer, setWeeklySelectedAnswer] = useState(null);
   const [weeklyScore, setWeeklyScore] = useState(0);
 
-  // Tarik data kuiz mingguan terkini dari backend (Fasa 4)
+  // Tarik data kuiz mingguan terkini dari backend (Fasa 4) dengan perlindungan localStorage
   useEffect(() => {
     fetch('/api/kuiz-mingguan')
       .then((res) => {
@@ -1173,7 +1198,16 @@ export default function App() {
       .then((data) => {
         const quiz = (data && data.data) ? data.data : data;
         if (quiz && quiz.tajuk_mingguan && Array.isArray(quiz.soalan_objektif) && quiz.soalan_objektif.length > 0) {
-          setKuizMingguan(quiz);
+          setKuizMingguan((prev) => {
+            // Jika dalam peranti sudah ada kuiz penuh yang dijana (cth: 20 soalan) tetapi server kembalikan 2 soalan (fallback), kekalkan kuiz 20 soalan!
+            if (prev?.soalan_objektif?.length > quiz.soalan_objektif.length) {
+              return prev;
+            }
+            try {
+              localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(quiz));
+            } catch {}
+            return quiz;
+          });
         }
       })
       .catch((err) => {
@@ -3598,6 +3632,9 @@ export default function App() {
           kuizMingguan={kuizMingguan}
           onKemaskiniKuiz={(dataBaru) => {
             setKuizMingguan(dataBaru);
+            try {
+              localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(dataBaru));
+            } catch {}
           }}
           onClose={() => setIsAdmin(false)}
         />
