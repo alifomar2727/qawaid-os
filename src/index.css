@@ -3986,3 +3986,54 @@ summary:focus-visible {
     color-scheme: dark;
   }
 }
+
+
+/* AI Chatbox: Kad Rujukan Kitab Turath (Dropdown Accordion) */
+.lg-details-sumber {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lg-details-sumber summary {
+  list-style: none !important;
+  outline: none;
+}
+
+.lg-details-sumber summary::-webkit-details-marker {
+  display: none !important;
+}
+
+.lg-details-sumber summary:hover {
+  background: rgba(16, 185, 129, 0.12) !important;
+}
+
+.lg-details-sumber summary:active {
+  background: rgba(16, 185, 129, 0.18) !important;
+}
+
+.lg-details-sumber[open] {
+  border-color: rgba(16, 185, 129, 0.55) !important;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.15) !important;
+}
+
+.lg-details-sumber .text-open {
+  display: none;
+}
+.lg-details-sumber .text-closed {
+  display: inline;
+}
+.lg-details-sumber[open] .text-open {
+  display: inline;
+}
+.lg-details-sumber[open] .text-closed {
+  display: none;
+}
+
+.lg-details-sumber[open] summary .lg-summary-arrow {
+  transform: rotate(180deg);
+}
+
+.lg-details-sumber[open] summary .lg-node-chip {
+  background: rgba(16, 185, 129, 0.3) !important;
+  border-color: rgba(16, 185, 129, 0.6) !important;
+}

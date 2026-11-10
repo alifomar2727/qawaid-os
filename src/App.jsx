@@ -4120,30 +4120,91 @@ export default function App() {
 
                   {msg.sumber && msg.sumber.length > 0 && (
                     <details
+                      className="lg-details-sumber"
                       style={{
-                        marginTop: '12px',
-                        paddingTop: '10px',
-                        borderTop: '1px solid var(--card-divider)',
-                        fontSize: '0.80rem',
+                        marginTop: '14px',
+                        borderRadius: 'var(--r-md)',
+                        border: '1px solid rgba(16, 185, 129, 0.35)',
+                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(6, 18, 38, 0.5) 100%)',
+                        overflow: 'hidden',
+                        transition: 'all 0.25s ease',
                       }}
                     >
                       <summary
                         style={{
                           cursor: 'pointer',
-                          fontWeight: 700,
-                          color: 'var(--text-strong)',
+                          padding: '10px 14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '10px',
                           userSelect: 'none',
-                          padding: '4px 0',
+                          listStyle: 'none',
+                          WebkitTapHighlightColor: 'transparent',
                         }}
                       >
-                        Rujukan Muka Surat Kitab القواعد الفقهية وتطبيقاتها في المذاهب الأربعة ({msg.sumber.length} Halaman)
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '9px', minWidth: 0 }}>
+                          <span
+                            style={{
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '50%',
+                              background: 'rgba(16, 185, 129, 0.2)',
+                              border: '1px solid rgba(16, 185, 129, 0.4)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#34d399',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <LucideIcon name="book-open" size={14} />
+                          </span>
+                          <span
+                            style={{
+                              fontWeight: 700,
+                              color: '#ffffff',
+                              fontSize: '0.84rem',
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            Rujukan Kitab Turath ({msg.sumber.length} Halaman Terpilih)
+                          </span>
+                        </div>
+
+                        <span
+                          className="lg-node-chip"
+                          style={{
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            color: '#6ee7b7',
+                            borderColor: 'rgba(16, 185, 129, 0.4)',
+                            background: 'rgba(16, 185, 129, 0.18)',
+                            padding: '4px 10px',
+                            flexShrink: 0,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          <span className="text-closed">Buka Rujukan</span>
+                          <span className="text-open">Tutup</span>
+                          <span className="lg-summary-arrow" style={{ fontSize: '0.65rem', transition: 'transform 0.25s ease', display: 'inline-block' }}>
+                            ▼
+                          </span>
+                        </span>
                       </summary>
+
                       <div
                         style={{
                           display: 'flex',
                           flexDirection: 'column',
                           gap: '10px',
-                          marginTop: '10px',
+                          padding: '0 12px 14px 12px',
+                          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                          marginTop: '6px',
+                          paddingTop: '12px',
                         }}
                       >
                         {msg.sumber.map((s, sIdx) => (
