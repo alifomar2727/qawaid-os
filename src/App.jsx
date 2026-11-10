@@ -3,6 +3,7 @@ import { dataKuiz50 } from './dataKuiz';
 import SprintGame from './SprintGame';
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import qawaidData from './data/Matriks_Qawaid_Fiqh.json';
+import kuizMingguanLalai from './data/kuizMingguanTerkini.json';
 
 /* Crisp Lucide SVG Line Icons (Zero external runtime dependency) */
 function LucideIcon({ name, size = 16, filled = false }) {
@@ -582,6 +583,16 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
   };
 
   // Fungsi muat turun kuiz aktif sebagai fail JSON untuk disimpan terus ke fail projek / GitHub
+  const [copiedKuiz, setCopiedKuiz] = useState(false);
+  const handleCopyKuizJson = () => {
+    if (!kuizMingguan) return;
+    try {
+      navigator.clipboard?.writeText(JSON.stringify(kuizMingguan, null, 2));
+      setCopiedKuiz(true);
+      setTimeout(() => setCopiedKuiz(false), 2000);
+    } catch {}
+  };
+
   const handleDownloadKuizJson = () => {
     if (!kuizMingguan) return;
     const blob = new Blob([JSON.stringify(kuizMingguan, null, 2)], { type: 'application/json' });
@@ -895,31 +906,53 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
               {kuizMingguan?.tajuk_mingguan || 'Tiada kuiz'}
             </strong>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <span className="lg-node-chip" style={{ fontSize: '0.74rem' }}>
               {kuizMingguan?.soalan_objektif?.length || 0} Soalan
             </span>
             {kuizMingguan?.soalan_objektif?.length > 0 && (
-              <button
-                type="button"
-                onClick={handleDownloadKuizJson}
-                className="lg-btn-glass"
-                title="Muat turun fail kuizMingguanTerkini.json untuk disimpan ke dalam fail GitHub"
-                style={{
-                  padding: '4px 10px',
-                  fontSize: '0.72rem',
-                  borderRadius: 'var(--r-pill)',
-                  cursor: 'pointer',
-                  color: '#6ee7b7',
-                  borderColor: 'rgba(16, 185, 129, 0.4)',
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                <span>📥 Muat Turun JSON</span>
-              </button>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={handleCopyKuizJson}
+                  className="lg-btn-glass"
+                  title="Salin data JSON kuiz ke papan keratan (clipboard)"
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '0.72rem',
+                    borderRadius: 'var(--r-pill)',
+                    cursor: 'pointer',
+                    color: '#93c5fd',
+                    borderColor: 'rgba(59, 130, 246, 0.4)',
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span>{copiedKuiz ? '✓ Disalin!' : '📋 Salin JSON'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadKuizJson}
+                  className="lg-btn-glass"
+                  title="Muat turun fail kuizMingguanTerkini.json untuk disimpan ke dalam fail GitHub"
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '0.72rem',
+                    borderRadius: 'var(--r-pill)',
+                    cursor: 'pointer',
+                    color: '#6ee7b7',
+                    borderColor: 'rgba(16, 185, 129, 0.4)',
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span>📥 Muat Turun JSON</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -1660,49 +1693,53 @@ export default function App() {
         const saved = localStorage.getItem('qawaid_kuiz_mingguan');
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (parsed && parsed.tajuk_mingguan && Array.isArray(parsed.soalan_objektif) && parsed.soalan_objektif.length > 0) {
-            return parsed;
+          if (parsed && parsed.tajuk_mingguan && Array.isArray(parsed.soalan_objektif)) {
+            // PENTING: Jika kuiz fail projek (kuizMingguanLalai) mempunyai lebih banyak soalan (cth: 20 soalan)
+            // berbanding cache peranti yang lama (2 soalan), gantikan cache peranti secara automatik!
+            if (kuizMingguanLalai?.soalan_objektif?.length > parsed.soalan_objektif.length) {
+              try {
+                localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(kuizMingguanLalai));
+              } catch {}
+              return kuizMingguanLalai;
+            }
+            if (parsed.soalan_objektif.length > 0) {
+              return parsed;
+            }
           }
         }
       } catch (e) {
         console.warn('Ralat membaca kuiz dari localStorage:', e);
       }
     }
-    return {
-      tajuk_mingguan: 'Kaedah Asasi 1: Al-Umur bi Maqasidiha & Isu Kontemporari',
-      tarikh_kemaskini: new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }),
-      soalan_objektif: [
-        {
-          id: 1,
-          soalan: 'Apakah maksud kaedah "الأمور بمقاصدها" dalam konteks transaksi perbankan Islam moden?',
-          pilihan: [
-            'Setiap kontrak dinilai berdasarkan lafaz zahir semata-mata',
-            'Niat dan objektif ekonomi sebenar menentukan status syarak sesuatu akad',
-            'Semua transaksi moden adalah harus tanpa perlu melihat motif',
-            'Hanya ibadat khusus yang memerlukan penentuan niat dan maqasid'
-          ],
-          jawapan_betul: 'Niat dan objektif ekonomi sebenar menentukan status syarak sesuatu akad',
-          huraian: 'Dalam fiqh muamalat kontemporari, substansi dan maqasid ekonomi sebenar mengatasi sekadar helah lafaz zahir.'
-        },
-        {
-          id: 2,
-          soalan: 'Antara berikut, manakah contoh aplikasi kaedah Al-Umur bi Maqasidiha dalam amalan perubatan?',
-          pilihan: [
-            'Pembedahan kosmetik semata-mata untuk kecantikan',
-            'Pembedahan rekonstruktif bertujuan memulihkan fungsi anggota yang rosak',
-            'Pengambilan ubat tanpa preskripsi doktor',
-            'Menolak rawatan kecemasan tanpa sebab munasabah'
-          ],
-          jawapan_betul: 'Pembedahan rekonstruktif bertujuan memulihkan fungsi anggota yang rosak',
-          huraian: 'Pembedahan pemulihan fungsi bertujuan رفع الضرر (menghilangkan kemudaratan), berbeza dengan tujuan tabarruj melampau.'
-        }
-      ]
-    };
+    return kuizMingguanLalai;
   });
 
   const [weeklyQuizIndex, setWeeklyQuizIndex] = useState(0);
   const [weeklySelectedAnswer, setWeeklySelectedAnswer] = useState(null);
   const [weeklyScore, setWeeklyScore] = useState(0);
+
+  // Fungsi muat semula kuiz daripada fail projek lalai & storan pelayan
+  const handleResetKuizKeLalai = () => {
+    try {
+      localStorage.removeItem('qawaid_kuiz_mingguan');
+    } catch {}
+    setKuizMingguan(kuizMingguanLalai);
+    try {
+      localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(kuizMingguanLalai));
+    } catch {}
+    fetch('/api/kuiz-mingguan')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const quiz = data?.data || data;
+        if (quiz?.tajuk_mingguan && Array.isArray(quiz.soalan_objektif) && quiz.soalan_objektif.length > 0) {
+          setKuizMingguan(quiz);
+          try {
+            localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(quiz));
+          } catch {}
+        }
+      })
+      .catch(() => {});
+  };
 
   // Tarik data kuiz mingguan terkini dari backend (Fasa 4) dengan perlindungan localStorage
   useEffect(() => {
@@ -2474,7 +2511,27 @@ export default function App() {
               <div className="lg-panel glass-card" style={{ maxWidth: '880px', margin: '0 auto' }}>
                 <div style={{ textAlign: 'center', marginBottom: '28px', position: 'relative' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <div style={{ width: '80px' }} />
+                    <button
+                      type="button"
+                      onClick={handleResetKuizKeLalai}
+                      className="lg-btn-glass"
+                      title="Muat semula data kuiz terkini dari pelayan"
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: '0.72rem',
+                        borderRadius: 'var(--r-pill)',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        color: '#6ee7b7',
+                        borderColor: 'rgba(16, 185, 129, 0.35)',
+                        background: 'rgba(16, 185, 129, 0.08)',
+                      }}
+                    >
+                      <LucideIcon name="refresh-cw" size={11} />
+                      <span>Muat Semula</span>
+                    </button>
                     <span
                       className="lg-node-chip"
                       style={{
