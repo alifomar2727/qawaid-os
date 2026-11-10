@@ -1211,7 +1211,7 @@ summary:focus-visible {
     display: inline !important;
   }
 
-  /* 4. Panel Kaedah Utama (2-Column x 3-Row Grid — Semua & Kaedah Centered, 100% Penuh, Liquid Glass Berkilau) */
+  /* 4. Panel Kaedah Utama (2-Column x 3-Row Grid — Symmetrical 100% Mathematical Center) */
   .lg-filter-sticky {
     position: relative !important;
     top: 0 !important;
@@ -1234,11 +1234,12 @@ summary:focus-visible {
     display: none !important;
   }
   .lg-filter-chip {
+    position: relative !important;
     width: 100% !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: space-between !important;
-    padding: 8px 10px !important;
+    justify-content: center !important;
+    padding: 8px 28px 8px 28px !important; /* Ruang simetri kiri & kanan 28px */
     min-height: 52px !important;
     border-radius: var(--r-md) !important;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.03) 60%, rgba(16, 185, 129, 0.05) 100%) !important;
@@ -1249,7 +1250,6 @@ summary:focus-visible {
       inset 0 1px 1px 0 rgba(255, 255, 255, 0.35),
       0 4px 14px rgba(3, 7, 22, 0.28) !important;
     font-size: 0.78rem !important;
-    gap: 6px !important;
     transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
   }
   .lg-filter-chip.is-active {
@@ -1263,7 +1263,8 @@ summary:focus-visible {
   }
   .lg-filter-chip-text,
   .lg-filter-chip-ar {
-    flex: 1 1 auto !important;
+    display: block !important;
+    width: 100% !important;
     text-align: center !important;
     font-weight: 700 !important;
     line-height: 1.35 !important;
@@ -1271,6 +1272,7 @@ summary:focus-visible {
     overflow: visible !important;
     text-overflow: clip !important;
     max-width: none !important;
+    margin: 0 auto !important;
   }
   .lg-filter-chip-text {
     font-size: 0.88rem !important;
@@ -1279,12 +1281,16 @@ summary:focus-visible {
   .lg-filter-chip-ar {
     font-family: "Noto Naskh Arabic", "Amiri", serif !important;
     font-size: 0.86rem !important;
-    padding-left: 2px !important;
+    direction: rtl !important;
   }
   .lg-chip-count {
-    font-size: 0.70rem !important;
-    padding: 3px 7px !important;
-    min-width: 22px !important;
+    position: absolute !important;
+    right: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-size: 0.68rem !important;
+    padding: 2px 6px !important;
+    min-width: 20px !important;
     text-align: center !important;
     border-radius: 999px !important;
     flex: 0 0 auto !important;
@@ -1355,10 +1361,6 @@ summary:focus-visible {
   }
   .lg-card {
     padding: 14px 12px !important;
-  }
-  .lg-filter-chip-ar {
-    font-size: 0.86rem !important;
-    max-width: 90px !important;
   }
   .lg-btn-glass,
   .lg-btn-nota {
