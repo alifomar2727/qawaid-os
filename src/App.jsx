@@ -182,6 +182,16 @@ function LucideIcon({ name, size = 16, filled = false }) {
           <path d="M3 21v-5h5" />
         </svg>
       );
+    case 'file-text':
+      return (
+        <svg {...props}>
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" x2="8" y1="13" y2="13" />
+          <line x1="16" x2="8" y1="17" y2="17" />
+          <line x1="10" x2="8" y1="9" y2="9" />
+        </svg>
+      );
     default:
       return null;
   }
@@ -467,20 +477,145 @@ function renderFormattedAiText(text = '') {
 }
 
 // =========================================================================
-// FASA 2: KOMPONEN PORTAL ADMIN RAHSIA (FRONTEND)
+// =========================================================================
+// FASA 2: KOMPONEN PORTAL ADMIN RAHSIA (FRONTEND) DENGAN UPLOAD SLIDES (PDF/TEKS)
 // =========================================================================
 function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
   const [tajuk, setTajuk] = useState('');
   const [nota, setNota] = useState('');
+  const [fileData, setFileData] = useState(null); // { name, size, type, base64 }
+  const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null); // { type: 'success' | 'error', text: '' }
+  const fileInputRef = useRef(null);
+
+  // Fungsi proses fail yang dimuat naik (PDF atau Teks)
+  const processSelectedFile = (file) => {
+    if (!file) return;
+
+    // Had saiz fail (15 MB)
+    const maxBytes = 15 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setStatus({
+        type: 'error',
+        text: `Saiz fail (${(file.size / (1024 * 1024)).toFixed(1)} MB) melebihi had 15 MB. Sila gunakan fail yang lebih kecil atau salin teksnya ke dalam kotak teks.`,
+      });
+      return;
+    }
+
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    const isText = file.type.startsWith('text/') || file.name.toLowerCase().endsWith('.txt') || file.name.toLowerCase().endsWith('.md');
+
+    // Auto-cadang tajuk kuiz jika ruangan tajuk masih kosong
+    if (!tajuk.trim()) {
+      const cleanName = file.name
+        .replace(/\.[^/.]+$/, '')
+        .replace(/[-_]+/g, ' ')
+        .trim();
+      if (cleanName) {
+        setTajuk(cleanName);
+      }
+    }
+
+    if (isText) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result || '';
+        setNota(content);
+        setFileData({
+          name: file.name,
+          size: file.size,
+          type: 'text/plain',
+          base64: null,
+        });
+        setStatus({
+          type: 'success',
+          text: `✓ Fail teks "${file.name}" berjaya dibaca dan dimasukkan ke ruangan teks nota.`,
+        });
+      };
+      reader.readAsText(file);
+    } else if (isPdf) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result || '';
+        const base64Str = typeof dataUrl === 'string' && dataUrl.includes(',') ? dataUrl.split(',')[1] : '';
+        setFileData({
+          name: file.name,
+          size: file.size,
+          type: 'application/pdf',
+          base64: base64Str,
+        });
+        setStatus({
+          type: 'success',
+          text: `✓ Fail slaid PDF "${file.name}" (${(file.size / (1024 * 1024)).toFixed(2)} MB) berjaya dimuat naik & sedia diproses terus oleh AI!`,
+        });
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Format dokumen lain
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result || '';
+        const base64Str = typeof dataUrl === 'string' && dataUrl.includes(',') ? dataUrl.split(',')[1] : '';
+        setFileData({
+          name: file.name,
+          size: file.size,
+          type: file.type || 'application/octet-stream',
+          base64: base64Str,
+        });
+        setStatus({
+          type: 'success',
+          text: `✓ Fail "${file.name}" sedia untuk dihantar ke AI.`,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) processSelectedFile(file);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processSelectedFile(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleRemoveFile = () => {
+    setFileData(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    setStatus(null);
+  };
 
   const handleJanaKuiz = async (e) => {
     e.preventDefault();
-    if (!tajuk.trim() || !nota.trim()) {
+
+    if (!tajuk.trim()) {
       setStatus({
         type: 'error',
-        text: 'Sila lengkapkan kedua-dua ruangan Tajuk Kuiz dan Teks Slaid/Nota Kuliah.',
+        text: 'Sila masukkan "Tajuk Kuiz Minggu Ini".',
+      });
+      return;
+    }
+
+    if (!nota.trim() && !fileData) {
+      setStatus({
+        type: 'error',
+        text: 'Sila muat naik fail slaid (PDF) ATAU masukkan teks slaid/nota kuliah.',
       });
       return;
     }
@@ -495,6 +630,14 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
         body: JSON.stringify({
           tajuk: tajuk.trim(),
           nota: nota.trim(),
+          fileData: fileData
+            ? {
+                name: fileData.name,
+                type: fileData.type,
+                size: fileData.size,
+                base64: fileData.base64,
+              }
+            : null,
         }),
       });
 
@@ -544,17 +687,19 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
         className="glass-card"
         style={{
           width: '100%',
-          maxWidth: '720px',
+          maxWidth: '740px',
+          maxHeight: '92vh',
+          overflowY: 'auto',
           padding: '28px 24px',
           borderRadius: 'var(--r-xl)',
           border: '1px solid rgba(16, 185, 129, 0.5)',
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.65), 0 0 30px rgba(16, 185, 129, 0.25)',
-          background: 'linear-gradient(145deg, rgba(8, 20, 42, 0.94), rgba(4, 12, 28, 0.98))',
+          background: 'linear-gradient(145deg, rgba(8, 20, 42, 0.96), rgba(4, 12, 28, 0.98))',
           margin: 'auto',
         }}
       >
         {/* Header Admin */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
               <span
@@ -579,7 +724,7 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
               Pusat Kawalan Kuiz Mingguan AI
             </h2>
             <p style={{ margin: '4px 0 0', fontSize: '0.84rem', color: 'var(--text-muted)' }}>
-              Masukkan teks slaid atau nota kuliah untuk menjana soalan objektif secara automatik.
+              Muat naik slaid PDF atau tampal nota kuliah untuk menjana soalan objektif secara automatik.
             </p>
           </div>
 
@@ -603,7 +748,7 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
           className="lg-inner-well"
           style={{
             padding: '12px 16px',
-            marginBottom: '20px',
+            marginBottom: '18px',
             borderRadius: 'var(--r-md)',
             background: 'rgba(255, 255, 255, 0.03)',
             display: 'flex',
@@ -628,6 +773,7 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
 
         {/* Borang Input Admin */}
         <form onSubmit={handleJanaKuiz} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Ruangan Tajuk Kuiz */}
           <div>
             <label
               style={{
@@ -660,23 +806,179 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
             />
           </div>
 
+          {/* RUANGAN MUAT NAIK FAIL SLAID (PDF / TEKS) */}
           <div>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                color: 'var(--text-strong)',
-                marginBottom: '6px',
-              }}
-            >
-              📄 Teks Slaid / Nota Kuliah:
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label
+                style={{
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  color: 'var(--text-strong)',
+                }}
+              >
+                📎 Muat Naik Slaid Kuliah (PDF / Dokumen):
+              </label>
+              <span style={{ fontSize: '0.72rem', color: 'var(--accent-glow, #34d399)' }}>
+                ✨ Disyorkan untuk pensyarah
+              </span>
+            </div>
+
+            {/* Input fail tersembunyi */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".pdf,.txt,.md,application/pdf,text/plain"
+              disabled={loading}
+              style={{ display: 'none' }}
+            />
+
+            {!fileData ? (
+              /* Kotak Seret & Lepas (Dropzone) */
+              <div
+                onClick={() => !loading && fileInputRef.current?.click()}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                style={{
+                  border: isDragging
+                    ? '2px dashed #10b981'
+                    : '2px dashed rgba(255, 255, 255, 0.22)',
+                  borderRadius: 'var(--r-md)',
+                  padding: '22px 16px',
+                  textAlign: 'center',
+                  background: isDragging
+                    ? 'rgba(16, 185, 129, 0.12)'
+                    : 'rgba(255, 255, 255, 0.02)',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <div
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '50%',
+                    background: 'rgba(16, 185, 129, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#34d399',
+                  }}
+                >
+                  <LucideIcon name="upload" size={20} />
+                </div>
+                <div>
+                  <strong style={{ fontSize: '0.88rem', color: '#ffffff', display: 'block' }}>
+                    Klik untuk pilih fail slaid PDF atau seret ke sini
+                  </strong>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                    Menyokong fail PDF slaid kuliah (.pdf), TXT, atau Markdown (Maksimum 15 MB)
+                  </span>
+                </div>
+              </div>
+            ) : (
+              /* Kad Paparan Fail yang Dipilih */
+              <div
+                className="lg-inner-well"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  borderRadius: 'var(--r-md)',
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(6, 182, 212, 0.08))',
+                  border: '1px solid rgba(16, 185, 129, 0.4)',
+                  gap: '12px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                  <div
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: '8px',
+                      background: fileData.type.includes('pdf')
+                        ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                        : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                      color: '#ffffff',
+                      fontWeight: 800,
+                      fontSize: '0.72rem',
+                      letterSpacing: '0.05em',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {fileData.type.includes('pdf') ? 'PDF' : 'DOC'}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: '0.88rem',
+                        fontWeight: 700,
+                        color: '#ffffff',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {fileData.name}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#6ee7b7', marginTop: '2px' }}>
+                      {(fileData.size / (1024 * 1024)).toFixed(2)} MB • Slaid sedia dianalisis terus oleh Gemini AI
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleRemoveFile}
+                  disabled={loading}
+                  className="lg-btn-glass"
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '0.75rem',
+                    color: '#f87171',
+                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    borderRadius: 'var(--r-pill)',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    flexShrink: 0,
+                  }}
+                >
+                  ✕ Buang Fail
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Ruangan Teks Slaid / Nota Kuliah (Pilihan jika guna PDF) */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label
+                style={{
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  color: 'var(--text-strong)',
+                }}
+              >
+                📄 Teks Slaid / Nota Kuliah:
+              </label>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                {fileData ? '(Pilihan: Boleh isi nota tambahan atau biarkan kosong)' : '(Wajib jika tiada fail PDF)'}
+              </span>
+            </div>
             <textarea
-              rows={8}
+              rows={fileData ? 4 : 7}
               value={nota}
               onChange={(e) => setNota(e.target.value)}
-              placeholder="Tampal (paste) teks slaid PowerPoint, nota kuliah, atau huraian bab fiqh di sini. AI akan menganalisis teks ini untuk mencipta 20 soalan objektif berformat kualiti tinggi..."
+              placeholder={
+                fileData
+                  ? 'Fail PDF sudah dipilih di atas! Anda boleh biarkan ruangan ini kosong, atau taip arahan khas (contoh: "Fokuskan soalan kepada pembahagian masyaqqah")...'
+                  : 'Tampal (paste) teks slaid PowerPoint, nota kuliah, atau huraian bab fiqh di sini. AI akan menganalisis teks ini untuk mencipta 20 soalan objektif...'
+              }
               disabled={loading}
               style={{
                 width: '100%',
@@ -691,6 +993,7 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
                 resize: 'vertical',
                 boxSizing: 'border-box',
                 fontFamily: 'inherit',
+                transition: 'rows 0.2s ease',
               }}
             />
           </div>
@@ -713,7 +1016,7 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
           )}
 
           {/* Butang Tindakan */}
-          <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
             <button
               type="submit"
               disabled={loading}
@@ -729,7 +1032,13 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
               }}
             >
               <LucideIcon name="sparkles" size={17} />
-              <span>{loading ? 'Sedang Menjana Kuiz Pintar dengan AI...' : 'Jana Kuiz & Kemas Kini Laman Web'}</span>
+              <span>
+                {loading
+                  ? fileData?.type?.includes('pdf')
+                    ? 'Sedang Membaca Slaid PDF & Menjana 20 Soalan...'
+                    : 'Sedang Menjana Kuiz Pintar dengan AI...'
+                  : 'Jana Kuiz & Kemas Kini Laman Web'}
+              </span>
             </button>
           </div>
         </form>
