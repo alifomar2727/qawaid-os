@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    QAWAID OS — iOS 26 LIQUID GLASS DESIGN SYSTEM
    Pure CSS Custom Properties, Two-Layer Optical Architecture, Concentric Radii
    Tuned Control-Layer Scrim & WCAG AA (>= 4.5:1) High-Contrast Typography
@@ -3973,3 +3973,10 @@ summary:focus-visible {
   }
 }
 
+
+/* Tema gelap asli: isyarat kepada pelayar (Samsung Internet / Chrome) supaya tidak memaksa Dark Mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
