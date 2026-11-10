@@ -581,6 +581,20 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
     }
   };
 
+  // Fungsi muat turun kuiz aktif sebagai fail JSON untuk disimpan terus ke fail projek / GitHub
+  const handleDownloadKuizJson = () => {
+    if (!kuizMingguan) return;
+    const blob = new Blob([JSON.stringify(kuizMingguan, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'kuizMingguanTerkini.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   // Fungsi proses fail yang dimuat naik (PDF atau Teks)
   const processSelectedFile = (file) => {
     if (!file) return;
@@ -881,9 +895,33 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
               {kuizMingguan?.tajuk_mingguan || 'Tiada kuiz'}
             </strong>
           </div>
-          <span className="lg-node-chip" style={{ fontSize: '0.74rem' }}>
-            {kuizMingguan?.soalan_objektif?.length || 0} Soalan
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="lg-node-chip" style={{ fontSize: '0.74rem' }}>
+              {kuizMingguan?.soalan_objektif?.length || 0} Soalan
+            </span>
+            {kuizMingguan?.soalan_objektif?.length > 0 && (
+              <button
+                type="button"
+                onClick={handleDownloadKuizJson}
+                className="lg-btn-glass"
+                title="Muat turun fail kuizMingguanTerkini.json untuk disimpan ke dalam fail GitHub"
+                style={{
+                  padding: '4px 10px',
+                  fontSize: '0.72rem',
+                  borderRadius: 'var(--r-pill)',
+                  cursor: 'pointer',
+                  color: '#6ee7b7',
+                  borderColor: 'rgba(16, 185, 129, 0.4)',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <span>📥 Muat Turun JSON</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Borang Input Admin */}
