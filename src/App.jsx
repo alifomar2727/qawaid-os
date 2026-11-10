@@ -1093,8 +1093,19 @@ export default function App() {
   const [logoClicks, setLogoClicks] = useState(0);
   const clickTimeoutRef = useRef(null);
 
-  const handleSecretLogoClick = () => {
-    // Reset kaunter jika klik tidak diteruskan dalam 2.5 saat
+  const handleLogoClick = () => {
+    // 1. Pergi ke Home Screen (Matriks) serta merta
+    setViewMode('MATRIKS');
+    setQuizSubMode('SELECTION');
+    setSelectedAsasi('ALL');
+    setSearchQuery('');
+    setDetailModalItem(null);
+    setAiQuestionModalItem(null);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 2. Kira klik berturut-turut untuk Portal Admin (5x)
     if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
     clickTimeoutRef.current = setTimeout(() => {
       setLogoClicks(0);
@@ -1626,11 +1637,11 @@ export default function App() {
             isCondensed ? 'is-condensed' : ''
           }`}
         >
-          {/* Logo dengan Secret Click (Tekan 5 kali berturut-turut untuk Portal Admin) */}
+          {/* Logo Qawaid OS (Klik untuk kembali ke Laman Utama / 5x untuk Portal Admin) */}
           <div
             className="lg-brand"
-            onClick={handleSecretLogoClick}
-            title="Qawaid OS (Klik 5x untuk Portal Admin)"
+            onClick={handleLogoClick}
+            title="Qawaid OS (Klik untuk Laman Utama)"
             style={{ cursor: 'pointer', userSelect: 'none' }}
           >
             <div className="lg-brand-icon">
@@ -1897,7 +1908,7 @@ export default function App() {
                       color: 'var(--text-strong)',
                     }}
                   >
-                    Pilih Cabaran Kuiz Qawa&apos;id OS
+                    Pilih Cabaran Kuiz Qawaid OS
                   </h2>
                   <p
                     style={{
@@ -1908,7 +1919,7 @@ export default function App() {
                       lineHeight: 1.6,
                     }}
                   >
-                    Uji kefahaman teori, hujah syarak dan tatbiqat semasa anda melalui dua mod penilaian khas:
+                    Uji kefahaman teori dan aplikasi penyelesaian isu semasa melalui dua mod di bawah:
                   </p>
                 </div>
 
@@ -1936,7 +1947,7 @@ export default function App() {
                     }}
                   >
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '14px' }}>
                         <span
                           style={{
                             fontSize: '0.72rem',
@@ -1950,9 +1961,6 @@ export default function App() {
                           }}
                         >
                           TOPIKAL MINGGUAN
-                        </span>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                          {kuizMingguan.tarikh_kemaskini || 'Terkini'}
                         </span>
                       </div>
 
@@ -1983,9 +1991,6 @@ export default function App() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
                         <span className="lg-node-chip" style={{ fontSize: '0.76rem', fontWeight: 700 }}>
                           📝 {kuizMingguan.soalan_objektif?.length || 0} Soalan
-                        </span>
-                        <span className="lg-node-chip" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-                          ⚡ AI Turath
                         </span>
                       </div>
                     </div>
@@ -2041,10 +2046,10 @@ export default function App() {
                             letterSpacing: '0.04em',
                           }}
                         >
-                          BANK LENGKAP 4 MAZHAB
+                          KOMPREHENSIF
                         </span>
                         <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                          50 Soalan Penuh
+                          80 Soalan Penuh
                         </span>
                       </div>
 
@@ -2068,15 +2073,12 @@ export default function App() {
                           lineHeight: 1.55,
                         }}
                       >
-                        Ujian mendalam merangkumi 5 kaedah asasi dan puluhan kaedah ranting beserta perbandingan fatwa Hanafi, Maliki, Syafi&apos;i dan Hanbali.
+                        Ujian mendalam merangkumi 5 kaedah asasi dan puluhan kaedah ranting.
                       </p>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
                         <span className="lg-node-chip" style={{ fontSize: '0.76rem', fontWeight: 700 }}>
                           📚 {dataKuiz50.length} Senario Kes
-                        </span>
-                        <span className="lg-node-chip" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-                          ⚖️ Mahkamah &amp; Ibadat
                         </span>
                       </div>
                     </div>
