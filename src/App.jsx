@@ -497,8 +497,6 @@ export default function App() {
 
   const [chatInput, setChatInput] = useState('');
   const [isLoadingAI, setIsLoadingAI] = useState(false);
-  const [isUploadingPdf, setIsUploadingPdf] = useState(false);
-  const pdfInputRef = useRef(null);
   const [chatMessages, setChatMessages] = useState([
     {
       role: 'ai',
@@ -833,74 +831,14 @@ export default function App() {
     }
   };
 
-  const muatNaikKitabPdf = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file || isUploadingPdf) return;
-    e.target.value = '';
-
-    setIsUploadingPdf(true);
-    setChatMessages((prev) => [
-      ...prev,
-      {
-        role: 'ai',
-        text: `📥 **Sedang memproses & memuat naik kitab:** \`${file.name}\`...\n⏳ *(Mengekstrak teks & menjana vektor 768-dimensi ke Pinecone. Sila tunggu sebentar...)*`,
-        sumber: [],
-      },
-    ]);
-
-    try {
-      const fileBase64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error('Gagal membaca fail.'));
-        reader.readAsDataURL(file);
-      });
-
-      const response = await fetch('/api/upload-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: file.name,
-          fileBase64,
-          maxBlocks: 80,
-        }),
-      });
-
-      const resData = await response.json();
-      if (!response.ok) {
-        throw new Error(resData.error || 'Gagal memuat naik kitab ke pelayan.');
-      }
-
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          role: 'ai',
-          text: `✅ **Alhamdulillah! Kitab berjaya dimasukkan ke dalam pangkalan data AI Chatbox:**\n• **Nama Kitab:** ${resData.namaKitab}\n• **ID Rekod Unik:** \`${resData.kodKitab}\` *(tidak menindih kitab lain)*\n• **Kaedah Ekstraksi:** ${resData.kaedah}\n• **Jumlah Blok Diindeks:** ${resData.jumlahBlok} blok (daripada ${resData.jumlahKeseluruhanBlok} perenggan)\n\nAnda kini boleh terus bertanya soalan berkaitan isi kitab ini!`,
-          sumber: [],
-        },
-      ]);
-    } catch (err) {
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          role: 'ai',
-          text: `❌ **Ralat Muat Naik Kitab:** ${err.message}`,
-          sumber: [],
-        },
-      ]);
-    } finally {
-      setIsUploadingPdf(false);
-    }
-  };
-
   // Top nav items (duplicate AI Turath removed from top nav since floating bottom-right AI Turath button is always reachable)
   const navItems = [
-    { id: 'EXPLORER', label: 'Matriks', icon: 'grid' },
-    { id: 'QUIZ', label: 'Kuiz', icon: 'brain' },
-    { id: 'GAMES', label: 'Games', icon: 'gamepad' },
-    { id: 'MATCH', label: 'Padanan', icon: 'puzzle' },
-    { id: 'FLASHCARD', label: 'Nota Lengkap', icon: 'book-open' },
-    { id: 'NOTES', label: `Bookmark (${bookmarks.length})`, icon: 'bookmark' },
+    { id: 'EXPLORER', label: 'Matriks', mobLabel: 'Matriks', icon: 'grid' },
+    { id: 'QUIZ', label: 'Kuiz', mobLabel: 'Kuiz', icon: 'brain' },
+    { id: 'GAMES', label: 'Games', mobLabel: 'Games', icon: 'gamepad' },
+    { id: 'MATCH', label: 'Padanan', mobLabel: 'Padanan', icon: 'puzzle' },
+    { id: 'FLASHCARD', label: 'Nota Lengkap', mobLabel: 'Nota', icon: 'book-open' },
+    { id: 'NOTES', label: `Bookmark (${bookmarks.length})`, mobLabel: `⭐ (${bookmarks.length})`, icon: 'bookmark' },
   ];
 
   return (
@@ -1031,7 +969,8 @@ export default function App() {
                   className={`lg-nav-btn ${isActive ? 'is-active' : ''}`}
                 >
                   <LucideIcon name={tab.icon} size={15} />
-                  <span>{tab.label}</span>
+                  <span className="lg-nav-text-desktop">{tab.label}</span>
+                  <span className="lg-nav-text-mobile">{tab.mobLabel || tab.label}</span>
                 </button>
               );
             })}
@@ -2369,7 +2308,7 @@ export default function App() {
                               }}
                             >
                               <span>
-                                📖 {s.kitab}{' '}
+                                📖 {s.kitab || s.tajuk || 'القواعد الفقهية وتطبيقاتها في المذاهب الأربعة'}{' '}
                                 {s.skor
                                   ? `(Padanan: ${(s.skor * 100).toFixed(0)}%)`
                                   : ''}
@@ -2421,8 +2360,8 @@ export default function App() {
                                 marginBottom: '6px',
                               }}
                             >
-                              {s.teks.slice(0, 380)}
-                              {s.teks.length > 380 ? '...' : ''}
+                              {(s.teks || s.huraian || s.tajuk || '').slice(0, 380)}
+                              {(s.teks || s.huraian || s.tajuk || '').length > 380 ? '...' : ''}
                             </div>
                           </div>
                         ))}
