@@ -1516,6 +1516,62 @@ export default function App() {
   const [quizSubMode, setQuizSubMode] = useState('SELECTION'); // 'SELECTION' | 'MINGGUAN' | 'KOMPREHENSIF'
 
   // =========================================================================
+  // FASA 2: TETAPAN TEKS DINAMIK WEB (MINI CMS)
+  // =========================================================================
+  const DEFAULT_TETAPAN_WEB = {
+    teksPengumuman: '✨ Selamat Datang ke Qawaid OS — Sistem Ulang Kaji Pintar Berteraskan Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-Arbaah',
+    subtajukApp: 'Sistem Ulang Kaji Qawaid Fiqhiyyah',
+    subtajukCabaran: 'Uji kefahaman teori dan aplikasi penyelesaian isu semasa melalui dua mod di bawah:',
+  };
+
+  const [tetapanWeb, setTetapanWeb] = useState(() => {
+    try {
+      const saved = localStorage.getItem('qawaid_tetapan_web');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          teksPengumuman: parsed.teksPengumuman || DEFAULT_TETAPAN_WEB.teksPengumuman,
+          subtajukApp: parsed.subtajukApp || DEFAULT_TETAPAN_WEB.subtajukApp,
+          subtajukCabaran: parsed.subtajukCabaran || DEFAULT_TETAPAN_WEB.subtajukCabaran,
+        };
+      }
+    } catch {}
+    return DEFAULT_TETAPAN_WEB;
+  });
+
+  // Fetch tetapan teks terkini dari backend (GET /api/tetapan-teks) sebaik aplikasi dimuatkan
+  useEffect(() => {
+    let isMounted = true;
+    const fetchTetapan = async () => {
+      try {
+        const res = await fetch('/api/tetapan-teks');
+        if (res.ok) {
+          const json = await res.json();
+          const data = json.data || json;
+          if (data && isMounted) {
+            const merged = {
+              teksPengumuman: data.teksPengumuman || DEFAULT_TETAPAN_WEB.teksPengumuman,
+              subtajukApp: data.subtajukApp || DEFAULT_TETAPAN_WEB.subtajukApp,
+              subtajukCabaran: data.subtajukCabaran || DEFAULT_TETAPAN_WEB.subtajukCabaran,
+            };
+            setTetapanWeb(merged);
+            try {
+              localStorage.setItem('qawaid_tetapan_web', JSON.stringify(merged));
+            } catch {}
+          }
+        }
+      } catch (err) {
+        console.warn('Gagal memuat tetapan teks dari backend (menggunakan data peranti):', err);
+      }
+    };
+
+    fetchTetapan();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // =========================================================================
   // FASA 2: PORTAL ADMIN RAHSIA (SECRET 5 CLICKS & PASSWORD AUTH)
   // =========================================================================
   const [isAdmin, setIsAdmin] = useState(false);
@@ -2084,6 +2140,42 @@ export default function App() {
       </div>
 
       {/* ====================================================================
+          PENGUMUMAN MARQUEE BAR ATAS (MINI CMS DINAMIK)
+         ==================================================================== */}
+      {tetapanWeb?.teksPengumuman && (
+        <aside
+          aria-label="Pengumuman Terkini"
+          style={{
+            position: 'relative',
+            zIndex: 100,
+            width: '100%',
+            background: 'linear-gradient(90deg, rgba(16, 185, 129, 0.15) 0%, rgba(59, 130, 246, 0.20) 50%, rgba(16, 185, 129, 0.15) 100%)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '6px 12px',
+            fontSize: '0.80rem',
+            color: '#a7f3d0',
+            overflow: 'hidden',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+          }}
+        >
+          <marquee
+            behavior="scroll"
+            direction="left"
+            scrollamount="5"
+            style={{
+              display: 'block',
+              margin: 0,
+              fontWeight: 600,
+              letterSpacing: '0.02em',
+            }}
+          >
+            {tetapanWeb.teksPengumuman}
+          </marquee>
+        </aside>
+      )}
+
+      {/* ====================================================================
           CONTROL LAYER: ONE FLOATING LIQUID GLASS HEADER CAPSULE
           (Logo + Search + Sliding-Capsule Nav + Light/Dark Toggle)
          ==================================================================== */}
@@ -2105,7 +2197,7 @@ export default function App() {
             </div>
             <div>
               <h1 className="lg-brand-title">Qawaid OS</h1>
-              <p className="lg-brand-sub">Sistem Ulang Kaji Qawaid Fiqhiyyah</p>
+              <p className="lg-brand-sub">{tetapanWeb?.subtajukApp || 'Sistem Ulang Kaji Qawaid Fiqhiyyah'}</p>
             </div>
           </div>
 
@@ -2397,7 +2489,7 @@ export default function App() {
                       lineHeight: 1.6,
                     }}
                   >
-                    Uji kefahaman teori dan aplikasi penyelesaian isu semasa melalui dua mod di bawah:
+                    {tetapanWeb?.subtajukCabaran || 'Uji kefahaman teori dan aplikasi penyelesaian isu semasa melalui dua mod di bawah:'}
                   </p>
                 </div>
 
@@ -4086,6 +4178,10 @@ export default function App() {
             try {
               localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(dataBaru));
             } catch {}
+          }}
+          tetapanWeb={tetapanWeb}
+          onKemaskiniTetapan={(dataBaru) => {
+            setTetapanWeb(dataBaru);
           }}
           onClose={() => setIsAdmin(false)}
         />
