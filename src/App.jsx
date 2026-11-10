@@ -466,6 +466,278 @@ function renderFormattedAiText(text = '') {
   return <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>{elements}</div>;
 }
 
+// =========================================================================
+// FASA 2: KOMPONEN PORTAL ADMIN RAHSIA (FRONTEND)
+// =========================================================================
+function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
+  const [tajuk, setTajuk] = useState('');
+  const [nota, setNota] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState(null); // { type: 'success' | 'error', text: '' }
+
+  const handleJanaKuiz = async (e) => {
+    e.preventDefault();
+    if (!tajuk.trim() || !nota.trim()) {
+      setStatus({
+        type: 'error',
+        text: 'Sila lengkapkan kedua-dua ruangan Tajuk Kuiz dan Teks Slaid/Nota Kuliah.',
+      });
+      return;
+    }
+
+    setLoading(true);
+    setStatus(null);
+
+    try {
+      const response = await fetch('/api/jana-kuiz-mingguan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tajuk: tajuk.trim(),
+          nota: nota.trim(),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || result.message || 'Gagal menjana kuiz dari AI');
+      }
+
+      setStatus({
+        type: 'success',
+        text: `🎉 Berjaya! Kuiz "${tajuk}" dengan ${result.data?.soalan_objektif?.length || 20} soalan telah dijana dan dikemas kini.`,
+      });
+
+      // Kemas kini state kuiz di frontend
+      if (result.data && onKemaskiniKuiz) {
+        onKemaskiniKuiz(result.data);
+      }
+    } catch (err) {
+      console.error('Ralat Admin:', err);
+      setStatus({
+        type: 'error',
+        text: `Ralat: ${err.message}. (Pastikan backend Fasa 3 telah sedia atau sambungan internet stabil).`,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        background: 'rgba(3, 7, 20, 0.85)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+        overflowY: 'auto',
+      }}
+    >
+      <div
+        className="glass-card"
+        style={{
+          width: '100%',
+          maxWidth: '720px',
+          padding: '28px 24px',
+          borderRadius: 'var(--r-xl)',
+          border: '1px solid rgba(16, 185, 129, 0.5)',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.65), 0 0 30px rgba(16, 185, 129, 0.25)',
+          background: 'linear-gradient(145deg, rgba(8, 20, 42, 0.94), rgba(4, 12, 28, 0.98))',
+          margin: 'auto',
+        }}
+      >
+        {/* Header Admin */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <span
+                style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  padding: '3px 10px',
+                  borderRadius: '999px',
+                  background: 'rgba(239, 68, 68, 0.25)',
+                  color: '#f87171',
+                  border: '1px solid rgba(239, 68, 68, 0.45)',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                🔒 PORTAL PENTADBIR
+              </span>
+              <span className="lg-node-chip" style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                Mod Rahsia
+              </span>
+            </div>
+            <h2 style={{ margin: 0, fontSize: '1.45rem', fontWeight: 800, color: '#ffffff' }}>
+              Pusat Kawalan Kuiz Mingguan AI
+            </h2>
+            <p style={{ margin: '4px 0 0', fontSize: '0.84rem', color: 'var(--text-muted)' }}>
+              Masukkan teks slaid atau nota kuliah untuk menjana soalan objektif secara automatik.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="lg-btn-glass"
+            style={{
+              padding: '6px 12px',
+              fontSize: '0.78rem',
+              borderRadius: 'var(--r-pill)',
+              cursor: 'pointer',
+            }}
+          >
+            ✕ Tutup Portal
+          </button>
+        </div>
+
+        {/* Status Semasa Kuiz */}
+        <div
+          className="lg-inner-well"
+          style={{
+            padding: '12px 16px',
+            marginBottom: '20px',
+            borderRadius: 'var(--r-md)',
+            background: 'rgba(255, 255, 255, 0.03)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '8px',
+          }}
+        >
+          <div>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>
+              Kuiz Aktif di Laman Web Sekarang:
+            </span>
+            <strong style={{ fontSize: '0.86rem', color: '#6ee7b7' }}>
+              {kuizMingguan?.tajuk_mingguan || 'Tiada kuiz'}
+            </strong>
+          </div>
+          <span className="lg-node-chip" style={{ fontSize: '0.74rem' }}>
+            {kuizMingguan?.soalan_objektif?.length || 0} Soalan
+          </span>
+        </div>
+
+        {/* Borang Input Admin */}
+        <form onSubmit={handleJanaKuiz} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: 'var(--text-strong)',
+                marginBottom: '6px',
+              }}
+            >
+              📌 Tajuk Kuiz Minggu Ini:
+            </label>
+            <input
+              type="text"
+              value={tajuk}
+              onChange={(e) => setTajuk(e.target.value)}
+              placeholder="Contoh: Minggu 4 — Kaedah Al-Masyaqqah Tajlib at-Taysir"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                borderRadius: 'var(--r-sm)',
+                border: '1px solid rgba(255, 255, 255, 0.18)',
+                background: 'rgba(6, 12, 28, 0.75)',
+                color: '#ffffff',
+                fontSize: '0.90rem',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: 'var(--text-strong)',
+                marginBottom: '6px',
+              }}
+            >
+              📄 Teks Slaid / Nota Kuliah:
+            </label>
+            <textarea
+              rows={8}
+              value={nota}
+              onChange={(e) => setNota(e.target.value)}
+              placeholder="Tampal (paste) teks slaid PowerPoint, nota kuliah, atau huraian bab fiqh di sini. AI akan menganalisis teks ini untuk mencipta 20 soalan objektif berformat kualiti tinggi..."
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                borderRadius: 'var(--r-sm)',
+                border: '1px solid rgba(255, 255, 255, 0.18)',
+                background: 'rgba(6, 12, 28, 0.75)',
+                color: '#ffffff',
+                fontSize: '0.86rem',
+                lineHeight: 1.6,
+                outline: 'none',
+                resize: 'vertical',
+                boxSizing: 'border-box',
+                fontFamily: 'inherit',
+              }}
+            />
+          </div>
+
+          {/* Mesej Ralat / Kejayaan */}
+          {status && (
+            <div
+              style={{
+                padding: '12px 16px',
+                borderRadius: 'var(--r-sm)',
+                fontSize: '0.85rem',
+                lineHeight: 1.5,
+                background: status.type === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                border: `1px solid ${status.type === 'success' ? '#10b981' : '#ef4444'}`,
+                color: status.type === 'success' ? '#6ee7b7' : '#fca5a5',
+              }}
+            >
+              {status.text}
+            </div>
+          )}
+
+          {/* Butang Tindakan */}
+          <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+            <button
+              type="submit"
+              disabled={loading}
+              className="lg-btn-primary"
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                padding: '14px',
+                fontSize: '0.94rem',
+                fontWeight: 700,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.75 : 1,
+              }}
+            >
+              <LucideIcon name="sparkles" size={17} />
+              <span>{loading ? 'Sedang Menjana Kuiz Pintar dengan AI...' : 'Jana Kuiz & Kemas Kini Laman Web'}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const { data } = qawaidData;
 
@@ -488,6 +760,38 @@ export default function App() {
   // FASA 1: KUIZ MINGGUAN DINAMIK & PERSIMPANGAN MOD KUIZ
   // =========================================================================
   const [quizSubMode, setQuizSubMode] = useState('SELECTION'); // 'SELECTION' | 'MINGGUAN' | 'KOMPREHENSIF'
+
+  // =========================================================================
+  // FASA 2: PORTAL ADMIN RAHSIA (SECRET 5 CLICKS & PASSWORD AUTH)
+  // =========================================================================
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [logoClicks, setLogoClicks] = useState(0);
+  const clickTimeoutRef = useRef(null);
+
+  const handleSecretLogoClick = () => {
+    // Reset kaunter jika klik tidak diteruskan dalam 2.5 saat
+    if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
+    clickTimeoutRef.current = setTimeout(() => {
+      setLogoClicks(0);
+    }, 2500);
+
+    const newClicks = logoClicks + 1;
+    setLogoClicks(newClicks);
+
+    if (newClicks >= 5) {
+      setLogoClicks(0);
+      if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
+
+      const password = window.prompt(
+        '🔒 PORTAL ADMIN RAHSIA QAWAID OS\n\nSila masukkan kata laluan pentadbir untuk menjana kuiz mingguan:'
+      );
+      if (password === 'AdminQawaid2026') {
+        setIsAdmin(true);
+      } else if (password !== null) {
+        alert('❌ Kata laluan salah! Akses pentadbir dinafikan.');
+      }
+    }
+  };
   const [kuizMingguan, setKuizMingguan] = useState({
     tajuk_mingguan: 'Kaedah Asasi 1: Al-Umur bi Maqasidiha & Isu Kontemporari',
     tarikh_kemaskini: new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }),
@@ -996,8 +1300,13 @@ export default function App() {
             isCondensed ? 'is-condensed' : ''
           }`}
         >
-          {/* Logo */}
-          <div className="lg-brand">
+          {/* Logo dengan Secret Click (Tekan 5 kali berturut-turut untuk Portal Admin) */}
+          <div
+            className="lg-brand"
+            onClick={handleSecretLogoClick}
+            title="Qawaid OS (Klik 5x untuk Portal Admin)"
+            style={{ cursor: 'pointer', userSelect: 'none' }}
+          >
             <div className="lg-brand-icon">
               <LucideIcon name="scale" size={18} />
             </div>
@@ -2952,6 +3261,19 @@ export default function App() {
         <LucideIcon name="sparkles" size={16} />
         <span>{viewMode === 'AI_CHAT' ? 'Kembali ke Matriks' : 'AI Chatbox'}</span>
       </button>
+
+      {/* ====================================================================
+          FASA 2: PORTAL ADMIN RAHSIA (MODAL)
+         ==================================================================== */}
+      {isAdmin && (
+        <AdminDashboard
+          kuizMingguan={kuizMingguan}
+          onKemaskiniKuiz={(dataBaru) => {
+            setKuizMingguan(dataBaru);
+          }}
+          onClose={() => setIsAdmin(false)}
+        />
+      )}
     </div>
   );
 }
