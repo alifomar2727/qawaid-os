@@ -1,4 +1,4 @@
-// api/chat.js
+// qawaid-explorer/api/chat.js
 // Vercel Serverless Function untuk AI Chatbox Qawaid OS
 // Berasaskan: "القواعد الفقهية وتطبيقاتها في المذاهب الأربعة" — Syeikh Prof. Dr. Muhammad Mustafa al-Zuhaili
 
@@ -114,7 +114,7 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
     let successModel = '';
     const logRalat = [];
 
-    // Senarai model aktif Google Gemini (disusun mengikut kelajuan tanpa kesesakan)
+    // Senarai model aktif Google Gemini (disusun daripada model laju tanpa kesesakan 503)
     const modelsToTry = [
       'gemini-3.1-flash-lite',
       'gemini-3.5-flash-lite',
@@ -147,7 +147,7 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
           jawapanText = dataGen?.candidates?.[0]?.content?.parts?.[0]?.text || '';
           if (jawapanText) {
             successModel = m;
-            break;
+            break; // Berjaya, keluar daripada gelung
           }
         } else {
           const errGenText = await resGen.text();
@@ -157,6 +157,7 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
           } catch {}
           logRalat.push(`${m} (${resGen.status}): ${msgGen}`);
 
+          // Jika server Google mengalami 503 (high demand), tunggu sebentar sebelum cuba model seterusnya
           if (resGen.status === 503) {
             await new Promise((resolve) => setTimeout(resolve, 800));
           }
