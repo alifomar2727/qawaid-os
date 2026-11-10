@@ -2073,7 +2073,7 @@ export default function App() {
 
   // Top nav items (duplicate AI Turath removed from top nav since floating bottom-right AI Turath button is always reachable)
   const navItems = [
-    { id: 'EXPLORER', label: 'Matriks', mobLabel: 'Matriks', icon: 'grid' },
+    { id: 'EXPLORER', label: 'Direktori', mobLabel: 'Direktori', icon: 'grid' },
     { id: 'QUIZ', label: 'Kuiz', mobLabel: 'Kuiz', icon: 'brain' },
     { id: 'GAMES', label: 'Games', mobLabel: 'Games', icon: 'gamepad' },
     { id: 'MATCH', label: 'Padanan', mobLabel: 'Padanan', icon: 'puzzle' },
@@ -3806,7 +3806,7 @@ export default function App() {
                     margin: 0,
                   }}
                 >
-                  Klik ikon bintang pada kad matriks untuk menyimpan kaedah di sini.
+                  Klik ikon bintang pada kad direktori untuk menyimpan kaedah di sini.
                 </p>
               </div>
             ) : (
@@ -4153,11 +4153,11 @@ export default function App() {
         }
         className="lg-fab-ai glass-control glass-control--refract"
         aria-label="AI Chatbox"
-        title={viewMode === 'AI_CHAT' ? 'Kembali ke Matriks' : 'Buka AI Chatbox'}
+        title={viewMode === 'AI_CHAT' ? 'Kembali ke Direktori' : 'Buka AI Chatbox'}
       >
         <span className="lg-fab-dot" />
         <LucideIcon name="sparkles" size={16} />
-        <span>{viewMode === 'AI_CHAT' ? 'Kembali ke Matriks' : 'AI Chatbox'}</span>
+        <span>{viewMode === 'AI_CHAT' ? 'Kembali ke Direktori' : 'AI Chatbox'}</span>
       </button>
 
       {/* Modal Kata Laluan Admin (Kalis Sekatan Pelayar) */}
