@@ -1158,21 +1158,29 @@ summary:focus-visible {
     font-size: 0.62rem !important;
   }
 
+  /* 3. Header & Navigation on Mobile (Spacious Liquid Glass Bubble & Smooth Scroll) */
   .lg-nav {
     display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 4px 6px !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
     width: 100% !important;
-    justify-content: space-between !important;
-    gap: 2px !important;
-    padding: 3px !important;
-    overflow-x: hidden !important;
+    scroll-behavior: smooth !important;
+  }
+  .lg-nav::-webkit-scrollbar {
+    display: none !important;
   }
   .lg-nav-btn {
-    flex: 1 1 0 !important;
-    min-width: 0 !important;
-    padding: 6px 2px !important;
-    font-size: 0.72rem !important;
-    gap: 3px !important;
+    flex: 0 0 auto !important;
+    min-width: auto !important;
+    padding: 7px 12px !important;
+    font-size: 0.78rem !important;
+    gap: 5px !important;
     justify-content: center !important;
+    white-space: nowrap !important;
   }
   .lg-nav-text-desktop {
     display: none !important;
@@ -1181,7 +1189,7 @@ summary:focus-visible {
     display: inline !important;
   }
 
-  /* 4. Panel Kaedah Utama (2-Column Grid of 6 Chips — ZERO Horizontal Scroll) */
+  /* 4. Panel Kaedah Utama (2-Column Grid of 6 Chips — 100% Penuh, Tidak Terpotong, Liquid Glass Berkilau) */
   .lg-filter-sticky {
     position: relative !important;
     top: 0 !important;
@@ -1192,10 +1200,10 @@ summary:focus-visible {
   .lg-filter-bar {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 6px !important;
+    gap: 7px !important;
     width: 100% !important;
-    padding: 7px !important;
-    border-radius: var(--r-md) !important;
+    padding: 8px !important;
+    border-radius: var(--r-lg) !important;
     overflow-x: visible !important;
     max-width: 100% !important;
     box-shadow: 0 8px 24px rgba(3, 7, 22, 0.4) !important;
@@ -1208,34 +1216,48 @@ summary:focus-visible {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 7px 9px !important;
-    border-radius: var(--r-sm) !important;
-    background: rgba(255, 255, 255, 0.07) !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
-    backdrop-filter: blur(14px) !important;
-    -webkit-backdrop-filter: blur(14px) !important;
-    font-size: 0.76rem !important;
-    transition: all 0.2s ease !important;
+    padding: 8px 10px !important;
+    min-height: 52px !important;
+    border-radius: var(--r-md) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.03) 60%, rgba(16, 185, 129, 0.05) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    backdrop-filter: blur(16px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(190%) !important;
+    box-shadow:
+      inset 0 1px 1px 0 rgba(255, 255, 255, 0.35),
+      0 4px 14px rgba(3, 7, 22, 0.28) !important;
+    font-size: 0.78rem !important;
+    gap: 6px !important;
+    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
   }
   .lg-filter-chip.is-active {
     background: rgba(255, 255, 255, 0.95) !important;
     border-color: #ffffff !important;
     color: #0b1226 !important;
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4) !important;
-    transform: scale(1.01) !important;
+    box-shadow:
+      0 4px 16px rgba(16, 185, 129, 0.45),
+      inset 0 1px 0 #ffffff !important;
+    transform: scale(1.02) !important;
   }
   .lg-filter-chip-ar {
-    font-size: 0.92rem !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    max-width: 110px !important;
+    font-family: "Noto Naskh Arabic", "Amiri", serif !important;
+    font-size: 0.86rem !important;
+    line-height: 1.35 !important;
+    white-space: normal !important; /* TIDAK TERPOTONG LAGI — Teks Penuh 100% */
+    overflow: visible !important;
+    text-overflow: clip !important;
+    max-width: none !important;
     text-align: right !important;
+    flex: 1 1 auto !important;
+    padding-left: 2px !important;
   }
   .lg-chip-count {
-    font-size: 0.68rem !important;
-    padding: 2px 6px !important;
+    font-size: 0.70rem !important;
+    padding: 3px 7px !important;
+    min-width: 22px !important;
+    text-align: center !important;
     border-radius: 999px !important;
+    flex: 0 0 auto !important;
   }
 
   /* 5. Content Layout & Card Elements */

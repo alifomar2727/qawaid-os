@@ -624,6 +624,10 @@ export default function App() {
         transform: `translateX(${activeBtn.offsetLeft}px)`,
         opacity: 1,
       });
+      // Scroll into view gently on mobile if partially off-screen
+      if (typeof window !== 'undefined' && window.innerWidth <= 680) {
+        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      }
     } else {
       setNavPillStyle((prev) => ({ ...prev, opacity: 0 }));
     }
@@ -838,7 +842,7 @@ export default function App() {
     { id: 'GAMES', label: 'Games', mobLabel: 'Games', icon: 'gamepad' },
     { id: 'MATCH', label: 'Padanan', mobLabel: 'Padanan', icon: 'puzzle' },
     { id: 'FLASHCARD', label: 'Nota Lengkap', mobLabel: 'Nota', icon: 'book-open' },
-    { id: 'NOTES', label: `Bookmark (${bookmarks.length})`, mobLabel: `⭐ (${bookmarks.length})`, icon: 'bookmark' },
+    { id: 'NOTES', label: `Bookmark (${bookmarks.length})`, mobLabel: `⭐ ${bookmarks.length}`, icon: 'bookmark' },
   ];
 
   return (
