@@ -1643,25 +1643,69 @@ export default function App() {
   }, []);
 
   // =========================================================================
-  // FASA 2: PORTAL ADMIN RAHSIA (SECRET 5 CLICKS & PASSWORD AUTH)
+  // FASA 2: PORTAL ADMIN RAHSIA (LONG-PRESS 1.5S, SHORTCUT KEY & HASH)
   // =========================================================================
   const [isAdmin, setIsAdmin] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const clickCountRef = useRef(0);
-  const clickTimerRef = useRef(null);
+  const longPressTimerRef = useRef(null);
+  const isLongPressRef = useRef(false);
 
-  // Semak parameter URL ?admin=1 jika admin mahu buka terus tanpa klik
+  // Semak parameter URL ?admin=1 atau hash #admin jika admin mahu buka terus
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const p = new URLSearchParams(window.location.search);
-      if (p.get('admin') === '1' || p.get('admin') === 'true') {
-        setShowPasswordModal(true);
+    const checkAdminQuery = () => {
+      if (typeof window !== 'undefined') {
+        const p = new URLSearchParams(window.location.search);
+        if (p.get('admin') === '1' || p.get('admin') === 'true' || window.location.hash.toLowerCase() === '#admin') {
+          setShowPasswordModal(true);
+        }
       }
-    }
+    };
+    checkAdminQuery();
+    window.addEventListener('hashchange', checkAdminQuery);
+    return () => window.removeEventListener('hashchange', checkAdminQuery);
   }, []);
 
+  // Shortcut Papan Kekunci untuk PC: Ctrl + Shift + A atau Alt + A
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (
+        (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) ||
+        (e.altKey && (e.key === 'A' || e.key === 'a'))
+      ) {
+        e.preventDefault();
+        setShowPasswordModal(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Handler Long-Press (Tekan & Tahan 1.5 saat pada logo)
+  const handleLogoPointerDown = () => {
+    isLongPressRef.current = false;
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = setTimeout(() => {
+      isLongPressRef.current = true;
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(60);
+      }
+      setShowPasswordModal(true);
+    }, 1500);
+  };
+
+  const handleLogoPointerUp = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
   const handleLogoClick = () => {
-    // 1. Sentiasa kembali ke Home Screen (Matriks / EXPLORER) serta-merta
+    if (isLongPressRef.current) {
+      isLongPressRef.current = false;
+      return;
+    }
+    // Sentiasa kembali ke Home Screen (Direktori)
     setViewMode('EXPLORER');
     setQuizSubMode('SELECTION');
     setSelectedAsasi('ALL');
@@ -1670,19 +1714,6 @@ export default function App() {
     setAiQuestionModalItem(null);
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // 2. Kira klik pantas (3 klik sudah mencukupi agar tidak terlepas di PC/telefon)
-    clickCountRef.current = (clickCountRef.current || 0) + 1;
-    if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
-    clickTimerRef.current = setTimeout(() => {
-      clickCountRef.current = 0;
-    }, 3500);
-
-    if (clickCountRef.current >= 3) {
-      clickCountRef.current = 0;
-      if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
-      setShowPasswordModal(true);
     }
   };
 
@@ -2260,11 +2291,15 @@ export default function App() {
             isCondensed ? 'is-condensed' : ''
           }`}
         >
-          {/* Logo Qawaid OS (Klik untuk kembali ke Laman Utama / 5x untuk Portal Admin) */}
+          {/* Logo Qawaid OS (Klik untuk Direktori / Tekan & Tahan 1.5s untuk Admin) */}
           <div
             className="lg-brand"
             onClick={handleLogoClick}
-            title="Qawaid OS (Klik untuk Laman Utama / 5x untuk Admin)"
+            onPointerDown={handleLogoPointerDown}
+            onPointerUp={handleLogoPointerUp}
+            onPointerCancel={handleLogoPointerUp}
+            onPointerLeave={handleLogoPointerUp}
+            title="Qawaid OS (Klik ke Direktori / Tahan 1.5s untuk Admin)"
             style={{ cursor: 'pointer', userSelect: 'none', touchAction: 'manipulation' }}
           >
             <div className="lg-brand-icon">
@@ -2510,59 +2545,53 @@ export default function App() {
             {quizSubMode === 'SELECTION' && (
               <div className="lg-panel glass-card" style={{ maxWidth: '880px', margin: '0 auto' }}>
                 <div style={{ textAlign: 'center', marginBottom: '28px', position: 'relative' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <button
-                      type="button"
-                      onClick={handleResetKuizKeLalai}
-                      className="lg-btn-glass"
-                      title="Muat semula data kuiz terkini dari pelayan"
-                      style={{
-                        padding: '4px 10px',
-                        fontSize: '0.72rem',
-                        borderRadius: 'var(--r-pill)',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        color: '#6ee7b7',
-                        borderColor: 'rgba(16, 185, 129, 0.35)',
-                        background: 'rgba(16, 185, 129, 0.08)',
-                      }}
-                    >
-                      <LucideIcon name="refresh-cw" size={11} />
-                      <span>Muat Semula</span>
-                    </button>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: '12px',
+                      marginBottom: '16px',
+                      flexWrap: 'wrap',
+                    }}
+                  >
                     <span
                       className="lg-node-chip"
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '6px',
-                        padding: '5px 14px',
+                        padding: '6px 16px',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.04em',
                       }}
                     >
-                      <LucideIcon name="brain" size={14} />
+                      <LucideIcon name="brain" size={15} />
                       <span>MOD PENILAIAN &amp; UJIAN</span>
                     </span>
+
                     <button
                       type="button"
-                      onClick={() => setShowPasswordModal(true)}
+                      onClick={handleResetKuizKeLalai}
                       className="lg-btn-glass"
-                      title="Portal Pentadbir Rahsia (Jana Kuiz AI)"
+                      title="Muat semula data kuiz terkini"
                       style={{
-                        padding: '4px 10px',
-                        fontSize: '0.72rem',
+                        padding: '5px 12px',
+                        fontSize: '0.74rem',
                         borderRadius: 'var(--r-pill)',
                         cursor: 'pointer',
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '4px',
-                        color: '#f87171',
-                        borderColor: 'rgba(239, 68, 68, 0.35)',
-                        background: 'rgba(239, 68, 68, 0.08)',
+                        gap: '5px',
+                        color: '#6ee7b7',
+                        borderColor: 'rgba(16, 185, 129, 0.35)',
+                        background: 'rgba(16, 185, 129, 0.08)',
+                        transition: 'all 0.2s ease',
                       }}
                     >
-                      <span>🔒 Admin</span>
+                      <LucideIcon name="refresh-cw" size={12} />
+                      <span>Muat Semula</span>
                     </button>
                   </div>
                   <h2
@@ -4237,6 +4266,39 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* Footer Bersih dengan Pintu Masuk Rahsia Pentadbir */}
+      <footer
+        style={{
+          textAlign: 'center',
+          padding: '24px 16px 48px',
+          fontSize: '0.74rem',
+          color: 'var(--text-muted)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '8px',
+          userSelect: 'none',
+        }}
+      >
+        <span>Qawaid OS • Sistem Ulang Kaji Kaedah Fiqh</span>
+        <span
+          onClick={() => setShowPasswordModal(true)}
+          title="Pentadbir"
+          style={{
+            cursor: 'pointer',
+            opacity: 0.25,
+            fontSize: '0.70rem',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            transition: 'opacity 0.2s ease',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.8')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.25')}
+        >
+          🔒
+        </span>
+      </footer>
 
       {/* ====================================================================
           CONTROL LAYER: SINGLE FLOATING "AI CHATBOX" GLASS BUTTON (Bottom-Right)
