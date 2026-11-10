@@ -1070,6 +1070,147 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
   );
 }
 
+// =========================================================================
+// MODAL KATA LALUAN PORTAL ADMIN (100% KALIS SEKATAN PELAYAR TELEFON)
+// =========================================================================
+function AdminPasswordModal({ isOpen, onClose, onSuccess }) {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setPassword('');
+      setError(false);
+      setTimeout(() => inputRef.current?.focus(), 150);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (password === 'AdminQawaid2026') {
+      onSuccess();
+      onClose();
+    } else {
+      setError(true);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 10001,
+        background: 'rgba(3, 7, 20, 0.85)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="glass-card"
+        style={{
+          width: '100%',
+          maxWidth: '420px',
+          padding: '24px 20px',
+          borderRadius: 'var(--r-xl)',
+          border: '1px solid rgba(239, 68, 68, 0.45)',
+          background: 'linear-gradient(145deg, rgba(16, 10, 24, 0.98), rgba(8, 6, 16, 0.99))',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.75), 0 0 30px rgba(239, 68, 68, 0.25)',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+          <span
+            style={{
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              padding: '3px 10px',
+              borderRadius: '999px',
+              background: 'rgba(239, 68, 68, 0.25)',
+              color: '#f87171',
+              border: '1px solid rgba(239, 68, 68, 0.45)',
+            }}
+          >
+            🔒 MOD PENTADBIR
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="lg-btn-glass"
+            style={{ padding: '4px 10px', fontSize: '0.75rem', borderRadius: 'var(--r-pill)', cursor: 'pointer' }}
+          >
+            ✕
+          </button>
+        </div>
+
+        <h3 style={{ margin: '0 0 6px', fontSize: '1.25rem', color: '#ffffff', fontWeight: 800 }}>
+          Akses Portal Rahsia
+        </h3>
+        <p style={{ margin: '0 0 16px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+          Masukkan kata laluan pentadbir untuk membuka pusat kawalan kuiz mingguan AI:
+        </p>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <input
+            ref={inputRef}
+            type="password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (error) setError(false);
+            }}
+            placeholder="Masukkan kata laluan..."
+            style={{
+              width: '100%',
+              padding: '12px 14px',
+              borderRadius: 'var(--r-sm)',
+              border: error ? '1px solid #ef4444' : '1px solid rgba(255, 255, 255, 0.2)',
+              background: 'rgba(6, 12, 28, 0.75)',
+              color: '#ffffff',
+              fontSize: '0.94rem',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+
+          {error && (
+            <div style={{ color: '#f87171', fontSize: '0.80rem', fontWeight: 600 }}>
+              ❌ Kata laluan salah! Akses dinafikan.
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="lg-btn-glass"
+              style={{ flex: 1, justifyContent: 'center', padding: '11px', fontSize: '0.86rem', cursor: 'pointer' }}
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              className="lg-btn-primary"
+              style={{ flex: 1, justifyContent: 'center', padding: '11px', fontSize: '0.86rem', fontWeight: 700, cursor: 'pointer' }}
+            >
+              Buka Portal
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const { data } = qawaidData;
 
@@ -1097,11 +1238,22 @@ export default function App() {
   // FASA 2: PORTAL ADMIN RAHSIA (SECRET 5 CLICKS & PASSWORD AUTH)
   // =========================================================================
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef(null);
 
+  // Semak parameter URL ?admin=1 jika admin mahu buka terus tanpa klik
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('admin') === '1' || p.get('admin') === 'true') {
+        setShowPasswordModal(true);
+      }
+    }
+  }, []);
+
   const handleLogoClick = () => {
-    // 1. Pergi ke Home Screen (Matriks / EXPLORER) serta-merta tanpa blank
+    // 1. Sentiasa kembali ke Home Screen (Matriks / EXPLORER) serta-merta
     setViewMode('EXPLORER');
     setQuizSubMode('SELECTION');
     setSelectedAsasi('ALL');
@@ -1112,28 +1264,17 @@ export default function App() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 2. Kira 5 klik berturut-turut untuk Portal Admin (kalis re-render)
+    // 2. Kira klik pantas (3 klik sudah mencukupi agar tidak terlepas di PC/telefon)
     clickCountRef.current = (clickCountRef.current || 0) + 1;
     if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
     clickTimerRef.current = setTimeout(() => {
       clickCountRef.current = 0;
-    }, 2500);
+    }, 3500);
 
-    if (clickCountRef.current >= 5) {
+    if (clickCountRef.current >= 3) {
       clickCountRef.current = 0;
       if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
-
-      // Gunakan setTimeout supaya kitaran render klik selesai sebelum modal muncul
-      setTimeout(() => {
-        const password = window.prompt(
-          '🔒 PORTAL ADMIN RAHSIA QAWAID OS\n\nSila masukkan kata laluan pentadbir untuk menjana kuiz mingguan:'
-        );
-        if (password === 'AdminQawaid2026') {
-          setIsAdmin(true);
-        } else if (password !== null) {
-          alert('❌ Kata laluan salah! Akses pentadbir dinafikan.');
-        }
-      }, 60);
+      setShowPasswordModal(true);
     }
   };
 
@@ -1675,8 +1816,8 @@ export default function App() {
           <div
             className="lg-brand"
             onClick={handleLogoClick}
-            title="Qawaid OS (Klik untuk Laman Utama)"
-            style={{ cursor: 'pointer', userSelect: 'none' }}
+            title="Qawaid OS (Klik untuk Laman Utama / 5x untuk Admin)"
+            style={{ cursor: 'pointer', userSelect: 'none', touchAction: 'manipulation' }}
           >
             <div className="lg-brand-icon">
               <LucideIcon name="scale" size={18} />
@@ -1920,20 +2061,42 @@ export default function App() {
             {/* SUB-MOD 1: SKRIN PERSIMPANGAN (Dua Kad Pilihan Utama) */}
             {quizSubMode === 'SELECTION' && (
               <div className="lg-panel glass-card" style={{ maxWidth: '880px', margin: '0 auto' }}>
-                <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                  <span
-                    className="lg-node-chip"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '5px 14px',
-                      marginBottom: '10px',
-                    }}
-                  >
-                    <LucideIcon name="brain" size={14} />
-                    <span>MOD PENILAIAN &amp; UJIAN</span>
-                  </span>
+                <div style={{ textAlign: 'center', marginBottom: '28px', position: 'relative' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <div style={{ width: '80px' }} />
+                    <span
+                      className="lg-node-chip"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '5px 14px',
+                      }}
+                    >
+                      <LucideIcon name="brain" size={14} />
+                      <span>MOD PENILAIAN &amp; UJIAN</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswordModal(true)}
+                      className="lg-btn-glass"
+                      title="Portal Pentadbir Rahsia (Jana Kuiz AI)"
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: '0.72rem',
+                        borderRadius: 'var(--r-pill)',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        color: '#f87171',
+                        borderColor: 'rgba(239, 68, 68, 0.35)',
+                        background: 'rgba(239, 68, 68, 0.08)',
+                      }}
+                    >
+                      <span>🔒 Admin</span>
+                    </button>
+                  </div>
                   <h2
                     style={{
                       margin: '0 0 8px',
@@ -3623,6 +3786,13 @@ export default function App() {
         <LucideIcon name="sparkles" size={16} />
         <span>{viewMode === 'AI_CHAT' ? 'Kembali ke Matriks' : 'AI Chatbox'}</span>
       </button>
+
+      {/* Modal Kata Laluan Admin (Kalis Sekatan Pelayar) */}
+      <AdminPasswordModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        onSuccess={() => setIsAdmin(true)}
+      />
 
       {/* ====================================================================
           FASA 2: PORTAL ADMIN RAHSIA (MODAL)
