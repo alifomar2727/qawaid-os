@@ -493,12 +493,14 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
   const processSelectedFile = (file) => {
     if (!file) return;
 
-    // Had saiz fail (15 MB)
-    const maxBytes = 15 * 1024 * 1024;
+    // Had saiz fail: Vercel menghadkan saiz permintaan kepada 4.5 MB, dan Base64
+    // membesarkan fail ~33%, jadi PDF maksimum yang selamat ialah ~3.3 MB.
+    const isTextFile = file.type.startsWith('text/') || /\.(txt|md)$/i.test(file.name);
+    const maxBytes = isTextFile ? 15 * 1024 * 1024 : 3.3 * 1024 * 1024;
     if (file.size > maxBytes) {
       setStatus({
         type: 'error',
-        text: `Saiz fail (${(file.size / (1024 * 1024)).toFixed(1)} MB) melebihi had 15 MB. Sila gunakan fail yang lebih kecil atau salin teksnya ke dalam kotak teks.`,
+        text: `Saiz fail (${(file.size / (1024 * 1024)).toFixed(1)} MB) melebihi had ${isTextFile ? '15' : '3.3'} MB. Sila mampatkan PDF dahulu (contoh: ilovepdf.com/compress_pdf) atau salin teks slaid ke dalam kotak teks.`,
       });
       return;
     }
@@ -641,7 +643,21 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
         }),
       });
 
-      const result = await response.json();
+      if (response.status === 413) {
+        throw new Error('Fail PDF terlalu besar untuk pelayan (had 4.5 MB). Sila mampatkan PDF atau tampal teks slaid');
+      }
+
+      const rawText = await response.text();
+      let result;
+      try {
+        result = JSON.parse(rawText);
+      } catch {
+        throw new Error(
+          response.status === 504
+            ? 'Pelayan mengambil masa terlalu lama (timeout). Cuba PDF yang lebih kecil'
+            : `Respons pelayan tidak sah (HTTP ${response.status})`
+        );
+      }
 
       if (!response.ok || !result.success) {
         throw new Error(result.error || result.message || 'Gagal menjana kuiz dari AI');
@@ -877,7 +893,7 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan }) {
                     Klik untuk pilih fail slaid PDF atau seret ke sini
                   </strong>
                   <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                    Menyokong fail PDF slaid kuliah (.pdf), TXT, atau Markdown (Maksimum 15 MB)
+                    Menyokong fail PDF slaid kuliah (.pdf, maks 3.3 MB), TXT, atau Markdown
                   </span>
                 </div>
               </div>
