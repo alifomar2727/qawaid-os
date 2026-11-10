@@ -1010,7 +1010,7 @@ export default function App() {
                     selectedAsasi === 'ALL' ? 'is-active' : ''
                   }`}
                 >
-                  <span>Semua</span>
+                  <span className="lg-filter-chip-text">Semua</span>
                   <span className="lg-chip-count">{data.length}</span>
                 </button>
 

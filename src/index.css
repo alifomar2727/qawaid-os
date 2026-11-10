@@ -1158,29 +1158,51 @@ summary:focus-visible {
     font-size: 0.62rem !important;
   }
 
-  /* 3. Header & Navigation on Mobile (Spacious Liquid Glass Bubble & Smooth Scroll) */
+  /* 3. Header & Navigation on Mobile (3-Column x 2-Row Segmented Grid — ZERO Scroll, All 6 Features 100% Visible) */
   .lg-nav {
-    display: flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    padding: 4px 6px !important;
-    overflow-x: auto !important;
-    scrollbar-width: none !important;
-    -webkit-overflow-scrolling: touch !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 5px !important;
+    padding: 4px !important;
     width: 100% !important;
-    scroll-behavior: smooth !important;
+    overflow: visible !important;
+    border-radius: var(--r-md) !important;
   }
-  .lg-nav::-webkit-scrollbar {
+  .lg-nav .lg-sliding-pill {
     display: none !important;
   }
   .lg-nav-btn {
-    flex: 0 0 auto !important;
-    min-width: auto !important;
-    padding: 7px 12px !important;
-    font-size: 0.78rem !important;
-    gap: 5px !important;
+    display: flex !important;
+    align-items: center !important;
     justify-content: center !important;
+    gap: 5px !important;
+    padding: 8px 4px !important;
+    border-radius: var(--r-sm) !important;
+    font-size: 0.76rem !important;
+    font-weight: 600 !important;
+    width: 100% !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    color: var(--ctrl-text-sub) !important;
     white-space: nowrap !important;
+    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  }
+  .lg-nav-btn:hover {
+    color: var(--ctrl-text-strong) !important;
+    background: rgba(255, 255, 255, 0.10) !important;
+  }
+  .lg-nav-btn.is-active {
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: #0b1226 !important;
+    font-weight: 700 !important;
+    border-color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4) !important;
+    transform: scale(1.02) !important;
+  }
+  .lg-nav-btn.is-active svg {
+    stroke: #0b1226 !important;
   }
   .lg-nav-text-desktop {
     display: none !important;
@@ -1189,7 +1211,7 @@ summary:focus-visible {
     display: inline !important;
   }
 
-  /* 4. Panel Kaedah Utama (2-Column Grid of 6 Chips — 100% Penuh, Tidak Terpotong, Liquid Glass Berkilau) */
+  /* 4. Panel Kaedah Utama (2-Column x 3-Row Grid — Semua & Kaedah Centered, 100% Penuh, Liquid Glass Berkilau) */
   .lg-filter-sticky {
     position: relative !important;
     top: 0 !important;
@@ -1239,16 +1261,24 @@ summary:focus-visible {
       inset 0 1px 0 #ffffff !important;
     transform: scale(1.02) !important;
   }
+  .lg-filter-chip-text,
   .lg-filter-chip-ar {
-    font-family: "Noto Naskh Arabic", "Amiri", serif !important;
-    font-size: 0.86rem !important;
+    flex: 1 1 auto !important;
+    text-align: center !important;
+    font-weight: 700 !important;
     line-height: 1.35 !important;
-    white-space: normal !important; /* TIDAK TERPOTONG LAGI — Teks Penuh 100% */
+    white-space: normal !important;
     overflow: visible !important;
     text-overflow: clip !important;
     max-width: none !important;
-    text-align: right !important;
-    flex: 1 1 auto !important;
+  }
+  .lg-filter-chip-text {
+    font-size: 0.88rem !important;
+    letter-spacing: 0.02em !important;
+  }
+  .lg-filter-chip-ar {
+    font-family: "Noto Naskh Arabic", "Amiri", serif !important;
+    font-size: 0.86rem !important;
     padding-left: 2px !important;
   }
   .lg-chip-count {
