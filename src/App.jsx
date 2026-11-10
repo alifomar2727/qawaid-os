@@ -4120,12 +4120,11 @@ export default function App() {
 
                   {msg.sumber && msg.sumber.length > 0 && (
                     <details
-                      open
                       style={{
                         marginTop: '12px',
                         paddingTop: '10px',
                         borderTop: '1px solid var(--card-divider)',
-                        fontSize: '0.78rem',
+                        fontSize: '0.80rem',
                       }}
                     >
                       <summary
@@ -4133,6 +4132,8 @@ export default function App() {
                           cursor: 'pointer',
                           fontWeight: 700,
                           color: 'var(--text-strong)',
+                          userSelect: 'none',
+                          padding: '4px 0',
                         }}
                       >
                         Rujukan Muka Surat Kitab القواعد الفقهية وتطبيقاتها في المذاهب الأربعة ({msg.sumber.length} Halaman)
@@ -4146,7 +4147,16 @@ export default function App() {
                         }}
                       >
                         {msg.sumber.map((s, sIdx) => (
-                          <div key={sIdx} className="lg-inner-well">
+                          <div
+                            key={sIdx}
+                            className="lg-inner-well"
+                            style={{
+                              padding: '12px 14px',
+                              borderRadius: 'var(--r-md)',
+                              background: 'rgba(255, 255, 255, 0.02)',
+                              border: '1px solid rgba(255, 255, 255, 0.08)',
+                            }}
+                          >
                             <div
                               style={{
                                 display: 'flex',
@@ -4155,15 +4165,13 @@ export default function App() {
                                 flexWrap: 'wrap',
                                 gap: '8px',
                                 fontWeight: 700,
-                                marginBottom: '6px',
+                                marginBottom: '8px',
                                 color: 'var(--text-strong)',
+                                fontSize: '0.82rem',
                               }}
                             >
                               <span>
-                                📖 {s.kitab || s.tajuk || 'القواعد الفقهية وتطبيقاتها في المذاهب الأربعة'}{' '}
-                                {s.skor
-                                  ? `(Padanan: ${(s.skor * 100).toFixed(0)}%)`
-                                  : ''}
+                                📖 {s.kitab || s.tajuk || 'القواعد الفقهية وتطبيقاتها في المذاهب الأربعة'}
                               </span>
                               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                 {s.urlShamela && (
@@ -4173,8 +4181,8 @@ export default function App() {
                                     rel="noopener noreferrer"
                                     className="lg-btn-primary"
                                     style={{
-                                      padding: '5px 12px',
-                                      fontSize: '0.74rem',
+                                      padding: '4px 10px',
+                                      fontSize: '0.72rem',
                                       textDecoration: 'none',
                                     }}
                                   >
@@ -4191,25 +4199,24 @@ export default function App() {
                                     rel="noopener noreferrer"
                                     className="lg-btn-glass"
                                     style={{
-                                      padding: '5px 10px',
-                                      fontSize: '0.72rem',
+                                      padding: '4px 8px',
+                                      fontSize: '0.70rem',
                                       textDecoration: 'none',
                                     }}
                                   >
-                                    <LucideIcon name="search" size={12} />
+                                    <LucideIcon name="search" size={11} />
                                     <span>Cari Kaedah Tepat</span>
                                   </a>
                                 )}
                               </div>
                             </div>
                             <div
-                              dir="rtl"
+                              dir="auto"
                               style={{
-                                fontFamily: '"Noto Naskh Arabic", serif',
-                                fontSize: '1.05rem',
-                                lineHeight: 1.85,
-                                color: 'var(--text-strong)',
-                                marginBottom: '6px',
+                                fontSize: '0.82rem',
+                                lineHeight: 1.65,
+                                color: 'var(--text-body, #cbd5e1)',
+                                marginBottom: '4px',
                               }}
                             >
                               {(s.teks || s.huraian || s.tajuk || '').slice(0, 380)}
