@@ -4168,7 +4168,7 @@ export default function App() {
                               lineHeight: 1.4,
                             }}
                           >
-                            Rujukan Kitab Turath ({msg.sumber.length} Halaman Terpilih)
+                            Rujukan Kitab ({msg.sumber.length} Halaman Terpilih)
                           </span>
                         </div>
 
