@@ -39,7 +39,7 @@ export default async function handler(req, res) {
   try {
     const qNorm = soalan.toLowerCase().trim();
 
-    // 1. Carian Konteks Tempatan daripada 52+ Nota Lengkap
+    // 1. Carian Konteks Tempatan daripada 52+ Nota Lengkap Kitab
     const konteksRelevan = [];
     const sumberPilihan = [];
 
@@ -51,6 +51,7 @@ export default async function handler(req, res) {
       const dalil = (nota.dalil || '').toLowerCase();
       const tatbiqat = (nota.tatbiqat || '').toLowerCase();
 
+      // Padanan kata kunci
       const perkataan = qNorm.split(/\s+/).filter((w) => w.length > 2);
       perkataan.forEach((w) => {
         if (tajukAr.includes(w)) skor += 10;
@@ -65,6 +66,7 @@ export default async function handler(req, res) {
       }
     });
 
+    // Susun mengikut markah tertinggi
     konteksRelevan.sort((a, b) => b.skor - a.skor);
     const topNotas = konteksRelevan.slice(0, 4).map((k) => k.nota);
 
@@ -109,82 +111,62 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
     let successModel = '';
     const logRalat = [];
 
-    // Kaedah 1: Interactions API Google AI Studio (Model gemini-3.8-flash rasmi terkini)
-    try {
-      const resInteractions = await fetch('https://generativelanguage.googleapis.com/v1beta2/interactions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          model: 'gemini-3.8-flash',
-          input: promptPenuh,
-        }),
-      });
+    // Senarai model aktif Google Gemini (disusun daripada model laju tanpa kesesakan 503)
+    const modelsToTry = [
+      'gemini-3.1-flash-lite',
+      'gemini-3.5-flash-lite',
+      'gemini-3.8-flash',
+      'gemini-3.6-flash',
+      'gemini-flash-latest',
+    ];
 
-      if (resInteractions.ok) {
-        const dataInt = await resInteractions.json();
-        const modelOutputStep = dataInt?.steps?.find((s) => s.type === 'model_output');
-        const textItem = modelOutputStep?.content?.find((c) => c.type === 'text');
-        jawapanText = textItem?.text || dataInt?.outputText || '';
-        if (jawapanText) {
-          successModel = 'gemini-3.8-flash (Interactions)';
-        }
-      } else {
-        const errText = await resInteractions.text();
-        let msg = errText;
-        try { msg = JSON.parse(errText)?.error?.message || errText; } catch {}
-        logRalat.push(`Interactions (HTTP ${resInteractions.status}): ${msg}`);
-      }
-    } catch (e) {
-      logRalat.push(`Interactions fetch: ${e.message}`);
-    }
-
-    // Kaedah 2: Fallback generateContent API (gemini-3.8-flash & gemini-3.6-flash)
-    if (!jawapanText) {
-      const modelsToTry = ['gemini-3.8-flash', 'gemini-3.6-flash'];
-      for (const m of modelsToTry) {
-        try {
-          const genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(apiKey)}`;
-          const resGen = await fetch(genUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-goog-api-key': apiKey,
+    for (const m of modelsToTry) {
+      try {
+        const genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(apiKey)}`;
+        const resGen = await fetch(genUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey,
+          },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: promptPenuh }] }],
+            generationConfig: {
+              temperature: 0.25,
+              topP: 0.95,
+              maxOutputTokens: 2048,
             },
-            body: JSON.stringify({
-              contents: [{ role: 'user', parts: [{ text: promptPenuh }] }],
-              generationConfig: {
-                temperature: 0.25,
-                topP: 0.95,
-                maxOutputTokens: 2048,
-              },
-            }),
-          });
+          }),
+        });
 
-          if (resGen.ok) {
-            const dataGen = await resGen.json();
-            jawapanText = dataGen?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            if (jawapanText) {
-              successModel = `${m} (generateContent)`;
-              break;
-            }
-          } else {
-            const errGenText = await resGen.text();
-            let msgGen = errGenText;
-            try { msgGen = JSON.parse(errGenText)?.error?.message || errGenText; } catch {}
-            logRalat.push(`${m} (HTTP ${resGen.status}): ${msgGen}`);
+        if (resGen.ok) {
+          const dataGen = await resGen.json();
+          jawapanText = dataGen?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          if (jawapanText) {
+            successModel = m;
+            break; // Berjaya, keluar daripada gelung
           }
-        } catch (eGen) {
-          logRalat.push(`${m}: ${eGen.message}`);
+        } else {
+          const errGenText = await resGen.text();
+          let msgGen = errGenText;
+          try {
+            msgGen = JSON.parse(errGenText)?.error?.message || errGenText;
+          } catch {}
+          logRalat.push(`${m} (${resGen.status}): ${msgGen}`);
+
+          // Jika pelayan Google mengalami 503 (high demand), tunggu 800ms sebelum mencuba model seterusnya
+          if (resGen.status === 503) {
+            await new Promise((resolve) => setTimeout(resolve, 800));
+          }
         }
+      } catch (eGen) {
+        logRalat.push(`${m}: ${eGen.message}`);
       }
     }
 
     if (!jawapanText) {
       return res.status(502).json({
-        error: `Ralat Google Gemini API: ${logRalat.join(' | ')}`,
+        error: `Pelayan Google Gemini sibuk: ${logRalat.join(' | ')}`,
       });
     }
 
