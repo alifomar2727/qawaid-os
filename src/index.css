@@ -1141,7 +1141,7 @@ summary:focus-visible {
     z-index: 0 !important;
   }
 
-  /* 3. Header & Navigation on Mobile (Fits 100% without horizontal scroll, exact PC pill active style) */
+  /* 3. Header & Navigation on Mobile (100% Concentric Symmetry & Visual Balance) */
   .lg-header-wrap {
     top: 6px !important;
     padding: 0 8px !important;
@@ -1163,47 +1163,56 @@ summary:focus-visible {
   .lg-nav {
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
-    gap: 4px !important;
-    padding: 4px !important;
+    gap: 5px !important;
+    padding: 5px !important;
     width: 100% !important;
     overflow: visible !important;
-    border-radius: var(--r-pill) !important;
+    border-radius: 16px !important; /* Concentric squircle container */
     background: rgba(6, 11, 26, 0.45) !important;
     border: 1px solid rgba(255, 255, 255, 0.14) !important;
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.18) !important;
+    box-sizing: border-box !important;
   }
   .lg-nav .lg-sliding-pill {
     display: none !important;
   }
   .lg-nav-btn {
-    display: flex !important;
+    display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 5px !important;
-    padding: 7px 4px !important;
-    border-radius: var(--r-pill) !important;
-    font-size: 0.76rem !important;
+    gap: 6px !important;
+    padding: 8px 6px !important;
+    border-radius: 11px !important; /* 16px - 5px = 11px concentric corner */
+    font-size: 0.77rem !important;
     font-weight: 600 !important;
     width: 100% !important;
+    min-height: 38px !important;
     background: transparent !important;
     border: 1px solid transparent !important;
     color: rgba(255, 255, 255, 0.85) !important;
     text-shadow: var(--ctrl-text-shadow) !important;
     white-space: nowrap !important;
     cursor: pointer !important;
+    box-sizing: border-box !important;
     transition: all 0.2s var(--spring) !important;
+  }
+  .lg-nav-btn svg {
+    display: block !important;
+    flex-shrink: 0 !important;
+    width: 15px !important;
+    height: 15px !important;
   }
   .lg-nav-btn:hover {
     color: #ffffff !important;
     background: rgba(255, 255, 255, 0.08) !important;
   }
-  /* Active tab: pure glowing white pill with dark text and dark icon (identical to PC) */
+  /* Active tab: pure glowing white bubble, 100% concentric, perfectly centered */
   .lg-nav-btn.is-active {
     background: #ffffff !important;
     color: #0b1226 !important;
     font-weight: 700 !important;
     border: 1px solid rgba(255, 255, 255, 0.98) !important;
-    border-radius: var(--r-pill) !important;
+    border-radius: 11px !important;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 #ffffff !important;
     transform: none !important;
   }
@@ -1214,10 +1223,12 @@ summary:focus-visible {
     display: none !important;
   }
   .lg-nav-text-mobile {
-    display: inline !important;
+    display: inline-block !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
   }
 
-  /* 4. Panel Kaedah Utama (Unified Liquid Glass Capsule, 2-Col x 3-Row Grid, 100% Symmetrical Mathematical Centering) */
+  /* 4. Panel Kaedah Utama (Unified Liquid Glass Capsule, 100% Symmetrical Centered Pairs) */
   .lg-filter-sticky {
     position: relative !important;
     top: 0 !important;
@@ -1239,6 +1250,7 @@ summary:focus-visible {
     backdrop-filter: var(--glass-blur-control) !important;
     -webkit-backdrop-filter: var(--glass-blur-control) !important;
     box-shadow: var(--glass-rim), var(--glass-shadow) !important;
+    box-sizing: border-box !important;
   }
   .lg-filter-bar .lg-sliding-pill {
     display: none !important;
@@ -1247,12 +1259,13 @@ summary:focus-visible {
   .lg-filter-chip {
     position: relative !important;
     width: 100% !important;
-    display: flex !important;
+    display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: 8px 32px 8px 32px !important; /* Ruang simetri kiri & kanan 32px */
+    gap: 7px !important;
+    padding: 8px 10px !important;
     min-height: 48px !important;
-    border-radius: var(--r-pill) !important;
+    border-radius: 14px !important; /* 20px - 6px = 14px concentric squircle */
     background: transparent !important;
     border: 1px solid transparent !important;
     box-shadow: none !important;
@@ -1266,11 +1279,11 @@ summary:focus-visible {
     background: rgba(255, 255, 255, 0.06) !important;
     color: #ffffff !important;
   }
-  /* Active chip: pure glowing white pill with dark text and grey badge (identical to PC) */
+  /* Active chip: pure glowing white bubble, concentric 14px radius, symmetrical */
   .lg-filter-chip.is-active {
     background: #ffffff !important;
     border: 1px solid rgba(255, 255, 255, 0.98) !important;
-    border-radius: var(--r-pill) !important;
+    border-radius: 14px !important;
     color: #0b1226 !important;
     box-shadow:
       0 4px 14px rgba(0, 0, 0, 0.35),
@@ -1280,17 +1293,13 @@ summary:focus-visible {
   /* Symmetrical Mathematical Centering for Both Malay and Arabic text */
   .lg-filter-chip-text,
   .lg-filter-chip-ar {
-    display: block !important;
-    width: 100% !important;
+    display: inline-block !important;
+    width: auto !important;
     text-align: center !important;
-    text-align-last: center !important;
-    margin: 0 auto !important;
-    line-height: 1.32 !important;
+    margin: 0 !important;
+    line-height: 1.25 !important;
     font-weight: 700 !important;
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
-    max-width: none !important;
+    white-space: nowrap !important;
   }
   .lg-filter-chip-text {
     font-size: 0.88rem !important;
@@ -1298,39 +1307,36 @@ summary:focus-visible {
   }
   .lg-filter-chip-ar {
     font-family: "Noto Naskh Arabic", "Amiri", "Traditional Arabic", serif !important;
-    font-size: 0.84rem !important;
+    font-size: 0.80rem !important;
   }
   .lg-filter-chip.is-active .lg-filter-chip-text,
   .lg-filter-chip.is-active .lg-filter-chip-ar {
     color: #0b1226 !important;
     text-shadow: none !important;
   }
-  /* Chip Count Badge (pinned to right clearance zone, dark badge when active) */
+  /* Chip Count Badge (INLINE with text, centered as a pair with gap: 7px) */
   .lg-chip-count {
-    position: absolute !important;
-    right: 8px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
+    position: static !important;
+    transform: none !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    min-width: 20px !important;
-    height: 19px !important;
-    padding: 0 5px !important;
-    border-radius: 999px !important;
+    min-width: 22px !important;
+    height: 20px !important;
+    padding: 0 6px !important;
+    border-radius: var(--r-pill) !important;
     font-size: 0.68rem !important;
     font-weight: 700 !important;
     background: rgba(255, 255, 255, 0.16) !important;
     color: #ffffff !important;
     text-shadow: var(--ctrl-text-shadow) !important;
-    flex: 0 0 auto !important;
+    flex-shrink: 0 !important;
   }
   .lg-filter-chip.is-active .lg-chip-count {
     background: rgba(11, 18, 38, 0.12) !important;
     color: #0b1226 !important;
     text-shadow: none !important;
   }
-
   /* 5. Content Layout & Card Elements (Exact PC Liquid Glass Aesthetic) */
   .lg-grid {
     grid-template-columns: 1fr !important;
