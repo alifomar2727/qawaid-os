@@ -1025,7 +1025,7 @@ export default function App() {
                       onClick={() => setSelectedAsasi(k.ar)}
                       className={`lg-filter-chip ${active ? 'is-active' : ''}`}
                     >
-                      <span dir="rtl" className="lg-filter-chip-ar">
+                      <span className="lg-filter-chip-ar">
                         {k.ar}
                       </span>
                       <span className="lg-chip-count">{k.count}</span>

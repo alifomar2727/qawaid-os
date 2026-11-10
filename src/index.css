@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    QAWAID OS — iOS 26 LIQUID GLASS DESIGN SYSTEM
    Pure CSS Custom Properties, Two-Layer Optical Architecture, Concentric Radii
    Tuned Control-Layer Scrim & WCAG AA (>= 4.5:1) High-Contrast Typography
@@ -1068,85 +1068,88 @@ summary:focus-visible {
 }
 
 @media (max-width: 680px) {
-  /* 1. Mobile Ambient Glass Mesh Wallpaper (Rich Emerald/Sapphire/Purple Glow) */
+  /* 1. Mobile Wallpaper & Lighting (Identical deep midnight-teal Islamic Girih base as PC) */
   .lg-wallpaper {
-    background:
-      radial-gradient(circle at 10% 12%, rgba(16, 185, 129, 0.32) 0%, transparent 40%),
-      radial-gradient(circle at 90% 20%, rgba(59, 130, 246, 0.35) 0%, transparent 45%),
-      radial-gradient(circle at 45% 45%, rgba(168, 85, 247, 0.28) 0%, transparent 42%),
-      radial-gradient(circle at 15% 70%, rgba(20, 184, 166, 0.30) 0%, transparent 45%),
-      radial-gradient(circle at 85% 85%, rgba(234, 179, 8, 0.24) 0%, transparent 42%),
-      linear-gradient(135deg, #051918 0%, #0b142e 52%, #060a18 100%) !important;
+    background: var(--wp-base) !important;
   }
-
+  .lg-girih-pattern g,
+  .lg-girih-pattern path,
+  .lg-girih-pattern polygon,
+  .lg-girih-pattern circle {
+    stroke: var(--girih-stroke) !important;
+  }
   .lg-orb {
-    opacity: 0.8 !important;
-    filter: blur(48px) !important;
+    opacity: 0.45 !important;
+    filter: blur(55px) !important;
   }
   .lg-orb--teal {
-    width: 260px !important;
-    height: 260px !important;
-    top: -30px !important;
+    width: 240px !important;
+    height: 240px !important;
+    top: -20px !important;
     right: -20px !important;
   }
   .lg-orb--gold {
-    width: 240px !important;
-    height: 240px !important;
-    top: 240px !important;
+    width: 200px !important;
+    height: 200px !important;
+    top: 260px !important;
     left: -30px !important;
   }
   .lg-orb--magenta {
-    width: 240px !important;
-    height: 240px !important;
+    width: 220px !important;
+    height: 220px !important;
     top: 45% !important;
-    left: 30% !important;
+    left: 25% !important;
   }
   .lg-orb--blue {
-    width: 280px !important;
-    height: 280px !important;
-    bottom: 120px !important;
-    right: -40px !important;
+    width: 250px !important;
+    height: 250px !important;
+    bottom: 140px !important;
+    right: -30px !important;
   }
   .lg-orb--emerald {
-    width: 260px !important;
-    height: 260px !important;
-    bottom: 20px !important;
+    width: 240px !important;
+    height: 240px !important;
+    bottom: 30px !important;
     left: -20px !important;
   }
 
-  /* 2. Liquid Glass Cards & Controls on Mobile */
-  .glass-card,
-  .glass-control {
-    backdrop-filter: blur(20px) saturate(220%) brightness(1.05) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(220%) brightness(1.05) !important;
-    background:
-      linear-gradient(145deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 50%, rgba(16, 185, 129, 0.08) 100%),
-      rgba(10, 18, 38, 0.65) !important;
-    border: 1px solid rgba(255, 255, 255, 0.28) !important;
-    box-shadow:
-      inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.55),
-      inset 0 0 20px 0 rgba(255, 255, 255, 0.04),
-      0 8px 30px rgba(3, 6, 20, 0.45) !important;
+  /* 2. Concentric Liquid Glass Radii & Scrims (Identical to PC) */
+  .glass-card {
+    background: var(--glass-bg), var(--glass-card-scrim) !important;
+    background-color: var(--glass-card-bg, rgba(10, 17, 38, 0.62)) !important;
+    backdrop-filter: var(--glass-blur-card) !important;
+    -webkit-backdrop-filter: var(--glass-blur-card) !important;
+    border: 1px solid var(--card-border) !important;
+    box-shadow: var(--glass-rim), var(--glass-shadow) !important;
   }
-
-  .glass-card::before {
+  .glass-control {
+    background: var(--glass-bg), var(--glass-control-scrim) !important;
+    background-color: var(--glass-control-bg, rgba(8, 14, 32, 0.55)) !important;
+    backdrop-filter: var(--glass-blur-control) !important;
+    -webkit-backdrop-filter: var(--glass-blur-control) !important;
+    border: 1px solid var(--control-border) !important;
+    box-shadow: var(--glass-rim), var(--glass-shadow) !important;
+  }
+  .glass-card::before,
+  .glass-control::before {
     content: "" !important;
     position: absolute !important;
     inset: 0 !important;
     border-radius: inherit !important;
-    background: radial-gradient(240px circle at 20% 0%, rgba(255, 255, 255, 0.22), transparent 70%) !important;
+    background: radial-gradient(280px circle at 20% 0%, rgba(255, 255, 255, 0.20), transparent 70%) !important;
     pointer-events: none !important;
     z-index: 0 !important;
   }
 
-  /* 3. Header & Navigation on Mobile (Fits 100% without horizontal scroll) */
+  /* 3. Header & Navigation on Mobile (Fits 100% without horizontal scroll, exact PC pill active style) */
   .lg-header-wrap {
     top: 6px !important;
     padding: 0 8px !important;
   }
   .lg-header {
     padding: 8px 10px !important;
-    gap: 6px !important;
+    gap: 8px !important;
+    border-radius: var(--r-lg) !important;
   }
   .lg-brand {
     gap: 8px !important;
@@ -1157,16 +1160,17 @@ summary:focus-visible {
   .lg-brand-sub {
     font-size: 0.62rem !important;
   }
-
-  /* 3. Header & Navigation on Mobile (3-Column x 2-Row Segmented Grid — ZERO Scroll, All 6 Features 100% Visible) */
   .lg-nav {
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
-    gap: 5px !important;
+    gap: 4px !important;
     padding: 4px !important;
     width: 100% !important;
     overflow: visible !important;
-    border-radius: var(--r-md) !important;
+    border-radius: var(--r-pill) !important;
+    background: rgba(6, 11, 26, 0.45) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.18) !important;
   }
   .lg-nav .lg-sliding-pill {
     display: none !important;
@@ -1176,30 +1180,32 @@ summary:focus-visible {
     align-items: center !important;
     justify-content: center !important;
     gap: 5px !important;
-    padding: 8px 4px !important;
-    border-radius: var(--r-sm) !important;
+    padding: 7px 4px !important;
+    border-radius: var(--r-pill) !important;
     font-size: 0.76rem !important;
     font-weight: 600 !important;
     width: 100% !important;
-    background: rgba(255, 255, 255, 0.06) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    color: var(--ctrl-text-sub) !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    text-shadow: var(--ctrl-text-shadow) !important;
     white-space: nowrap !important;
-    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+    cursor: pointer !important;
+    transition: all 0.2s var(--spring) !important;
   }
   .lg-nav-btn:hover {
-    color: var(--ctrl-text-strong) !important;
-    background: rgba(255, 255, 255, 0.10) !important;
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.08) !important;
   }
+  /* Active tab: pure glowing white pill with dark text and dark icon (identical to PC) */
   .lg-nav-btn.is-active {
-    background: rgba(255, 255, 255, 0.95) !important;
+    background: #ffffff !important;
     color: #0b1226 !important;
     font-weight: 700 !important;
-    border-color: #ffffff !important;
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4) !important;
-    transform: scale(1.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.98) !important;
+    border-radius: var(--r-pill) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 #ffffff !important;
+    transform: none !important;
   }
   .lg-nav-btn.is-active svg {
     stroke: #0b1226 !important;
@@ -1211,7 +1217,7 @@ summary:focus-visible {
     display: inline !important;
   }
 
-  /* 4. Panel Kaedah Utama (2-Column x 3-Row Grid — Symmetrical 100% Mathematical Center) */
+  /* 4. Panel Kaedah Utama (Unified Liquid Glass Capsule, 2-Col x 3-Row Grid, 100% Symmetrical Mathematical Centering) */
   .lg-filter-sticky {
     position: relative !important;
     top: 0 !important;
@@ -1222,122 +1228,194 @@ summary:focus-visible {
   .lg-filter-bar {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 7px !important;
+    gap: 6px !important;
     width: 100% !important;
-    padding: 8px !important;
-    border-radius: var(--r-lg) !important;
+    padding: 6px !important;
+    border-radius: 20px !important;
     overflow-x: visible !important;
     max-width: 100% !important;
-    box-shadow: 0 8px 24px rgba(3, 7, 22, 0.4) !important;
+    background: var(--glass-bg), var(--glass-control-scrim) !important;
+    border: 1px solid var(--control-border) !important;
+    backdrop-filter: var(--glass-blur-control) !important;
+    -webkit-backdrop-filter: var(--glass-blur-control) !important;
+    box-shadow: var(--glass-rim), var(--glass-shadow) !important;
   }
   .lg-filter-bar .lg-sliding-pill {
     display: none !important;
   }
+  /* Inactive chip: seamless on glass capsule, no individual dark borders */
   .lg-filter-chip {
     position: relative !important;
     width: 100% !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: 8px 28px 8px 28px !important; /* Ruang simetri kiri & kanan 28px */
-    min-height: 52px !important;
-    border-radius: var(--r-md) !important;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.03) 60%, rgba(16, 185, 129, 0.05) 100%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.18) !important;
-    backdrop-filter: blur(16px) saturate(190%) !important;
-    -webkit-backdrop-filter: blur(16px) saturate(190%) !important;
-    box-shadow:
-      inset 0 1px 1px 0 rgba(255, 255, 255, 0.35),
-      0 4px 14px rgba(3, 7, 22, 0.28) !important;
-    font-size: 0.78rem !important;
-    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+    padding: 8px 32px 8px 32px !important; /* Ruang simetri kiri & kanan 32px */
+    min-height: 48px !important;
+    border-radius: var(--r-pill) !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    box-shadow: none !important;
+    color: rgba(255, 255, 255, 0.88) !important;
+    text-shadow: var(--ctrl-text-shadow) !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+    transition: all 0.2s var(--spring) !important;
   }
+  .lg-filter-chip:hover {
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: #ffffff !important;
+  }
+  /* Active chip: pure glowing white pill with dark text and grey badge (identical to PC) */
   .lg-filter-chip.is-active {
-    background: rgba(255, 255, 255, 0.95) !important;
-    border-color: #ffffff !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.98) !important;
+    border-radius: var(--r-pill) !important;
     color: #0b1226 !important;
     box-shadow:
-      0 4px 16px rgba(16, 185, 129, 0.45),
+      0 4px 14px rgba(0, 0, 0, 0.35),
       inset 0 1px 0 #ffffff !important;
-    transform: scale(1.02) !important;
+    transform: none !important;
   }
+  /* Symmetrical Mathematical Centering for Both Malay and Arabic text */
   .lg-filter-chip-text,
   .lg-filter-chip-ar {
     display: block !important;
     width: 100% !important;
     text-align: center !important;
+    text-align-last: center !important;
+    margin: 0 auto !important;
+    line-height: 1.32 !important;
     font-weight: 700 !important;
-    line-height: 1.35 !important;
     white-space: normal !important;
     overflow: visible !important;
     text-overflow: clip !important;
     max-width: none !important;
-    margin: 0 auto !important;
   }
   .lg-filter-chip-text {
     font-size: 0.88rem !important;
     letter-spacing: 0.02em !important;
   }
   .lg-filter-chip-ar {
-    font-family: "Noto Naskh Arabic", "Amiri", serif !important;
-    font-size: 0.86rem !important;
-    direction: rtl !important;
+    font-family: "Noto Naskh Arabic", "Amiri", "Traditional Arabic", serif !important;
+    font-size: 0.84rem !important;
   }
+  .lg-filter-chip.is-active .lg-filter-chip-text,
+  .lg-filter-chip.is-active .lg-filter-chip-ar {
+    color: #0b1226 !important;
+    text-shadow: none !important;
+  }
+  /* Chip Count Badge (pinned to right clearance zone, dark badge when active) */
   .lg-chip-count {
     position: absolute !important;
     right: 8px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
-    font-size: 0.68rem !important;
-    padding: 2px 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     min-width: 20px !important;
-    text-align: center !important;
+    height: 19px !important;
+    padding: 0 5px !important;
     border-radius: 999px !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    background: rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+    text-shadow: var(--ctrl-text-shadow) !important;
     flex: 0 0 auto !important;
   }
+  .lg-filter-chip.is-active .lg-chip-count {
+    background: rgba(11, 18, 38, 0.12) !important;
+    color: #0b1226 !important;
+    text-shadow: none !important;
+  }
 
-  /* 5. Content Layout & Card Elements */
+  /* 5. Content Layout & Card Elements (Exact PC Liquid Glass Aesthetic) */
   .lg-grid {
     grid-template-columns: 1fr !important;
-    gap: 12px !important;
+    gap: 14px !important;
   }
   .lg-main {
     padding: 4px 10px 120px !important;
   }
   .lg-card {
-    padding: 16px 14px !important;
-    border-radius: var(--r-lg) !important;
+    padding: 20px 18px !important;
+    border-radius: var(--r-xl) !important;
+    background: var(--glass-bg), var(--glass-card-scrim) !important;
+    border: 1px solid var(--card-border) !important;
+    backdrop-filter: var(--glass-blur-card) !important;
+    -webkit-backdrop-filter: var(--glass-blur-card) !important;
+    box-shadow: var(--glass-rim), var(--glass-shadow) !important;
   }
   .lg-arabic-block {
-    font-size: 1.35rem !important;
+    font-family: "Noto Naskh Arabic", "Amiri", "Traditional Arabic", serif !important;
+    font-size: 1.45rem !important;
+    font-weight: 700 !important;
     line-height: 1.75 !important;
     color: #ffffff !important;
-    text-shadow: 0 0 16px rgba(16, 185, 129, 0.35) !important;
-    margin-bottom: 8px !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+    text-align: right !important;
+    direction: rtl !important;
+    margin-bottom: 12px !important;
     min-height: auto !important;
   }
   .lg-bm-block {
-    font-size: 0.92rem !important;
-    color: rgba(255, 255, 255, 0.94) !important;
+    font-size: 0.98rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
     line-height: 1.55 !important;
+    margin-bottom: 10px !important;
   }
   .lg-huraian-block {
-    font-size: 0.82rem !important;
-    color: rgba(255, 255, 255, 0.78) !important;
-    line-height: 1.6 !important;
+    font-size: 0.85rem !important;
+    color: rgba(255, 255, 255, 0.82) !important;
+    line-height: 1.62 !important;
+  }
+  .lg-card-divider {
+    border: none !important;
+    border-top: 1px solid var(--card-divider) !important;
+    margin: 14px 0 !important;
   }
   .lg-card-footer {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 8px !important;
     margin-top: 14px !important;
-    flex-wrap: wrap !important;
   }
-  .lg-btn-glass,
+  .lg-source-ref {
+    color: rgba(255, 255, 255, 0.65) !important;
+    font-size: 0.78rem !important;
+  }
+  .lg-btn-glass {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 7px 13px !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    border-radius: var(--r-pill) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    color: #ffffff !important;
+    text-shadow: var(--ctrl-text-shadow) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+  }
   .lg-btn-nota {
-    padding: 6px 10px !important;
-    font-size: 0.72rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 7px 14px !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    border-radius: var(--r-pill) !important;
+    background: rgba(16, 185, 129, 0.16) !important;
+    border: 1px solid rgba(16, 185, 129, 0.55) !important;
+    color: #34d399 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 2px 8px rgba(16, 185, 129, 0.25) !important;
   }
 
   /* 6. Floating AI Chatbox Button (Safe & Glowing) */
@@ -1360,12 +1438,15 @@ summary:focus-visible {
     padding: 4px 6px 120px !important;
   }
   .lg-card {
-    padding: 14px 12px !important;
+    padding: 16px 14px !important;
+  }
+  .lg-filter-chip {
+    padding: 7px 28px 7px 28px !important;
   }
   .lg-btn-glass,
   .lg-btn-nota {
-    padding: 6px 8px !important;
-    font-size: 0.70rem !important;
+    padding: 6px 10px !important;
+    font-size: 0.74rem !important;
   }
 }
 
