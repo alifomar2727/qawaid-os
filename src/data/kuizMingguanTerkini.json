@@ -1,0 +1,30 @@
+{
+  "tajuk_mingguan": "Kaedah Asasi 1: Al-Umur bi Maqasidiha & Isu Kontemporari",
+  "tarikh_kemaskini": "11 Mac 2026",
+  "soalan_objektif": [
+    {
+      "id": 1,
+      "soalan": "Apakah maksud kaedah \"الأمور بمقاصدها\" dalam konteks transaksi perbankan Islam moden?",
+      "pilihan": [
+        "Setiap kontrak dinilai berdasarkan lafaz zahir semata-mata",
+        "Niat dan objektif ekonomi sebenar menentukan status syarak sesuatu akad",
+        "Semua transaksi moden adalah harus tanpa perlu melihat motif",
+        "Hanya ibadat khusus yang memerlukan penentuan niat dan maqasid"
+      ],
+      "jawapan_betul": "Niat dan objektif ekonomi sebenar menentukan status syarak sesuatu akad",
+      "huraian": "Dalam fiqh muamalat kontemporari, substansi dan maqasid ekonomi sebenar mengatasi sekadar helah lafaz zahir."
+    },
+    {
+      "id": 2,
+      "soalan": "Antara berikut, manakah contoh aplikasi kaedah Al-Umur bi Maqasidiha dalam amalan perubatan?",
+      "pilihan": [
+        "Pembedahan kosmetik semata-mata untuk kecantikan",
+        "Pembedahan rekonstruktif bertujuan memulihkan fungsi anggota yang rosak",
+        "Pengambilan ubat tanpa preskripsi doktor",
+        "Menolak rawatan kecemasan tanpa sebab munasabah"
+      ],
+      "jawapan_betul": "Pembedahan rekonstruktif bertujuan memulihkan fungsi anggota yang rosak",
+      "huraian": "Pembedahan pemulihan fungsi bertujuan رفع الضرر (menghilangkan kemudaratan), berbeza dengan tujuan tabarruj melampau."
+    }
+  ]
+}
