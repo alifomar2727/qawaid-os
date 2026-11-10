@@ -1,7 +1,8 @@
-// api/jana-kuiz-mingguan.js
+// qawaid-explorer/api/jana-kuiz-mingguan.js
 // Vercel Serverless Function: FASA 3 - Penjanaan Kuiz Mingguan AI Menggunakan Google Gemini
 
 export default async function handler(req, res) {
+  // Konfigurasi CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
@@ -10,7 +11,9 @@ export default async function handler(req, res) {
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
   );
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
   if (req.method !== 'POST') {
     return res.status(405).json({
@@ -22,7 +25,10 @@ export default async function handler(req, res) {
   const { tajuk, nota, fileData } = req.body || {};
 
   if (!tajuk || typeof tajuk !== 'string' || !tajuk.trim()) {
-    return res.status(400).json({ success: false, error: 'Ruangan "tajuk" kuiz diperlukan.' });
+    return res.status(400).json({
+      success: false,
+      error: 'Ruangan "tajuk" kuiz diperlukan.',
+    });
   }
 
   if (!nota?.trim() && !fileData?.base64) {
@@ -38,11 +44,12 @@ export default async function handler(req, res) {
   if (!apiKey) {
     return res.status(500).json({
       success: false,
-      error: 'GEMINI_API_KEY belum dikonfigurasikan di Environment Variables Vercel.',
+      error: 'GEMINI_API_KEY belum dikonfigurasikan di Environment Variables. Sila semak tetapan Vercel / fail .env.',
     });
   }
 
   try {
+    // 1. Prompt Rasmi Fasa 3 mengikut kehendak pengguna
     const arahanPrompt = `Anda adalah pakar fiqh. Berdasarkan nota ini, hasilkan 20 soalan objektif (A, B, C, D) dalam bahasa Melayu. Output mestilah HANYA dalam format array JSON tulen dengan key: 'soalan', 'pilihan' (array 4 pilihan), 'jawapan_betul', dan 'huraian'. Jangan beri penerangan lain.
 
 Tajuk Kuiz: ${tajuk.trim()}
@@ -50,7 +57,9 @@ Tajuk Kuiz: ${tajuk.trim()}
 ${fileData ? `[PENTING: Rujuk kandungan slaid PDF yang dilampirkan untuk membina 20 soalan ini]\n` : ''}
 ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
 
+    // 2. Bina bahagian kandungan (parts) termasuk dokumen PDF jika ada
     const parts = [];
+
     if (fileData?.base64) {
       const mimeType = fileData.type || 'application/pdf';
       parts.push({
@@ -63,14 +72,15 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
 
     parts.push({ text: arahanPrompt });
 
+    // 3. Senarai model Google Gemini AKTIF (model lama 2.x / 1.5 telah ditamatkan oleh Google)
+    //    Disusun: model terbaik untuk baca PDF dahulu, kemudian model ringan sebagai sandaran.
     const modelsToTry = [
-      'gemini-2.5-flash',
-      'gemini-2.0-flash',
-      'gemini-1.5-flash',
-      'gemini-flash-latest',
-      'gemini-3.1-flash-lite',
-      'gemini-3.5-flash-lite',
       'gemini-3.8-flash',
+      'gemini-3.6-flash',
+      'gemini-flash-latest',
+      'gemini-3.5-flash-lite',
+      'gemini-3.1-flash-lite',
+      'gemini-flash-lite-latest',
     ];
 
     let rawOutputText = '';
@@ -79,10 +89,11 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
 
     for (const model of modelsToTry) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90s timeout (PDF besar perlukan masa)
 
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+        
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -95,7 +106,9 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
             generationConfig: {
               temperature: 0.25,
               topP: 0.95,
-              maxOutputTokens: 8192,
+              // Model 3.x menggunakan token "thinking" yang turut dikira dalam had output,
+              // jadi had dinaikkan supaya 20 soalan tidak terpotong di tengah jalan.
+              maxOutputTokens: 32768,
               responseMimeType: 'application/json',
             },
           }),
@@ -105,11 +118,18 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
 
         if (response.ok) {
           const resJson = await response.json();
-          rawOutputText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          if (rawOutputText.trim()) {
+          const candidate = resJson?.candidates?.[0];
+          // Gabungkan semua bahagian teks (abaikan bahagian "thought" dalaman model)
+          rawOutputText = (candidate?.content?.parts || [])
+            .filter((p) => !p.thought)
+            .map((p) => p.text || '')
+            .join('')
+            .trim();
+          if (rawOutputText) {
             successModel = model;
             break;
           }
+          errorLogs.push(`${model}: respons kosong (${candidate?.finishReason || 'UNKNOWN'})`);
         } else {
           const errText = await response.text();
           let parsedErr = errText;
@@ -125,10 +145,18 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
     }
 
     if (!rawOutputText) {
-      throw new Error(`Model Gemini sibuk: ${errorLogs.slice(0, 3).join(' | ')}`);
+      // Utamakan ralat yang bukan 404 (model tamat) supaya punca sebenar kelihatan
+      const ralatPenting = errorLogs.filter((e) => !e.includes('(404)'));
+      const ringkasan = (ralatPenting.length ? ralatPenting : errorLogs).slice(0, 3).join(' | ');
+      throw new Error(`Semua model Gemini gagal menjana kuiz. Butiran: ${ringkasan}`);
     }
 
+    // 4. Bersihkan dan parse JSON array soalan objektif
     const soalanObjektif = parseDanNormalisasiSoalan(rawOutputText);
+
+    if (!soalanObjektif || soalanObjektif.length === 0) {
+      throw new Error('Format jawapan AI tidak mengandungi senarai soalan yang sah.');
+    }
 
     const payloadHasil = {
       tajuk_mingguan: tajuk.trim(),
@@ -141,7 +169,7 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
       model_penjana: successModel,
     };
 
-    // Simpan ke Firebase jika ada
+    // 5. Simpan automatik ke Cloud (Firebase) dan Storan Tempatan
     const fbUrl = process.env.FIREBASE_DATABASE_URL;
     if (fbUrl) {
       try {
@@ -151,8 +179,9 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payloadHasil),
         });
+        console.log('âœ… Kuiz berjaya disimpan ke Firebase Realtime Database');
       } catch (fbErr) {
-        console.warn('Gagal menyimpan ke Firebase:', fbErr.message);
+        console.warn('âš ï¸ Gagal menyimpan ke Firebase:', fbErr.message);
       }
     }
 
@@ -177,10 +206,16 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
   }
 }
 
+/**
+ * Memastikan output JSON dari Gemini diproses dengan selamat dan mematuhi format App.jsx
+ */
 function parseDanNormalisasiSoalan(rawText) {
   let cleaned = String(rawText || '').trim();
+
+  // Buang code blocks markdown jika ada
   cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
+  // Ekstrak bahagian array [ ... ]
   const firstIdx = cleaned.indexOf('[');
   const lastIdx = cleaned.lastIndexOf(']');
   if (firstIdx !== -1 && lastIdx !== -1 && lastIdx > firstIdx) {
@@ -188,6 +223,8 @@ function parseDanNormalisasiSoalan(rawText) {
   }
 
   let parsed = JSON.parse(cleaned);
+
+  // Jika AI membalut dalam objek contoh { soalan: [...] } atau { kuiz: [...] }
   if (!Array.isArray(parsed) && typeof parsed === 'object') {
     const possibleArray = Object.values(parsed).find((val) => Array.isArray(val));
     if (possibleArray) parsed = possibleArray;
@@ -202,6 +239,7 @@ function parseDanNormalisasiSoalan(rawText) {
       ? item.pilihan.map((p) => String(p).trim())
       : [];
 
+    // Pastikan tepat 4 pilihan
     if (pilihan.length < 4) {
       const defaultAbcd = ['A', 'B', 'C', 'D'];
       while (pilihan.length < 4) {
@@ -211,7 +249,10 @@ function parseDanNormalisasiSoalan(rawText) {
       pilihan = pilihan.slice(0, 4);
     }
 
+    // Normalisasi jawapan betul
     let jawapanBetul = String(item.jawapan_betul || pilihan[0]).trim();
+
+    // Jika jawapan betul hanya huruf "A", "B", "C", "D"
     const matchLetter = jawapanBetul.match(/^([A-D])\b/i);
     if (matchLetter && !pilihan.includes(jawapanBetul)) {
       const letterIndex = { A: 0, B: 1, C: 2, D: 3 }[matchLetter[1].toUpperCase()];
@@ -219,13 +260,17 @@ function parseDanNormalisasiSoalan(rawText) {
         jawapanBetul = pilihan[letterIndex];
       }
     } else if (!pilihan.includes(jawapanBetul)) {
+      // Cari pilihan yang sepadan sebahagian
       const matched = pilihan.find(
         (p) =>
           p.toLowerCase().includes(jawapanBetul.toLowerCase()) ||
           jawapanBetul.toLowerCase().includes(p.toLowerCase())
       );
-      if (matched) jawapanBetul = matched;
-      else jawapanBetul = pilihan[0];
+      if (matched) {
+        jawapanBetul = matched;
+      } else {
+        jawapanBetul = pilihan[0];
+      }
     }
 
     return {
