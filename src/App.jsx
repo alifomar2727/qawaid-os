@@ -484,6 +484,62 @@ export default function App() {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [score, setScore] = useState(0);
 
+  // =========================================================================
+  // FASA 1: KUIZ MINGGUAN DINAMIK & PERSIMPANGAN MOD KUIZ
+  // =========================================================================
+  const [quizSubMode, setQuizSubMode] = useState('SELECTION'); // 'SELECTION' | 'MINGGUAN' | 'KOMPREHENSIF'
+  const [kuizMingguan, setKuizMingguan] = useState({
+    tajuk_mingguan: 'Kaedah Asasi 1: Al-Umur bi Maqasidiha & Isu Kontemporari',
+    tarikh_kemaskini: new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }),
+    soalan_objektif: [
+      {
+        id: 1,
+        soalan: 'Apakah maksud kaedah "الأمور بمقاصدها" dalam konteks transaksi perbankan Islam moden?',
+        pilihan: [
+          'Setiap kontrak dinilai berdasarkan lafaz zahir semata-mata',
+          'Niat dan objektif ekonomi sebenar menentukan status syarak sesuatu akad',
+          'Semua transaksi moden adalah harus tanpa perlu melihat motif',
+          'Hanya ibadat khusus yang memerlukan penentuan niat dan maqasid'
+        ],
+        jawapan_betul: 'Niat dan objektif ekonomi sebenar menentukan status syarak sesuatu akad',
+        huraian: 'Dalam fiqh muamalat kontemporari, substansi dan maqasid ekonomi sebenar mengatasi sekadar helah lafaz zahir.'
+      },
+      {
+        id: 2,
+        soalan: 'Antara berikut, manakah contoh aplikasi kaedah Al-Umur bi Maqasidiha dalam amalan perubatan?',
+        pilihan: [
+          'Pembedahan kosmetik semata-mata untuk kecantikan',
+          'Pembedahan rekonstruktif bertujuan memulihkan fungsi anggota yang rosak',
+          'Pengambilan ubat tanpa preskripsi doktor',
+          'Menolak rawatan kecemasan tanpa sebab munasabah'
+        ],
+        jawapan_betul: 'Pembedahan rekonstruktif bertujuan memulihkan fungsi anggota yang rosak',
+        huraian: 'Pembedahan pemulihan fungsi bertujuan رفع الضرر (menghilangkan kemudaratan), berbeza dengan tujuan tabarruj melampau.'
+      }
+    ]
+  });
+
+  const [weeklyQuizIndex, setWeeklyQuizIndex] = useState(0);
+  const [weeklySelectedAnswer, setWeeklySelectedAnswer] = useState(null);
+  const [weeklyScore, setWeeklyScore] = useState(0);
+
+  // Tarik data kuiz mingguan terkini dari backend (Fasa 4)
+  useEffect(() => {
+    fetch('/api/kuiz-mingguan')
+      .then((res) => {
+        if (res.ok) return res.json();
+        throw new Error('Gagal mengambil kuiz mingguan');
+      })
+      .then((data) => {
+        if (data && data.tajuk_mingguan && Array.isArray(data.soalan_objektif) && data.soalan_objektif.length > 0) {
+          setKuizMingguan(data);
+        }
+      })
+      .catch((err) => {
+        console.log('Menggunakan data kuiz mingguan sedia ada:', err.message);
+      });
+  }, []);
+
   const [matchScore, setMatchScore] = useState(0);
   const [matchIndex, setMatchIndex] = useState(0);
   const [matchStreak, setMatchStreak] = useState(0);
@@ -694,6 +750,33 @@ export default function App() {
   const prevQuestion = () => {
     setSelectedAnswer(null);
     setQuizIndex((prev) => (prev === 0 ? dataKuiz50.length - 1 : prev - 1));
+  };
+
+  // Handlers untuk Cabaran Topikal Mingguan (Fasa 1)
+  const currentWeeklyItem = useMemo(() => {
+    const list = kuizMingguan?.soalan_objektif || [];
+    if (list.length === 0) return null;
+    return list[weeklyQuizIndex % list.length];
+  }, [kuizMingguan, weeklyQuizIndex]);
+
+  const handleAnswerWeeklyQuiz = (pilihan) => {
+    if (weeklySelectedAnswer || !currentWeeklyItem) return;
+    setWeeklySelectedAnswer(pilihan);
+    if (pilihan === currentWeeklyItem.jawapan_betul) {
+      setWeeklyScore((s) => s + 1);
+    }
+  };
+
+  const nextWeeklyQuestion = () => {
+    setWeeklySelectedAnswer(null);
+    const total = kuizMingguan?.soalan_objektif?.length || 1;
+    setWeeklyQuizIndex((prev) => (prev + 1) % total);
+  };
+
+  const prevWeeklyQuestion = () => {
+    setWeeklySelectedAnswer(null);
+    const total = kuizMingguan?.soalan_objektif?.length || 1;
+    setWeeklyQuizIndex((prev) => (prev === 0 ? total - 1 : prev - 1));
   };
 
   // =========================================================================
@@ -968,6 +1051,7 @@ export default function App() {
                   type="button"
                   onClick={() => {
                     setViewMode(tab.id);
+                    if (tab.id === 'QUIZ') setQuizSubMode('SELECTION');
                     if (tab.id === 'FLASHCARD') setIsFlipped(false);
                   }}
                   className={`lg-nav-btn ${isActive ? 'is-active' : ''}`}
@@ -1149,174 +1233,605 @@ export default function App() {
         )}
 
         {/* ====================================================================
-            QUIZ VIEW (50 Soalan — القواعد الفقهية وتطبيقاتها في المذاهب الأربعة)
+            FASA 1: KUIZ VIEW — PERSIMPANGAN & DUA MOD PILIHAN
            ==================================================================== */}
         {viewMode === 'QUIZ' && (
-          <div className="lg-panel glass-card">
-            <div
-              className="lg-card-top"
-              style={{ marginBottom: '18px', flexWrap: 'wrap', gap: '8px' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <span className="lg-node-chip">
-                  SOALAN {quizIndex + 1} / {dataKuiz50.length}
-                </span>
-                {currentQuizItem.kategori && (
-                  <span className="lg-node-chip" dir="auto">
-                    {currentQuizItem.kategori}
-                  </span>
-                )}
-              </div>
-              <span className="lg-node-chip">
-                SKOR: {score} / {dataKuiz50.length}
-              </span>
-            </div>
-
-            <p
-              style={{
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                color: 'var(--text-muted)',
-                margin: '0 0 8px',
-              }}
-            >
-              Senario Kes &amp; Tatbiqat Mazhab:
-            </p>
-            <div className="lg-inner-well" style={{ marginBottom: '20px' }}>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: '0.94rem',
-                  fontWeight: 600,
-                  lineHeight: 1.6,
-                  color: 'var(--text-strong)',
-                }}
-              >
-                {currentQuizItem.isu_kontemporari}
-              </p>
-            </div>
-
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                marginBottom: '20px',
-              }}
-            >
-              {quizOptions.map((opt) => {
-                const isCorrect = opt.kaedah_ranting_ar === currentQuizItem.kaedah_ranting_ar;
-                const isPicked = selectedAnswer === opt.kaedah_ranting_ar;
-                let borderCol = undefined;
-                let bgCol = undefined;
-                if (selectedAnswer) {
-                  if (isCorrect) {
-                    borderCol = '#10b981';
-                    bgCol = 'rgba(16, 185, 129, 0.22)';
-                  } else if (isPicked) {
-                    borderCol = '#ef4444';
-                    bgCol = 'rgba(239, 68, 68, 0.22)';
-                  }
-                }
-                return (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => handleAnswerQuiz(opt)}
-                    className="lg-inner-well"
+          <>
+            {/* SUB-MOD 1: SKRIN PERSIMPANGAN (Dua Kad Pilihan Utama) */}
+            {quizSubMode === 'SELECTION' && (
+              <div className="lg-panel glass-card" style={{ maxWidth: '880px', margin: '0 auto' }}>
+                <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+                  <span
+                    className="lg-node-chip"
                     style={{
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      borderColor: borderCol,
-                      background: bgCol,
-                      transition: 'transform 0.2s var(--spring)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '5px 14px',
+                      marginBottom: '10px',
                     }}
                   >
-                    <div
-                      dir="rtl"
-                      style={{
-                        fontFamily: '"Noto Naskh Arabic", serif',
-                        fontSize: '1.22rem',
-                        fontWeight: 700,
-                        lineHeight: 1.8,
-                        color: 'var(--text-strong)',
-                        marginBottom: '4px',
-                      }}
-                    >
-                      {opt.kaedah_ranting_ar}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: '0.8rem',
-                        fontWeight: 600,
-                        color: 'var(--text-body)',
-                      }}
-                    >
-                      {opt.kaedah_ranting_bm}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                    <LucideIcon name="brain" size={14} />
+                    <span>MOD PENILAIAN &amp; UJIAN</span>
+                  </span>
+                  <h2
+                    style={{
+                      margin: '0 0 8px',
+                      fontSize: '1.65rem',
+                      fontWeight: 800,
+                      color: 'var(--text-strong)',
+                    }}
+                  >
+                    Pilih Cabaran Kuiz Qawa&apos;id OS
+                  </h2>
+                  <p
+                    style={{
+                      margin: '0 auto',
+                      maxWidth: '560px',
+                      fontSize: '0.88rem',
+                      color: 'var(--text-muted)',
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    Uji kefahaman teori, hujah syarak dan tatbiqat semasa anda melalui dua mod penilaian khas:
+                  </p>
+                </div>
 
-            {selectedAnswer && currentQuizItem.huraian_jawapan && (
-              <div
-                className="lg-inner-well"
-                style={{
-                  marginBottom: '18px',
-                  borderColor: 'rgba(56, 189, 248, 0.45)',
-                  background: 'rgba(8, 25, 54, 0.55)',
-                }}
-              >
+                {/* Grid 2 Kad Persimpangan */}
                 <div
                   style={{
-                    fontSize: '0.73rem',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    color: 'var(--text-muted)',
-                    marginBottom: '6px',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gap: '18px',
+                    marginBottom: '10px',
                   }}
                 >
-                  Huraian &amp; Rujukan Kitab (القواعد الفقهية وتطبيقاتها في المذاهب الأربعة —{' '}
-                  {currentQuizItem.jilid_halaman}):
+                  {/* KAD A: Cabaran Topikal Mingguan */}
+                  <div
+                    className="lg-inner-well"
+                    style={{
+                      padding: '24px 20px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      borderRadius: 'var(--r-lg)',
+                      borderColor: 'rgba(16, 185, 129, 0.45)',
+                      background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 18, 38, 0.6) 100%)',
+                      boxShadow: '0 8px 24px rgba(16, 185, 129, 0.18)',
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                        <span
+                          style={{
+                            fontSize: '0.72rem',
+                            fontWeight: 800,
+                            padding: '3px 10px',
+                            borderRadius: '999px',
+                            background: 'rgba(16, 185, 129, 0.22)',
+                            color: '#34d399',
+                            border: '1px solid rgba(16, 185, 129, 0.4)',
+                            letterSpacing: '0.04em',
+                          }}
+                        >
+                          TOPIKAL MINGGUAN
+                        </span>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                          {kuizMingguan.tarikh_kemaskini || 'Terkini'}
+                        </span>
+                      </div>
+
+                      <h3
+                        style={{
+                          margin: '0 0 10px',
+                          fontSize: '1.25rem',
+                          fontWeight: 800,
+                          color: '#ffffff',
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        🗓️ Cabaran Topikal Mingguan (Berdasarkan Slides)
+                      </h3>
+
+                      <p
+                        style={{
+                          margin: '0 0 16px',
+                          fontSize: '0.90rem',
+                          fontWeight: 600,
+                          color: '#a7f3d0',
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {kuizMingguan.tajuk_mingguan}
+                      </p>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                        <span className="lg-node-chip" style={{ fontSize: '0.76rem', fontWeight: 700 }}>
+                          📝 {kuizMingguan.soalan_objektif?.length || 0} Soalan
+                        </span>
+                        <span className="lg-node-chip" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                          ⚡ AI Turath
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWeeklyQuizIndex(0);
+                        setWeeklySelectedAnswer(null);
+                        setWeeklyScore(0);
+                        setQuizSubMode('MINGGUAN');
+                      }}
+                      className="lg-btn-primary"
+                      style={{
+                        width: '100%',
+                        justifyContent: 'center',
+                        padding: '12px 18px',
+                        fontSize: '0.92rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <span>Mula Cabaran Mingguan</span>
+                      <LucideIcon name="arrow-right" size={16} />
+                    </button>
+                  </div>
+
+                  {/* KAD B: Ujian Komprehensif */}
+                  <div
+                    className="lg-inner-well"
+                    style={{
+                      padding: '24px 20px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      borderRadius: 'var(--r-lg)',
+                      borderColor: 'rgba(56, 189, 248, 0.45)',
+                      background: 'linear-gradient(145deg, rgba(56, 189, 248, 0.10) 0%, rgba(6, 18, 38, 0.6) 100%)',
+                      boxShadow: '0 8px 24px rgba(56, 189, 248, 0.15)',
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                        <span
+                          style={{
+                            fontSize: '0.72rem',
+                            fontWeight: 800,
+                            padding: '3px 10px',
+                            borderRadius: '999px',
+                            background: 'rgba(56, 189, 248, 0.22)',
+                            color: '#7dd3fc',
+                            border: '1px solid rgba(56, 189, 248, 0.4)',
+                            letterSpacing: '0.04em',
+                          }}
+                        >
+                          BANK LENGKAP 4 MAZHAB
+                        </span>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                          50 Soalan Penuh
+                        </span>
+                      </div>
+
+                      <h3
+                        style={{
+                          margin: '0 0 10px',
+                          fontSize: '1.25rem',
+                          fontWeight: 800,
+                          color: '#ffffff',
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        🏆 Ujian Komprehensif (Berdasarkan Kitab القواعد الفقهية وتطبيقاتها في المذاهب الأربعة)
+                      </h3>
+
+                      <p
+                        style={{
+                          margin: '0 0 16px',
+                          fontSize: '0.88rem',
+                          color: 'var(--text-body)',
+                          lineHeight: 1.55,
+                        }}
+                      >
+                        Ujian mendalam merangkumi 5 kaedah asasi dan puluhan kaedah ranting beserta perbandingan fatwa Hanafi, Maliki, Syafi&apos;i dan Hanbali.
+                      </p>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                        <span className="lg-node-chip" style={{ fontSize: '0.76rem', fontWeight: 700 }}>
+                          📚 {dataKuiz50.length} Senario Kes
+                        </span>
+                        <span className="lg-node-chip" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                          ⚖️ Mahkamah &amp; Ibadat
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuizIndex(0);
+                        setSelectedAnswer(null);
+                        setScore(0);
+                        setQuizSubMode('KOMPREHENSIF');
+                      }}
+                      className="lg-btn-glass"
+                      style={{
+                        width: '100%',
+                        justifyContent: 'center',
+                        padding: '12px 18px',
+                        fontSize: '0.92rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        borderColor: 'rgba(56, 189, 248, 0.5)',
+                        background: 'rgba(56, 189, 248, 0.15)',
+                        color: '#bae6fd',
+                      }}
+                    >
+                      <span>Buka Ujian Komprehensif</span>
+                      <LucideIcon name="arrow-right" size={16} />
+                    </button>
+                  </div>
                 </div>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: '0.86rem',
-                    lineHeight: 1.6,
-                    color: 'var(--text-strong)',
-                  }}
-                >
-                  {currentQuizItem.huraian_jawapan}
-                </p>
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                type="button"
-                onClick={prevQuestion}
-                className="lg-btn-glass"
-                style={{ padding: '12px 18px', justifyContent: 'center' }}
-              >
-                <LucideIcon name="arrow-left" size={15} />
-                <span>Sebelum</span>
-              </button>
-              <button
-                type="button"
-                onClick={nextQuestion}
-                className="lg-btn-primary"
-                style={{ flex: 1, justifyContent: 'center', padding: '12px' }}
-              >
-                <span>Soalan Seterusnya</span>
-                <LucideIcon name="arrow-right" size={15} />
-              </button>
-            </div>
-          </div>
+            {/* SUB-MOD 2: CABARAN TOPIKAL MINGGUAN (Berdasarkan Slaid / Nota) */}
+            {quizSubMode === 'MINGGUAN' && currentWeeklyItem && (
+              <div className="lg-panel glass-card">
+                <div
+                  className="lg-card-top"
+                  style={{ marginBottom: '18px', flexWrap: 'wrap', gap: '8px' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => setQuizSubMode('SELECTION')}
+                      className="lg-btn-glass"
+                      style={{ padding: '6px 12px', fontSize: '0.76rem' }}
+                    >
+                      <LucideIcon name="arrow-left" size={14} />
+                      <span>Mod Kuiz</span>
+                    </button>
+                    <span className="lg-node-chip" style={{ borderColor: '#10b981', color: '#6ee7b7' }}>
+                      🗓️ TOPIKAL MINGGUAN
+                    </span>
+                    <span className="lg-node-chip">
+                      SOALAN {weeklyQuizIndex + 1} / {kuizMingguan.soalan_objektif.length}
+                    </span>
+                  </div>
+                  <span className="lg-node-chip">
+                    SKOR: {weeklyScore} / {kuizMingguan.soalan_objektif.length}
+                  </span>
+                </div>
+
+                <div style={{ marginBottom: '10px' }}>
+                  <span style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 700 }}>
+                    {kuizMingguan.tajuk_mingguan}
+                  </span>
+                </div>
+
+                <div className="lg-inner-well" style={{ marginBottom: '20px' }}>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: '0.96rem',
+                      fontWeight: 600,
+                      lineHeight: 1.6,
+                      color: 'var(--text-strong)',
+                    }}
+                  >
+                    {currentWeeklyItem.soalan}
+                  </p>
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}
+                >
+                  {currentWeeklyItem.pilihan?.map((pilihan, pIdx) => {
+                    const isCorrect = pilihan === currentWeeklyItem.jawapan_betul;
+                    const isPicked = weeklySelectedAnswer === pilihan;
+                    let borderCol = undefined;
+                    let bgCol = undefined;
+                    if (weeklySelectedAnswer) {
+                      if (isCorrect) {
+                        borderCol = '#10b981';
+                        bgCol = 'rgba(16, 185, 129, 0.22)';
+                      } else if (isPicked) {
+                        borderCol = '#ef4444';
+                        bgCol = 'rgba(239, 68, 68, 0.22)';
+                      }
+                    }
+                    const abcd = ['A', 'B', 'C', 'D'][pIdx] || `${pIdx + 1}`;
+                    return (
+                      <button
+                        key={pIdx}
+                        type="button"
+                        onClick={() => handleAnswerWeeklyQuiz(pilihan)}
+                        className="lg-inner-well"
+                        style={{
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          borderColor: borderCol,
+                          background: bgCol,
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '12px',
+                          padding: '14px 16px',
+                          transition: 'transform 0.2s var(--spring)',
+                        }}
+                      >
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '26px',
+                            height: '26px',
+                            borderRadius: '50%',
+                            background: isPicked ? (isCorrect ? '#10b981' : '#ef4444') : 'rgba(255, 255, 255, 0.1)',
+                            color: '#ffffff',
+                            fontWeight: 800,
+                            fontSize: '0.8rem',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {abcd}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '0.88rem',
+                            fontWeight: 600,
+                            color: 'var(--text-strong)',
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {pilihan}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {weeklySelectedAnswer && currentWeeklyItem.huraian && (
+                  <div
+                    className="lg-inner-well"
+                    style={{
+                      marginBottom: '18px',
+                      borderColor: 'rgba(16, 185, 129, 0.45)',
+                      background: 'rgba(6, 28, 20, 0.65)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: '0.73rem',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                        color: '#6ee7b7',
+                        marginBottom: '6px',
+                      }}
+                    >
+                      💡 Huraian Jawapan &amp; Pengukuhan Konsep:
+                    </div>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '0.86rem',
+                        lineHeight: 1.6,
+                        color: 'var(--text-strong)',
+                      }}
+                    >
+                      {currentWeeklyItem.huraian}
+                    </p>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    type="button"
+                    onClick={prevWeeklyQuestion}
+                    className="lg-btn-glass"
+                    style={{ padding: '12px 18px', justifyContent: 'center' }}
+                  >
+                    <LucideIcon name="arrow-left" size={15} />
+                    <span>Sebelum</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={nextWeeklyQuestion}
+                    className="lg-btn-primary"
+                    style={{ flex: 1, justifyContent: 'center', padding: '12px' }}
+                  >
+                    <span>Soalan Seterusnya</span>
+                    <LucideIcon name="arrow-right" size={15} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* SUB-MOD 3: UJIAN KOMPREHENSIF (50 Soalan — Kitab Zuhaili) */}
+            {quizSubMode === 'KOMPREHENSIF' && (
+              <div className="lg-panel glass-card">
+                <div
+                  className="lg-card-top"
+                  style={{ marginBottom: '18px', flexWrap: 'wrap', gap: '8px' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => setQuizSubMode('SELECTION')}
+                      className="lg-btn-glass"
+                      style={{ padding: '6px 12px', fontSize: '0.76rem' }}
+                    >
+                      <LucideIcon name="arrow-left" size={14} />
+                      <span>Mod Kuiz</span>
+                    </button>
+                    <span className="lg-node-chip">
+                      SOALAN {quizIndex + 1} / {dataKuiz50.length}
+                    </span>
+                    {currentQuizItem.kategori && (
+                      <span className="lg-node-chip" dir="auto">
+                        {currentQuizItem.kategori}
+                      </span>
+                    )}
+                  </div>
+                  <span className="lg-node-chip">
+                    SKOR: {score} / {dataKuiz50.length}
+                  </span>
+                </div>
+
+                <p
+                  style={{
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    color: 'var(--text-muted)',
+                    margin: '0 0 8px',
+                  }}
+                >
+                  Senario Kes &amp; Tatbiqat Mazhab:
+                </p>
+                <div className="lg-inner-well" style={{ marginBottom: '20px' }}>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: '0.94rem',
+                      fontWeight: 600,
+                      lineHeight: 1.6,
+                      color: 'var(--text-strong)',
+                    }}
+                  >
+                    {currentQuizItem.isu_kontemporari}
+                  </p>
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}
+                >
+                  {quizOptions.map((opt) => {
+                    const isCorrect = opt.kaedah_ranting_ar === currentQuizItem.kaedah_ranting_ar;
+                    const isPicked = selectedAnswer === opt.kaedah_ranting_ar;
+                    let borderCol = undefined;
+                    let bgCol = undefined;
+                    if (selectedAnswer) {
+                      if (isCorrect) {
+                        borderCol = '#10b981';
+                        bgCol = 'rgba(16, 185, 129, 0.22)';
+                      } else if (isPicked) {
+                        borderCol = '#ef4444';
+                        bgCol = 'rgba(239, 68, 68, 0.22)';
+                      }
+                    }
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => handleAnswerQuiz(opt)}
+                        className="lg-inner-well"
+                        style={{
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          borderColor: borderCol,
+                          background: bgCol,
+                          transition: 'transform 0.2s var(--spring)',
+                        }}
+                      >
+                        <div
+                          dir="rtl"
+                          style={{
+                            fontFamily: '"Noto Naskh Arabic", serif',
+                            fontSize: '1.22rem',
+                            fontWeight: 700,
+                            lineHeight: 1.8,
+                            color: 'var(--text-strong)',
+                            marginBottom: '4px',
+                          }}
+                        >
+                          {opt.kaedah_ranting_ar}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: '0.8rem',
+                            fontWeight: 600,
+                            color: 'var(--text-body)',
+                          }}
+                        >
+                          {opt.kaedah_ranting_bm}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {selectedAnswer && currentQuizItem.huraian_jawapan && (
+                  <div
+                    className="lg-inner-well"
+                    style={{
+                      marginBottom: '18px',
+                      borderColor: 'rgba(56, 189, 248, 0.45)',
+                      background: 'rgba(8, 25, 54, 0.55)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: '0.73rem',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                        color: 'var(--text-muted)',
+                        marginBottom: '6px',
+                      }}
+                    >
+                      Huraian &amp; Rujukan Kitab (القواعد الفقهية وتطبيقاتها في المذاهب الأربعة —{' '}
+                      {currentQuizItem.jilid_halaman}):
+                    </div>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '0.86rem',
+                        lineHeight: 1.6,
+                        color: 'var(--text-strong)',
+                      }}
+                    >
+                      {currentQuizItem.huraian_jawapan}
+                    </p>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    type="button"
+                    onClick={prevQuestion}
+                    className="lg-btn-glass"
+                    style={{ padding: '12px 18px', justifyContent: 'center' }}
+                  >
+                    <LucideIcon name="arrow-left" size={15} />
+                    <span>Sebelum</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={nextQuestion}
+                    className="lg-btn-primary"
+                    style={{ flex: 1, justifyContent: 'center', padding: '12px' }}
+                  >
+                    <span>Soalan Seterusnya</span>
+                    <LucideIcon name="arrow-right" size={15} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* ====================================================================
