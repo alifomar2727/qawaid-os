@@ -78,7 +78,7 @@ Jawab soalan dengan terperinci, ilmiah, bersopan dan tersusun dalam Bahasa Melay
 Konteks Rujukan Kitab:
 ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-Arbaah karya Syeikh Muhammad Mustafa al-Zuhaili.'}`;
 
-    const modelsToTry = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+    const modelsToTry = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
     let jawapanText = '';
     let successModel = '';
     let lastError = '';
