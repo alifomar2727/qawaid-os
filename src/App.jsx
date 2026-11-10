@@ -1144,8 +1144,9 @@ export default function App() {
         throw new Error('Gagal mengambil kuiz mingguan');
       })
       .then((data) => {
-        if (data && data.tajuk_mingguan && Array.isArray(data.soalan_objektif) && data.soalan_objektif.length > 0) {
-          setKuizMingguan(data);
+        const quiz = (data && data.data) ? data.data : data;
+        if (quiz && quiz.tajuk_mingguan && Array.isArray(quiz.soalan_objektif) && quiz.soalan_objektif.length > 0) {
+          setKuizMingguan(quiz);
         }
       })
       .catch((err) => {
