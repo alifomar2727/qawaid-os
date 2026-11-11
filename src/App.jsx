@@ -233,6 +233,66 @@ function LucideIcon({ name, size = 16, strokeWidth = 1.85, filled = false, color
   }
 }
 
+/* =========================================================================
+   Logo Neon Zamrud Qawaid OS (Dacing Keadilan / Scales of Justice Neon Sign)
+   - Garisan hijau zamrud bercahaya (#34d399, #10b981, #6ee7b7, teras putih)
+   - Berdenyut & sesekali berkelip seperti tiub gas neon sebenar
+   - Animasi berayun dacing (weighing tilt) bila cursor di PC atau diklik
+   ========================================================================= */
+function NeonScaleLogo({ isWeighing = false }) {
+  return (
+    <div className={`neon-logo-wrap ${isWeighing ? 'is-weighing' : ''}`} aria-label="Logo Qawaid OS">
+      <div className="neon-logo-aura" aria-hidden="true" />
+      <svg
+        className="neon-scale-svg"
+        viewBox="0 0 48 48"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        {/* Lingkaran Luar Tiub Neon */}
+        <circle className="neon-stroke-ring" cx="24" cy="24" r="21" />
+        <circle cx="24" cy="24" r="21" stroke="#ffffff" strokeWidth="0.8" strokeOpacity="0.85" fill="none" />
+
+        {/* Tiang Utama & Tapak Dacing (Fixed Central Stand) */}
+        {/* Bulatan Hulu Atas */}
+        <circle className="neon-stroke-stand" cx="24" cy="11.5" r="2.2" strokeWidth="1.8" />
+        <circle cx="24" cy="11.5" r="2.2" stroke="#ffffff" strokeWidth="0.7" fill="none" />
+
+        {/* Tiang Tegak */}
+        <line className="neon-stroke-stand" x1="24" y1="13.7" x2="24" y2="37" strokeWidth="2.2" />
+        <line x1="24" y1="13.7" x2="24" y2="37" stroke="#ffffff" strokeWidth="0.8" strokeLinecap="round" />
+
+        {/* Tapak Berperingkat (Trapezoid Base) */}
+        <path className="neon-stroke-stand" d="M17 40.5 L20.5 36.5 H27.5 L31 40.5 Z" strokeWidth="2" />
+        <path d="M17 40.5 L20.5 36.5 H27.5 L31 40.5 Z" stroke="#ffffff" strokeWidth="0.7" fill="none" />
+
+        {/* Palang Penimbang Bergerak & Paksi (Tilting Beam) */}
+        <g className="neon-beam-group">
+          <line className="neon-stroke-beam" x1="10" y1="18" x2="38" y2="18" />
+          <line className="neon-stroke-beam" x1="10" y1="18" x2="38" y2="18" stroke="#ffffff" strokeWidth="0.8" />
+          {/* Paksi Tengah (Pivot Dot) */}
+          <circle cx="24" cy="18" r="1.4" fill="#ffffff" />
+        </g>
+
+        {/* Mangkuk Penimbang Kiri (Left Pan) */}
+        <g className="neon-left-pan-group">
+          <polygon className="neon-pan-shape" points="10,18 5.5,27 14.5,27" />
+          <path className="neon-pan-shape" d="M5.5 27 C5.5 32 14.5 32 14.5 27" />
+          <path d="M5.5 27 C5.5 31.5 14.5 31.5 14.5 27" stroke="#ffffff" strokeWidth="0.7" fill="none" strokeLinecap="round" />
+        </g>
+
+        {/* Mangkuk Penimbang Kanan (Right Pan) */}
+        <g className="neon-right-pan-group">
+          <polygon className="neon-pan-shape" points="38,18 33.5,27 42.5,27" />
+          <path className="neon-pan-shape" d="M33.5 27 C33.5 32 42.5 32 42.5 27" />
+          <path d="M33.5 27 C33.5 31.5 42.5 31.5 42.5 27" stroke="#ffffff" strokeWidth="0.7" fill="none" strokeLinecap="round" />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
 function renderInlineAiTokens(text = '') {
   const tokenRegex =
     /(\[[^\]]+\]\(https?:\/\/[^\s)]+\)|https?:\/\/shamela\.ws\/[^\s)]+|\*\*[^*]+\*\*|\*[^*\n]+\*|`[^`\n]+`|«[^»]+»)/g;
@@ -1995,6 +2055,8 @@ export default function App() {
     return 'EXPLORER';
   });
   const [isCondensed, setIsCondensed] = useState(false);
+  const [isLogoWeighing, setIsLogoWeighing] = useState(false);
+  const weighingTimerRef = useRef(null);
 
   const [quizIndex, setQuizIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -2124,6 +2186,20 @@ export default function App() {
       isLongPressRef.current = false;
       return;
     }
+    // Animasi dacing penimbang neon zamrud (bergerak atas & bawah)
+    setIsLogoWeighing(false);
+    setTimeout(() => {
+      setIsLogoWeighing(true);
+    }, 10);
+    if (weighingTimerRef.current) clearTimeout(weighingTimerRef.current);
+    weighingTimerRef.current = setTimeout(() => {
+      setIsLogoWeighing(false);
+    }, 2000);
+
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try { navigator.vibrate(15); } catch {}
+    }
+
     // Sentiasa kembali ke Home Screen (Direktori)
     setViewMode('EXPLORER');
     setQuizSubMode('SELECTION');
@@ -2755,7 +2831,7 @@ export default function App() {
         >
           {/* Logo Qawaid OS (Klik untuk Direktori / Tekan & Tahan 1.5s untuk Admin) */}
           <div
-            className="lg-brand"
+            className={`lg-brand ${isLogoWeighing ? 'is-weighing' : ''}`}
             onClick={handleLogoClick}
             onPointerDown={handleLogoPointerDown}
             onPointerUp={handleLogoPointerUp}
@@ -2765,7 +2841,7 @@ export default function App() {
             style={{ cursor: 'pointer', userSelect: 'none', touchAction: 'manipulation' }}
           >
             <div className="lg-brand-icon">
-              <LucideIcon name="scale" size={18} />
+              <NeonScaleLogo isWeighing={isLogoWeighing} />
             </div>
             <div>
               <h1 className="lg-brand-title">Qawaid OS</h1>
