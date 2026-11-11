@@ -2248,42 +2248,6 @@ export default function App() {
       </div>
 
       {/* ====================================================================
-          PENGUMUMAN MARQUEE BAR ATAS (MINI CMS DINAMIK)
-         ==================================================================== */}
-      {tetapanWeb?.teksPengumuman && (
-        <aside
-          aria-label="Pengumuman Terkini"
-          style={{
-            position: 'relative',
-            zIndex: 100,
-            width: '100%',
-            background: 'linear-gradient(90deg, rgba(16, 185, 129, 0.15) 0%, rgba(59, 130, 246, 0.20) 50%, rgba(16, 185, 129, 0.15) 100%)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '6px 12px',
-            fontSize: '0.80rem',
-            color: '#a7f3d0',
-            overflow: 'hidden',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-          }}
-        >
-          <marquee
-            behavior="scroll"
-            direction="left"
-            scrollamount="5"
-            style={{
-              display: 'block',
-              margin: 0,
-              fontWeight: 600,
-              letterSpacing: '0.02em',
-            }}
-          >
-            {tetapanWeb.teksPengumuman}
-          </marquee>
-        </aside>
-      )}
-
-      {/* ====================================================================
           CONTROL LAYER: ONE FLOATING LIQUID GLASS HEADER CAPSULE
           (Logo + Search + Sliding-Capsule Nav + Light/Dark Toggle)
          ==================================================================== */}
@@ -2378,8 +2342,42 @@ export default function App() {
       <main className="lg-main">
         {viewMode === 'EXPLORER' && (
           <>
+            {/* ================================================================
+                HERO SECTION (MUKA DEPAN / HOME - MOBILE-FIRST LIQUID GLASS)
+               ================================================================ */}
+            <div id="hero-section" className="glass-card">
+              <h2 className="hero-title-ar" dir="rtl">
+                اَلْقَوَاعِدُ الْفِقْهِيَّةُ
+              </h2>
+              <p className="hero-subtitle">
+                Platform Ulang Kaji &amp; Aplikasi Isu Semasa Anda
+              </p>
+
+              <div className="hero-btn-group">
+                <button
+                  type="button"
+                  className="hero-btn-primary"
+                >
+                  <span>🎲 Uji Minda Rawak</span>
+                </button>
+                <button
+                  type="button"
+                  className="hero-btn-secondary"
+                >
+                  <span>📖 Selusuri Direktori</span>
+                </button>
+                <button
+                  type="button"
+                  className="hero-btn-secondary"
+                >
+                  <span>✨ Bincang Isu dengan AI</span>
+                </button>
+              </div>
+            </div>
+
             {/* CONTROL LAYER: STICKY SEGMENTED GLASS FILTER BAR (With Gap, No Overlap) */}
             <div
+              id="direktori-kad"
               className="lg-filter-sticky"
               style={{ top: `${filterStickyTop}px` }}
             >
