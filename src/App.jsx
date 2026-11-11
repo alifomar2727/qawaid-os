@@ -3693,21 +3693,10 @@ export default function App() {
             MATCH VIEW (Padanan Kaedah — 59 Kaedah Penuh & 4 Pilihan)
            ==================================================================== */}
         {viewMode === 'MATCH' && (
-          <div className="lg-panel glass-card" style={{ maxWidth: '840px', margin: '0 auto' }}>
+          <div className="lg-panel glass-card" style={{ maxWidth: '840px', margin: '0 auto 80px auto' }}>
             {/* Bar Atas: Status Kemajuan, Penukar Mod, Skor & Streak */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '10px',
-                marginBottom: '18px',
-                paddingBottom: '14px',
-                borderBottom: '1px solid var(--card-divider)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <div className="lg-match-topbar">
+              <div className="lg-match-topbar-left">
                 <span className="lg-node-chip">
                   KAEDAH {matchIndex + 1} / {data.length}
                 </span>
@@ -3721,24 +3710,16 @@ export default function App() {
                   setMatchFeedback(null);
                   setMatchSelectedId(null);
                 }}
-                className="lg-btn-glass"
-                style={{
-                  padding: '6px 14px',
-                  fontSize: '0.78rem',
-                  fontWeight: 700,
-                  borderRadius: '20px',
-                  border: '1px solid rgba(56, 189, 248, 0.35)',
-                  color: 'var(--text-strong)',
-                }}
+                className="lg-match-mode-btn"
                 title="Tukar mod soalan padanan"
               >
                 <LucideIcon name="refresh-cw" size={13} />
                 <span>
-                  {matchMode === 'AR_TO_BM' ? '🇸🇦 Lafaz Arab ➔ 🇲🇾 Maksud' : '🇲🇾 Maksud ➔ 🇸🇦 Lafaz Arab'}
+                  {matchMode === 'AR_TO_BM' ? 'Lafaz Arab ➔ Maksud' : 'Maksud ➔ Lafaz Arab'}
                 </span>
               </button>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <div className="lg-match-topbar-right">
                 <span className="lg-node-chip" style={{ color: '#34d399' }}>
                   SKOR: {matchScore}
                 </span>
@@ -3759,21 +3740,21 @@ export default function App() {
 
             {/* Sub-header: Asasi & Arahan */}
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-              <div
-                style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                  color: '#60a5fa',
-                  marginBottom: '4px',
-                }}
-              >
-                {currentMatchItem.kaedah_asasi_ar} ({currentMatchItem.kaedah_asasi_bm})
+              <div className="lg-match-asasi-banner">
+                <span
+                  dir="rtl"
+                  lang="ar"
+                  className="lg-match-asasi-ar"
+                >
+                  {currentMatchItem.kaedah_asasi_ar}
+                </span>
+                <span className="lg-match-asasi-bm">
+                  {currentMatchItem.kaedah_asasi_bm}
+                </span>
               </div>
               <h2
                 style={{
-                  fontSize: '1.25rem',
+                  fontSize: 'clamp(1.15rem, 3.8vw, 1.35rem)',
                   fontWeight: 800,
                   margin: '0 0 6px',
                   color: 'var(--text-strong)',
@@ -3813,12 +3794,16 @@ export default function App() {
               {matchMode === 'AR_TO_BM' ? (
                 <div
                   dir="rtl"
+                  lang="ar"
                   style={{
-                    fontFamily: '"Noto Naskh Arabic", serif',
-                    fontSize: '1.85rem',
+                    fontFamily: "'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif",
+                    fontSize: 'clamp(1.75rem, 5.5vw, 2.35rem)',
                     fontWeight: 700,
-                    lineHeight: 1.9,
-                    color: 'var(--text-strong)',
+                    lineHeight: 1.85,
+                    color: 'var(--text-strong, #ffffff)',
+                    textWrap: 'balance',
+                    textShadow: '0 0 14px rgba(255, 255, 255, 0.28)',
+                    unicodeBidi: 'isolate',
                   }}
                 >
                   {currentMatchItem.kaedah_ranting_ar}
@@ -3827,10 +3812,11 @@ export default function App() {
                 <div
                   dir="ltr"
                   style={{
-                    fontSize: '1.15rem',
+                    fontSize: 'clamp(1.05rem, 3.2vw, 1.25rem)',
                     fontWeight: 700,
                     lineHeight: 1.6,
                     color: '#38bdf8',
+                    textWrap: 'balance',
                   }}
                 >
                   "{currentMatchItem.kaedah_ranting_bm}"
@@ -3873,34 +3859,40 @@ export default function App() {
             </div>
 
             {/* Grid 4 Pilihan Jawapan */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '14px',
-                marginBottom: '22px',
-              }}
-            >
-              {matchOptions.map((opt) => {
+            <div className="lg-match-options-grid">
+              {matchOptions.map((opt, optIdx) => {
                 const isTarget = opt.id === currentMatchItem.id;
                 const isSelected = matchSelectedId === opt.id;
-                let borderStyle = 'rgba(56, 189, 248, 0.18)';
-                let bgStyle = 'rgba(255, 255, 255, 0.03)';
+                let borderStyle = 'rgba(56, 189, 248, 0.2)';
+                let bgStyle = 'rgba(15, 23, 42, 0.55)';
                 let glowStyle = 'none';
+                let letterColor = '#38bdf8';
+                let letterBg = 'rgba(56, 189, 248, 0.12)';
+                let letterBorder = 'rgba(56, 189, 248, 0.3)';
 
                 if (matchFeedback && isSelected) {
                   if (isTarget) {
                     borderStyle = '#10b981';
-                    bgStyle = 'rgba(16, 185, 129, 0.25)';
+                    bgStyle = 'rgba(16, 185, 129, 0.22)';
                     glowStyle = '0 0 20px rgba(16, 185, 129, 0.35)';
+                    letterColor = '#34d399';
+                    letterBg = 'rgba(16, 185, 129, 0.3)';
+                    letterBorder = '#10b981';
                   } else {
                     borderStyle = '#ef4444';
-                    bgStyle = 'rgba(239, 68, 68, 0.25)';
+                    bgStyle = 'rgba(239, 68, 68, 0.22)';
                     glowStyle = '0 0 20px rgba(239, 68, 68, 0.35)';
+                    letterColor = '#f87171';
+                    letterBg = 'rgba(239, 68, 68, 0.3)';
+                    letterBorder = '#ef4444';
                   }
                 } else if (matchFeedback === 'correct' && isTarget) {
                   borderStyle = '#10b981';
-                  bgStyle = 'rgba(16, 185, 129, 0.25)';
+                  bgStyle = 'rgba(16, 185, 129, 0.22)';
+                  glowStyle = '0 0 20px rgba(16, 185, 129, 0.35)';
+                  letterColor = '#34d399';
+                  letterBg = 'rgba(16, 185, 129, 0.3)';
+                  letterBorder = '#10b981';
                 }
 
                 return (
@@ -3908,99 +3900,47 @@ export default function App() {
                     key={opt.id}
                     type="button"
                     onClick={() => handleAnswerMatch(opt)}
-                    className="lg-btn-glass"
+                    className="lg-match-option-card"
                     disabled={matchFeedback === 'correct'}
                     style={{
-                      padding: '16px',
-                      borderRadius: 'var(--r-md)',
-                      textAlign: matchMode === 'AR_TO_BM' ? 'left' : 'right',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '6px',
                       borderColor: borderStyle,
                       background: bgStyle,
                       boxShadow: glowStyle,
                       cursor: matchFeedback === 'correct' ? 'default' : 'pointer',
-                      transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                      position: 'relative',
                     }}
                   >
-                    {matchMode === 'AR_TO_BM' ? (
-                      <>
-                        <div
-                          style={{
-                            fontSize: '0.72rem',
-                            fontWeight: 700,
-                            letterSpacing: '0.04em',
-                            color: 'var(--text-muted)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'flex-end',
-                            width: '100%',
-                          }}
-                        >
-                          <span>{opt.jilid_halaman}</span>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: '0.9rem',
-                            fontWeight: 600,
-                            lineHeight: 1.5,
-                            color: 'var(--text-strong)',
-                          }}
-                        >
-                          {opt.kaedah_ranting_bm}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div
-                          style={{
-                            fontSize: '0.72rem',
-                            fontWeight: 700,
-                            letterSpacing: '0.04em',
-                            color: 'var(--text-muted)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'flex-end',
-                            width: '100%',
-                            direction: 'ltr',
-                          }}
-                        >
-                          <span>{opt.jilid_halaman}</span>
-                        </div>
-                        <div
-                          dir="rtl"
-                          style={{
-                            fontFamily: '"Noto Naskh Arabic", serif',
-                            fontSize: '1.28rem',
-                            fontWeight: 700,
-                            lineHeight: 1.8,
-                            color: 'var(--text-strong)',
-                            width: '100%',
-                          }}
-                        >
-                          {opt.kaedah_ranting_ar}
-                        </div>
-                      </>
-                    )}
+                    <div className="lg-match-option-inner">
+                      <span
+                        className="lg-match-option-letter"
+                        style={{
+                          color: letterColor,
+                          background: letterBg,
+                          borderColor: letterBorder,
+                        }}
+                      >
+                        {String.fromCharCode(65 + optIdx)}
+                      </span>
+                      <div className="lg-match-option-text">
+                        {matchMode === 'AR_TO_BM' ? (
+                          <span>{opt.kaedah_ranting_bm}</span>
+                        ) : (
+                          <span
+                            dir="rtl"
+                            lang="ar"
+                            className="lg-match-option-text-ar"
+                          >
+                            {opt.kaedah_ranting_ar}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </button>
                 );
               })}
             </div>
 
             {/* Kawalan Bawah: Seterusnya, Buka Nota, Mula Semula */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '10px',
-                paddingTop: '12px',
-                borderTop: '1px solid var(--card-divider)',
-              }}
-            >
+            <div className="lg-match-bottom-controls">
               <button
                 type="button"
                 onClick={resetMatch}
@@ -4012,7 +3952,7 @@ export default function App() {
                 <span>Mula Semula</span>
               </button>
 
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div className="lg-match-bottom-right-btns">
                 <button
                   type="button"
                   onClick={() => bukaNotaUntukKad(currentMatchItem)}
