@@ -147,11 +147,24 @@ function LucideIcon({ name, size = 16, strokeWidth = 1.85, filled = false, color
         </svg>
       );
     case 'external':
+    case 'external-link':
       return (
         <svg {...props}>
           <path d="M15 3h6v6" />
           <path d="M10 14 21 3" />
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+        </svg>
+      );
+    case 'chevron-down':
+      return (
+        <svg {...props}>
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      );
+    case 'chevron-up':
+      return (
+        <svg {...props}>
+          <path d="m18 15-6-6-6 6" />
         </svg>
       );
     case 'sun':
@@ -2255,6 +2268,7 @@ export default function App() {
     },
   ]);
   const chatEndRef = useRef(null);
+  const [isSourceStripExpanded, setIsSourceStripExpanded] = useState(false);
 
   // Refs for sliding glass indicators & sticky header offset
   const headerWrapRef = useRef(null);
@@ -4533,31 +4547,74 @@ export default function App() {
                       color: 'var(--text-strong)',
                     }}
                   >
-                    Penyelidik AI: القواعد الفقهية وتطبيقاتها في المذاهب الأربعة
+                    Penyelidik AI
                   </h2>
-                  <p
-                    style={{
-                      fontSize: '0.74rem',
-                      color: 'var(--text-muted)',
-                      margin: 0,
-                    }}
-                  >
-                    Rujukan eksklusif kitab Syeikh Dr. Muhammad Mustafa al-Zuhaili + pautan terus halaman Shamela.ws (#21786)
-                  </p>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <a
-                  href="https://shamela.ws/book/21786"
-                  target="_blank"
-                  rel="noopener noreferrer"
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('EXPLORER')}
                   className="lg-btn-glass"
-                  style={{ textDecoration: 'none' }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    cursor: 'pointer',
+                    padding: '6px 14px',
+                    fontSize: '0.8rem',
+                  }}
+                  title="Tutup Penyelidik AI"
+                  aria-label="Tutup"
                 >
-                  <LucideIcon name="external" size={13} />
-                  <span>Kitab di Shamela.ws</span>
-                </a>
+                  <LucideIcon name="x" size={14} />
+                  <span>Tutup</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Jalur Maklumat Sumber */}
+            <div className="lg-source-strip">
+              <div className="lg-source-strip-icon">
+                <LucideIcon name="book-open" size={16} />
+              </div>
+              <div className="lg-source-strip-content">
+                <p className={`lg-source-strip-text ${isSourceStripExpanded ? 'is-expanded' : ''}`}>
+                  Rujukan eksklusif kitab{' '}
+                  <span
+                    dir="rtl"
+                    lang="ar"
+                    className="lg-source-strip-ar"
+                    style={{
+                      unicodeBidi: 'isolate',
+                      fontFamily: "'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif",
+                      fontSize: '1.05em',
+                    }}
+                  >
+                    القواعد الفقهية وتطبيقاتها في المذاهب الأربعة
+                  </span>{' '}
+                  karya Dr. Muhammad Mustafa al-Zuhaili, dengan pautan terus ke teks asal di{' '}
+                  <a
+                    href="https://shamela.ws/book/21786"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="lg-shamela-link"
+                  >
+                    Shamela
+                    <LucideIcon name="external-link" size={12} />
+                  </a>
+                  .
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsSourceStripExpanded(!isSourceStripExpanded)}
+                  className="lg-source-strip-toggle"
+                  aria-expanded={isSourceStripExpanded}
+                >
+                  <span>{isSourceStripExpanded ? 'Kurang' : 'Lagi'}</span>
+                  <LucideIcon name={isSourceStripExpanded ? 'chevron-up' : 'chevron-down'} size={12} />
+                </button>
               </div>
             </div>
 

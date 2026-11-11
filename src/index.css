@@ -4295,3 +4295,110 @@ summary:focus-visible {
               width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
               opacity 0.25s ease !important;
 }
+
+/* ==========================================================================
+   PENYELIDIK AI: JALUR MAKLUMAT SUMBER (SOURCE INFO STRIP)
+   ========================================================================== */
+.lg-source-strip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 20px;
+  margin: 0 -20px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.lg-source-strip-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.lg-source-strip-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lg-source-strip-text {
+  margin: 0;
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  word-break: break-word;
+}
+
+.lg-source-strip-ar {
+  font-family: 'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif;
+  font-size: 1.05em;
+  unicode-bidi: isolate;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.lg-shamela-link {
+  color: #e0be7a;
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin: 0 2px;
+  vertical-align: baseline;
+  transition: color 0.15s ease, text-decoration 0.15s ease;
+}
+
+.lg-shamela-link:hover {
+  text-decoration: underline;
+  color: #f6e0b5;
+}
+
+/* Butang Lipatan Sumber untuk Mobile (< 640px) */
+.lg-source-strip-toggle {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  color: #e0be7a;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  margin-top: 6px;
+  cursor: pointer;
+  width: fit-content;
+  transition: all 0.2s ease;
+}
+
+.lg-source-strip-toggle:hover {
+  background: rgba(224, 190, 122, 0.15);
+  border-color: rgba(224, 190, 122, 0.35);
+  color: #f6e0b5;
+}
+
+@media (max-width: 640px) {
+  .lg-source-strip {
+    padding: 10px 16px;
+  }
+
+  .lg-source-strip-toggle {
+    display: inline-flex;
+  }
+
+  .lg-source-strip-text:not(.is-expanded) {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
