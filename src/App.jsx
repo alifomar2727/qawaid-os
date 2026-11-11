@@ -1890,6 +1890,7 @@ function getKaedahTheme(item) {
   // 1. Niat / Al-Umur Bi Maqasidiha -> Tema Emerald / Hijau (#10b981)
   if (ar.includes('مَقَاصِد') || text.includes('niat') || text.includes('tujuan') || text.includes('maqasid')) {
     return {
+      label: '🌿 Niat & Tujuan',
       color: '#10b981',
       border: 'rgba(16, 185, 129, 0.30)',
       badgeBg: '#10b981',
@@ -1899,6 +1900,7 @@ function getKaedahTheme(item) {
   // 2. Yakin / Al-Yaqin -> Tema Biru (#3b82f6)
   if (ar.includes('يَقِين') || text.includes('yakin') || text.includes('yaqin') || ar.includes('شَّكّ')) {
     return {
+      label: '💎 Keyakinan',
       color: '#3b82f6',
       border: 'rgba(59, 130, 246, 0.30)',
       badgeBg: '#3b82f6',
@@ -1908,6 +1910,7 @@ function getKaedahTheme(item) {
   // 3. Kesukaran / Al-Masyaqqah -> Tema Oren/Emas (#f59e0b)
   if (ar.includes('مَشَقَّة') || text.includes('sukar') || text.includes('masyaqqah') || ar.includes('تَيْسِير')) {
     return {
+      label: '⚖️ Keringanan',
       color: '#f59e0b',
       border: 'rgba(245, 158, 11, 0.30)',
       badgeBg: '#f59e0b',
@@ -1917,6 +1920,7 @@ function getKaedahTheme(item) {
   // 4. Mudarat / Ad-Dharar -> Tema Merah/Ros (#ef4444)
   if (ar.includes('ضَّرَر') || text.includes('mudarat') || text.includes('dharar') || text.includes('bahaya')) {
     return {
+      label: '🛡️ Mudarat',
       color: '#ef4444',
       border: 'rgba(239, 68, 68, 0.30)',
       badgeBg: '#ef4444',
@@ -1926,6 +1930,7 @@ function getKaedahTheme(item) {
   // 5. Adat / Al-Adah -> Tema Ungu/Indigo (#8b5cf6)
   if (ar.includes('عَادَة') || text.includes('adat') || text.includes('adah') || ar.includes('مُحَكَّمَة')) {
     return {
+      label: '🏛️ Adat',
       color: '#8b5cf6',
       border: 'rgba(139, 92, 246, 0.30)',
       badgeBg: '#8b5cf6',
@@ -1934,6 +1939,7 @@ function getKaedahTheme(item) {
   }
   // Cabang / Lain-lain -> Tema Putih / Kaca biasa (#ffffff)
   return {
+    label: 'Kaedah Fiqh',
     color: '#ffffff',
     border: 'rgba(255, 255, 255, 0.30)',
     badgeBg: 'rgba(255, 255, 255, 0.20)',
@@ -2911,10 +2917,13 @@ export default function App() {
                               borderRadius: 'var(--r-pill, 9999px)',
                               border: 'none',
                               boxShadow: `0 2px 8px ${theme.color}40`,
-                              letterSpacing: '0.04em',
+                              letterSpacing: '0.02em',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
                             }}
                           >
-                            {item.id}
+                            {theme.label}
                           </span>
 
                           <button
