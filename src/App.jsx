@@ -2271,7 +2271,6 @@ export default function App() {
   const chatContainerRef = useRef(null);
   const shouldAutoScrollToBottomRef = useRef(false);
   const prevChatMessagesLenRef = useRef(chatMessages.length);
-  const [isSourceStripExpanded, setIsSourceStripExpanded] = useState(false);
 
   // Refs for sliding glass indicators & sticky header offset
   const headerWrapRef = useRef(null);
@@ -4556,7 +4555,7 @@ export default function App() {
                 <LucideIcon name="book-open" size={16} />
               </div>
               <div className="lg-source-strip-content">
-                <p className={`lg-source-strip-text ${isSourceStripExpanded ? 'is-expanded' : ''}`}>
+                <p className="lg-source-strip-text">
                   Rujukan eksklusif kitab{' '}
                   <span
                     dir="rtl"
@@ -4582,15 +4581,6 @@ export default function App() {
                   </a>
                   .
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setIsSourceStripExpanded(!isSourceStripExpanded)}
-                  className="lg-source-strip-toggle"
-                  aria-expanded={isSourceStripExpanded}
-                >
-                  <span>{isSourceStripExpanded ? 'Kurang' : 'Lagi'}</span>
-                  <LucideIcon name={isSourceStripExpanded ? 'chevron-up' : 'chevron-down'} size={12} />
-                </button>
               </div>
             </div>
 
@@ -4821,7 +4811,7 @@ export default function App() {
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Tanya kaedah fiqh atau rujukan kitab Dr. al-Zuhaili..."
+                placeholder="Tanya AI Chatbox"
                 className="lg-ai-input"
               />
               <button
