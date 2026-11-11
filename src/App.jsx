@@ -6,21 +6,43 @@ import qawaidData from './data/Matriks_Qawaid_Fiqh.json';
 import kuizMingguanLalai from './data/kuizMingguanTerkini.json';
 
 /* Crisp Lucide SVG Line Icons (Zero external runtime dependency) */
-function LucideIcon({ name, size = 16, filled = false }) {
+function LucideIcon({ name, size = 16, strokeWidth = 1.85, filled = false, color, style }) {
   const props = {
     width: size,
     height: size,
     viewBox: '0 0 24 24',
     fill: filled ? 'currentColor' : 'none',
-    stroke: 'currentColor',
-    strokeWidth: 1.85,
+    stroke: color || 'currentColor',
+    strokeWidth,
     strokeLinecap: 'round',
     strokeLinejoin: 'round',
     'aria-hidden': 'true',
-    style: { flexShrink: 0 },
+    style: { flexShrink: 0, ...style },
   };
 
   switch (name) {
+    case 'dices':
+      return (
+        <svg {...props}>
+          <rect width="12" height="12" x="2" y="10" rx="2" ry="2" />
+          <path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3.16l-4.76-4.76a2.24 2.24 0 0 0-3.16 0L10 6.08" />
+          <path d="M6 14h.01" />
+          <path d="M10 18h.01" />
+          <path d="M15 6h.01" />
+          <path d="M18 9h.01" />
+        </svg>
+      );
+    case 'dice-5':
+      return (
+        <svg {...props}>
+          <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+          <path d="M16 8h.01" />
+          <path d="M8 8h.01" />
+          <path d="M8 16h.01" />
+          <path d="M16 16h.01" />
+          <path d="M12 12h.01" />
+        </svg>
+      );
     case 'scale':
       return (
         <svg {...props}>
@@ -1855,7 +1877,7 @@ function ModalUjiMindaRawak({ rawakSoalan, onClose, onSoalanLain }) {
           <button
             type="button"
             onClick={onSoalanLain}
-            className="hero-btn-primary"
+            className="lg-btn-primary"
             style={{
               padding: '9px 18px',
               fontSize: '0.84rem',
@@ -1868,7 +1890,7 @@ function ModalUjiMindaRawak({ rawakSoalan, onClose, onSoalanLain }) {
           <button
             type="button"
             onClick={onClose}
-            className="hero-btn-secondary"
+            className="lg-btn-glass"
             style={{ padding: '9px 20px', fontSize: '0.84rem' }}
           >
             <span>Tutup</span>
@@ -2545,8 +2567,11 @@ export default function App() {
     }
 
     setFlashIndex(foundIdx !== -1 ? foundIdx : 0);
+    setIsFlipped(false);
     setViewMode('FLASHCARD');
-    setIsFlipped(true);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
   };
 
   const hantarSoalanAI = async (teksPilihan) => {
@@ -2736,6 +2761,9 @@ export default function App() {
                     setViewMode(tab.id);
                     if (tab.id === 'QUIZ') setQuizSubMode('SELECTION');
                     if (tab.id === 'FLASHCARD') setIsFlipped(false);
+                    if (typeof window !== 'undefined') {
+                      window.scrollTo({ top: 0, behavior: 'instant' });
+                    }
                   }}
                   className={`lg-nav-btn ${isActive ? 'is-active' : ''}`}
                 >
@@ -2772,7 +2800,8 @@ export default function App() {
                   className="hero-btn-primary"
                   onClick={handleUjiMindaRawak}
                 >
-                  <span>🎲 Uji Minda Rawak</span>
+                  <LucideIcon name="dices" size={18} strokeWidth={2} />
+                  <span>Uji Minda Rawak</span>
                 </button>
                 <button
                   type="button"
@@ -2784,17 +2813,19 @@ export default function App() {
                     }
                   }}
                 >
-                  <span>📖 Selusuri Direktori</span>
+                  <LucideIcon name="book-open" size={18} strokeWidth={2} />
+                  <span>Selusuri Direktori</span>
                 </button>
                 <button
                   type="button"
-                  className="hero-btn-secondary"
+                  className="hero-btn-tertiary"
                   onClick={() => {
                     setViewMode('AI_CHAT');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                 >
-                  <span>✨ Bincang Isu dengan AI</span>
+                  <LucideIcon name="sparkles" size={18} strokeWidth={2} color="#e0be7a" />
+                  <span>Bincang Isu dengan AI</span>
                 </button>
               </div>
             </div>

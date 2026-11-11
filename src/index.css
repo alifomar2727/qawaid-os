@@ -4087,74 +4087,116 @@ summary:focus-visible {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
   flex-wrap: wrap;
 }
 
-.hero-btn-primary {
+/* Ketiga-tiga butang CTA: border-radius penuh, tinggi & padding sama, font-weight 600, gap 10px */
+.hero-btn-primary,
+.hero-btn-secondary,
+.hero-btn-tertiary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 24px;
+  gap: 10px;
+  padding: 14px 26px;
   border-radius: var(--r-pill, 9999px);
-  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-  color: #ffffff;
   font-size: 0.92rem;
-  font-weight: 700;
-  border: 1px solid rgba(147, 197, 253, 0.5);
-  box-shadow: 0 4px 18px rgba(37, 99, 235, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  line-height: 1.2;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
   text-decoration: none;
+  box-sizing: border-box;
+  transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease, border-color 200ms ease, filter 200ms ease;
+}
+
+/* Focus-visible: outline 2px emas (#e0be7a) dengan offset 3px */
+.hero-btn-primary:focus-visible,
+.hero-btn-secondary:focus-visible,
+.hero-btn-tertiary:focus-visible {
+  outline: 2px solid #e0be7a;
+  outline-offset: 3px;
+}
+
+/* 1. Butang utama (Uji Minda Rawak): gradien zamrud yang sama dengan butang Nota */
+.hero-btn-primary {
+  background: var(--tint-primary-grad, linear-gradient(135deg, #0d9488 0%, #059669 55%, #047857 100%));
+  background-color: var(--tint-primary, #059669);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .hero-btn-primary:hover {
   transform: translateY(-2px);
-  filter: brightness(1.12);
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  filter: brightness(1.06);
+  box-shadow: 0 8px 26px rgba(16, 185, 129, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
 .hero-btn-primary:active {
-  transform: scale(0.98);
+  transform: translateY(0);
 }
 
+/* 2. Butang sekunder (Selusuri Direktori): kaca (bg putih ~6%, border putih ~18%, backdrop-blur) */
 .hero-btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 22px;
-  border-radius: var(--r-pill, 9999px);
   background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  color: var(--text-strong, #ffffff);
-  font-size: 0.92rem;
-  font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none;
-  text-decoration: none;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .hero-btn-secondary:hover {
   transform: translateY(-2px);
   background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.45);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.32);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.32);
 }
 
 .hero-btn-secondary:active {
-  transform: scale(0.98);
+  transform: translateY(0);
 }
 
-/* Mobile-First Layout: Butang tersusun ke bawah (width: 100%) pada telefon bimbit */
-@media (max-width: 680px) {
+/* 3. Butang tertier (Bincang Isu dengan AI): gaya kaca sama seperti sekunder, ikon sparkles emas #e0be7a */
+.hero-btn-tertiary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.hero-btn-tertiary:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.32);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
+.hero-btn-tertiary:active {
+  transform: translateY(0);
+}
+
+/* Hormati prefers-reduced-motion: matikan transform */
+@media (prefers-reduced-motion: reduce) {
+  .hero-btn-primary,
+  .hero-btn-secondary,
+  .hero-btn-tertiary {
+    transition: none !important;
+  }
+  .hero-btn-primary:hover,
+  .hero-btn-secondary:hover,
+  .hero-btn-tertiary:hover {
+    transform: none !important;
+  }
+}
+
+/* Responsif: pada skrin bawah 640px, susun menegak dengan butang lebar penuh */
+@media (max-width: 640px) {
   #hero-section {
     padding: 24px 16px;
     margin: 6px auto 16px auto;
@@ -4171,16 +4213,16 @@ summary:focus-visible {
 
   .hero-btn-group {
     flex-direction: column !important;
-    gap: 10px;
-    width: 100%;
+    gap: 12px !important;
+    width: 100% !important;
   }
 
   .hero-btn-primary,
-  .hero-btn-secondary {
+  .hero-btn-secondary,
+  .hero-btn-tertiary {
     width: 100% !important;
-    padding: 13px 18px;
-    font-size: 0.90rem;
-    box-sizing: border-box;
+    padding: 14px 20px !important;
+    box-sizing: border-box !important;
   }
 }
 
