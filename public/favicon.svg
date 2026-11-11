@@ -1,41 +1,42 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#07132a"/>
-      <stop offset="50%" stop-color="#06222b"/>
-      <stop offset="100%" stop-color="#043329"/>
-    </linearGradient>
-    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fef08a"/>
-      <stop offset="50%" stop-color="#e0be7a"/>
-      <stop offset="100%" stop-color="#ca8a04"/>
-    </linearGradient>
-    <linearGradient id="emerald" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6ee7b7"/>
-      <stop offset="100%" stop-color="#10b981"/>
-    </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="#10b981" flood-opacity="0.5"/>
+    <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="#34d399" flood-opacity="0.9"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="3.5" flood-color="#10b981" flood-opacity="0.6"/>
     </filter>
   </defs>
 
-  <!-- Background Squircle -->
-  <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#bg)" stroke="#10b981" stroke-width="1.8" stroke-opacity="0.85"/>
-  <rect x="3.5" y="3.5" width="41" height="41" rx="10.5" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="0.8"/>
+  <!-- Deep Dark Midnight Background -->
+  <rect width="48" height="48" rx="10" fill="#040a16"/>
 
-  <!-- Brand Scale Icon centered (24x24 scaled by 1.333 with origin offset) -->
-  <g transform="translate(8, 8) scale(1.333)" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
-    <!-- Base -->
-    <path d="M7 21h10" stroke="url(#gold)" stroke-width="2.2"/>
-    <!-- Central Pole -->
-    <path d="M12 3v18" stroke="url(#gold)" stroke-width="2.2"/>
-    <!-- Top Beam -->
-    <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" stroke="url(#gold)" stroke-width="2.2" fill="none"/>
+  <g filter="url(#neon-glow)">
+    <!-- Outer Neon Ring -->
+    <circle cx="24" cy="24" r="20" stroke="#34d399" stroke-width="2.2" fill="#062e24" fill-opacity="0.3"/>
+    <circle cx="24" cy="24" r="20" stroke="#ffffff" stroke-width="0.8" stroke-opacity="0.85" fill="none"/>
+
+    <!-- Central Stand -->
+    <circle cx="24" cy="11.5" r="2.2" stroke="#34d399" stroke-width="1.8" fill="none"/>
+    <circle cx="24" cy="11.5" r="2.2" stroke="#ffffff" stroke-width="0.7" fill="none"/>
+
+    <line x1="24" y1="13.7" x2="24" y2="37" stroke="#34d399" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="24" y1="13.7" x2="24" y2="37" stroke="#ffffff" stroke-width="0.8" stroke-linecap="round"/>
+
+    <path d="M17 40.5 L20.5 36.5 H27.5 L31 40.5 Z" stroke="#34d399" stroke-width="2" fill="none" stroke-linejoin="round"/>
+    <path d="M17 40.5 L20.5 36.5 H27.5 L31 40.5 Z" stroke="#ffffff" stroke-width="0.7" fill="none" stroke-linejoin="round"/>
+
+    <!-- Beam -->
+    <line x1="10" y1="18" x2="38" y2="18" stroke="#6ee7b7" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="10" y1="18" x2="38" y2="18" stroke="#ffffff" stroke-width="0.8" stroke-linecap="round"/>
+    <circle cx="24" cy="18" r="1.4" fill="#ffffff"/>
+
     <!-- Left Pan -->
-    <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" stroke="url(#emerald)" stroke-width="1.8" fill="rgba(16, 185, 129, 0.35)"/>
+    <polygon points="10,18 5.5,27 14.5,27" stroke="#34d399" stroke-width="1.8" fill="#10b981" fill-opacity="0.22" stroke-linejoin="round"/>
+    <path d="M5.5 27 C5.5 32 14.5 32 14.5 27" stroke="#34d399" stroke-width="1.8" fill="#10b981" fill-opacity="0.22" stroke-linejoin="round"/>
+    <path d="M5.5 27 C5.5 31.5 14.5 31.5 14.5 27" stroke="#ffffff" stroke-width="0.7" fill="none" stroke-linecap="round"/>
+
     <!-- Right Pan -->
-    <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" stroke="url(#emerald)" stroke-width="1.8" fill="rgba(16, 185, 129, 0.35)"/>
-    <!-- Top Jewel Dot -->
-    <circle cx="12" cy="3" r="1.3" fill="#fde047"/>
+    <polygon points="38,18 33.5,27 42.5,27" stroke="#34d399" stroke-width="1.8" fill="#10b981" fill-opacity="0.22" stroke-linejoin="round"/>
+    <path d="M33.5 27 C33.5 32 42.5 32 42.5 27" stroke="#34d399" stroke-width="1.8" fill="#10b981" fill-opacity="0.22" stroke-linejoin="round"/>
+    <path d="M33.5 27 C33.5 31.5 42.5 31.5 42.5 27" stroke="#ffffff" stroke-width="0.7" fill="none" stroke-linecap="round"/>
   </g>
 </svg>
