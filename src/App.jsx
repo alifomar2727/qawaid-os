@@ -2810,10 +2810,18 @@ export default function App() {
               </div>
             ) : (
               <div className="lg-grid">
-                {filteredData.map((item) => {
+                {filteredData.map((item, index) => {
                   const isBookmarked = bookmarks.some((b) => b.id === item.id);
                   return (
-                    <article key={item.id} className="lg-card glass-card">
+                    <article
+                      key={item.id}
+                      className="lg-card glass-card kad-kaedah"
+                      style={{
+                        animation: 'fadeInUp 0.6s ease-out forwards',
+                        opacity: 0,
+                        animationDelay: `${index * 0.1}s`,
+                      }}
+                    >
                       <div>
                         {/* 1. Neutral Glass Bookmark Button */}
                         <div className="lg-card-top" style={{ justifyContent: 'flex-end' }}>
@@ -2837,7 +2845,16 @@ export default function App() {
                         </div>
 
                         {/* 2. Arabic Block (Fixed min-height, line-height 1.9, Naskh font, full tashkeel) */}
-                        <div dir="rtl" className="lg-arabic-block">
+                        <div
+                          dir="rtl"
+                          className="lg-arabic-block"
+                          style={{
+                            fontFamily: "'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif",
+                            fontSize: 'clamp(1.5rem, 5vw, 2rem)',
+                            textWrap: 'balance',
+                            textShadow: '0 0 10px rgba(255, 255, 255, 0.3)',
+                          }}
+                        >
                           {item.kaedah_ranting_ar}
                         </div>
 

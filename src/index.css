@@ -4188,3 +4188,30 @@ summary:focus-visible {
 #direktori-kad {
   scroll-margin-top: 110px;
 }
+
+
+/* ==========================================================================
+   FASA 1: TIPOGRAFI ARAB "HERO" & ANIMASI MASUK KAD KAEDAH (DIREKTORI)
+   ========================================================================== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.kad-kaedah {
+  will-change: transform, opacity;
+}
+
+.lg-arabic-block {
+  font-family: 'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif !important;
+  font-size: clamp(1.5rem, 5vw, 2rem) !important;
+  text-wrap: balance !important;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3) !important;
+  line-height: 1.85 !important;
+}
