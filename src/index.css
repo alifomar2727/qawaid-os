@@ -4215,3 +4215,41 @@ summary:focus-visible {
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.3) !important;
   line-height: 1.85 !important;
 }
+
+
+/* ==========================================================================
+   FASA 3: INTERAKSI UI (PC HOVER 3D & PENUNJUK GELONGSOR TAB PENAPIS)
+   ========================================================================== */
+
+/* 1. Efek Hover Bertaraf Premium (HANYA pada peranti dengan sokongan hover) */
+@media (hover: hover) and (pointer: fine) {
+  .kad-kaedah {
+    transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.28s ease,
+                border-color 0.28s ease;
+  }
+
+  .kad-kaedah:hover {
+    transform: translateY(-4px) scale(1.01);
+    border-color: var(--theme-color, rgba(255, 255, 255, 0.55)) !important;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45),
+                0 0 22px var(--theme-color, rgba(59, 130, 246, 0.35)),
+                inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  }
+}
+
+/* 2. Butang Penapis (Filter Tabs): Animasi Gelongsor & Peralihan Lembut */
+.lg-filter-chip {
+  position: relative;
+  transition: all 0.3s ease !important;
+}
+
+.lg-filter-chip.is-active {
+  transition: all 0.3s ease !important;
+}
+
+.lg-filter-bar .lg-sliding-pill {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s ease !important;
+}
