@@ -4274,15 +4274,6 @@ export default function App() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => handleTanyaAiNota(dataNotaLengkap[flashIndex])}
-                      className="lg-btn-glass lg-flash-tanya-ai"
-                      title="Tanya AI Chatbox mengenai kaedah ini"
-                    >
-                      <LucideIcon name="sparkles" size={14} />
-                      <span>Tanya AI</span>
-                    </button>
-                    <button
-                      type="button"
                       onClick={() => setIsFlipped(false)}
                       className="lg-btn-glass lg-flash-close-btn"
                       title="Tutup Nota Penuh"
@@ -4475,7 +4466,7 @@ export default function App() {
                             title="Tanya AI Chatbox mengenai kaedah ini"
                           >
                             <LucideIcon name="sparkles" size={15} />
-                            <span>Tanya AI Chatbox</span>
+                            <span>Tanya AI</span>
                           </button>
                           {nota.urlShamela && (
                             <a

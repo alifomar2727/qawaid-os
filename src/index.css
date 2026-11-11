@@ -5154,7 +5154,7 @@ summary:focus-visible {
 
 .lg-flash-chip {
   flex: 0 1 auto;
-  max-width: 42%;
+  max-width: 70%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -5185,7 +5185,6 @@ summary:focus-visible {
 @media (max-width: 640px) {
   .lg-flash-header {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
@@ -5193,28 +5192,17 @@ summary:focus-visible {
   }
 
   .lg-flash-chip {
-    max-width: 100%;
-    width: 100%;
-    order: 1;
-    margin-bottom: 4px;
-    text-align: center;
-    justify-content: center;
-  }
-
-  .lg-flash-tanya-ai {
-    order: 2;
-    flex: 1;
-    justify-content: center;
-    font-size: 0.78rem !important;
-    padding: 7px 10px !important;
+    max-width: 65%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.74rem !important;
   }
 
   .lg-flash-close-btn {
-    order: 3;
-    flex: 1;
-    justify-content: center;
+    flex-shrink: 0;
     font-size: 0.78rem !important;
-    padding: 7px 10px !important;
+    padding: 6px 12px !important;
   }
 }
 
