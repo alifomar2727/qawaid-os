@@ -1563,6 +1563,322 @@ function AdminPasswordModal({ isOpen, onClose, onSuccess }) {
   );
 }
 
+// =========================================================================
+// FASA 3: MODAL UJI MINDA RAWAK (80 SOALAN UMUM AL-ZUHAILI - LIQUID GLASS POPUP)
+// =========================================================================
+function ModalUjiMindaRawak({ rawakSoalan, onClose, onSoalanLain }) {
+  const [pilihanUser, setPilihanUser] = useState(null);
+
+  useEffect(() => {
+    setPilihanUser(null);
+  }, [rawakSoalan?.id]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  if (!rawakSoalan) return null;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 10002,
+        background: 'rgba(3, 7, 20, 0.82)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="lg-panel glass-card"
+        style={{
+          maxWidth: '680px',
+          width: '100%',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          borderRadius: 'var(--r-xl, 24px)',
+          border: '1px solid rgba(255, 255, 255, 0.16)',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25)',
+          padding: '24px 22px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+          position: 'relative',
+        }}
+      >
+        {/* Modal Header */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '8px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            paddingBottom: '12px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span
+              className="lg-node-chip"
+              style={{
+                background: 'rgba(37, 99, 235, 0.2)',
+                borderColor: 'rgba(59, 130, 246, 0.5)',
+                color: '#93c5fd',
+                fontWeight: 700,
+                fontSize: '0.78rem',
+              }}
+            >
+              🎲 UJI MINDA RAWAK
+            </span>
+            {rawakSoalan.kategori && (
+              <span className="lg-node-chip" style={{ fontSize: '0.74rem' }}>
+                {rawakSoalan.kategori}
+              </span>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="lg-icon-btn"
+            title="Tutup Modal"
+            aria-label="Tutup Modal"
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--text-strong)',
+            }}
+          >
+            <LucideIcon name="x" size={16} />
+          </button>
+        </div>
+
+        {/* Soalan / Senario Kes */}
+        <div>
+          <div
+            style={{
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#60a5fa',
+              marginBottom: '8px',
+            }}
+          >
+            Senario Isu Semasa:
+          </div>
+          <p
+            style={{
+              margin: 0,
+              fontSize: '0.94rem',
+              lineHeight: 1.65,
+              color: 'var(--text-strong, #ffffff)',
+              fontWeight: 500,
+            }}
+          >
+            {rawakSoalan.isu_kontemporari}
+          </p>
+        </div>
+
+        {/* 4 Pilihan Jawapan */}
+        <div>
+          <div
+            style={{
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: 'var(--text-muted)',
+              marginBottom: '10px',
+            }}
+          >
+            Pilih Kaedah Fiqh Yang Tepat:
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr',
+              gap: '10px',
+            }}
+          >
+            {rawakSoalan.options?.map((opt, oIdx) => {
+              const isPicked = pilihanUser === opt.kaedah_ranting_ar;
+              const isCorrect = opt.kaedah_ranting_ar === rawakSoalan.kaedah_ranting_ar;
+
+              let borderCol = 'rgba(255, 255, 255, 0.12)';
+              let bgCol = 'rgba(255, 255, 255, 0.04)';
+
+              if (pilihanUser) {
+                if (isCorrect) {
+                  borderCol = '#10b981';
+                  bgCol = 'rgba(16, 185, 129, 0.22)';
+                } else if (isPicked) {
+                  borderCol = '#ef4444';
+                  bgCol = 'rgba(239, 68, 68, 0.22)';
+                }
+              }
+
+              return (
+                <button
+                  key={oIdx}
+                  type="button"
+                  onClick={() => {
+                    if (!pilihanUser) {
+                      setPilihanUser(opt.kaedah_ranting_ar);
+                    }
+                  }}
+                  className="lg-inner-well"
+                  style={{
+                    textAlign: 'left',
+                    cursor: pilihanUser ? 'default' : 'pointer',
+                    borderColor: borderCol,
+                    background: bgCol,
+                    padding: '12px 16px',
+                    borderRadius: 'var(--r-md, 14px)',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <div
+                    dir="rtl"
+                    style={{
+                      fontFamily: '"Noto Naskh Arabic", "Amiri", serif',
+                      fontSize: '1.15rem',
+                      fontWeight: 700,
+                      lineHeight: 1.6,
+                      color: '#ffffff',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    {opt.kaedah_ranting_ar}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '0.82rem',
+                      color: 'var(--text-body, #cbd5e1)',
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    {opt.kaedah_ranting_bm}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Huraian & Rujukan Kitab jika pengguna sudah memilih */}
+        {pilihanUser && (
+          <div
+            className="lg-inner-well"
+            style={{
+              borderColor: 'rgba(56, 189, 248, 0.45)',
+              background: 'rgba(8, 25, 54, 0.65)',
+              padding: '14px 16px',
+              borderRadius: 'var(--r-md, 14px)',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '0.74rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                color: '#67e8f9',
+                marginBottom: '6px',
+              }}
+            >
+              📖 Huraian &amp; Rujukan Kitab ({rawakSoalan.jilid_halaman || 'Jil. 1'}):
+            </div>
+            <p
+              style={{
+                margin: '0 0 10px 0',
+                fontSize: '0.85rem',
+                lineHeight: 1.6,
+                color: 'var(--text-strong, #ffffff)',
+              }}
+            >
+              {rawakSoalan.huraian_jawapan}
+            </p>
+            {rawakSoalan.urlShamela && (
+              <a
+                href={rawakSoalan.urlShamela}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="lg-btn-glass"
+                style={{
+                  fontSize: '0.74rem',
+                  padding: '5px 12px',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                }}
+              >
+                <LucideIcon name="external" size={13} />
+                <span>Buka Shamela.ws</span>
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* Modal Actions */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '10px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            paddingTop: '14px',
+            marginTop: '4px',
+          }}
+        >
+          <button
+            type="button"
+            onClick={onSoalanLain}
+            className="hero-btn-primary"
+            style={{
+              padding: '9px 18px',
+              fontSize: '0.84rem',
+            }}
+          >
+            <LucideIcon name="refresh-cw" size={14} />
+            <span>Soalan Rawak Lain</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="hero-btn-secondary"
+            style={{ padding: '9px 20px', fontSize: '0.84rem' }}
+          >
+            <span>Tutup</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const { data } = qawaidData;
 
@@ -1809,6 +2125,35 @@ export default function App() {
 
   const [flashIndex, setFlashIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+
+  // =========================================================================
+  // FASA 3: UJI MINDA RAWAK (80 SOALAN AL-ZUHAILI)
+  // =========================================================================
+  const [rawakSoalan, setRawakSoalan] = useState(null);
+
+  const handleUjiMindaRawak = useCallback(() => {
+    if (!dataKuiz50 || dataKuiz50.length === 0) return;
+    const randomIndex = Math.floor(Math.random() * dataKuiz50.length);
+    const item = dataKuiz50[randomIndex];
+
+    // Cipta 4 pilihan jawapan unik: 1 jawapan tepat + 3 distraktor rawak
+    const seen = new Set([item.kaedah_ranting_ar]);
+    const distractors = [];
+    const shuffled = [...dataKuiz50].sort(() => 0.5 - Math.random());
+    for (const d of shuffled) {
+      if (!seen.has(d.kaedah_ranting_ar)) {
+        seen.add(d.kaedah_ranting_ar);
+        distractors.push(d);
+        if (distractors.length === 3) break;
+      }
+    }
+    const options = [...distractors, item].sort(() => 0.5 - Math.random());
+
+    setRawakSoalan({
+      ...item,
+      options,
+    });
+  }, []);
 
   const [chatInput, setChatInput] = useState('');
   const [isLoadingAI, setIsLoadingAI] = useState(false);
@@ -2357,6 +2702,7 @@ export default function App() {
                 <button
                   type="button"
                   className="hero-btn-primary"
+                  onClick={handleUjiMindaRawak}
                 >
                   <span>🎲 Uji Minda Rawak</span>
                 </button>
@@ -4400,6 +4746,15 @@ export default function App() {
         isOpen={showPasswordModal}
         onClose={() => setShowPasswordModal(false)}
         onSuccess={() => setIsAdmin(true)}
+      />
+
+      {/* ====================================================================
+          FASA 3: MODAL UJI MINDA RAWAK (80 SOALAN AL-ZUHAILI)
+         ==================================================================== */}
+      <ModalUjiMindaRawak
+        rawakSoalan={rawakSoalan}
+        onClose={() => setRawakSoalan(null)}
+        onSoalanLain={handleUjiMindaRawak}
       />
 
       {/* ====================================================================
