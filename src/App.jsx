@@ -1879,6 +1879,68 @@ function ModalUjiMindaRawak({ rawakSoalan, onClose, onSoalanLain }) {
   );
 }
 
+// =========================================================================
+// FASA 2: PEMETAAN WARNA DINAMIK 5 KAEDAH INDUK (DYNAMIC COLOR CODING)
+// =========================================================================
+function getKaedahTheme(item) {
+  const ar = item?.kaedah_asasi_ar || '';
+  const bm = item?.kaedah_asasi_bm || '';
+  const text = `${ar} ${bm}`.toLowerCase();
+
+  // 1. Niat / Al-Umur Bi Maqasidiha -> Tema Emerald / Hijau (#10b981)
+  if (ar.includes('مَقَاصِد') || text.includes('niat') || text.includes('tujuan') || text.includes('maqasid')) {
+    return {
+      color: '#10b981',
+      border: 'rgba(16, 185, 129, 0.30)',
+      badgeBg: '#10b981',
+      watermark: 'radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 60%)',
+    };
+  }
+  // 2. Yakin / Al-Yaqin -> Tema Biru (#3b82f6)
+  if (ar.includes('يَقِين') || text.includes('yakin') || text.includes('yaqin') || ar.includes('شَّكّ')) {
+    return {
+      color: '#3b82f6',
+      border: 'rgba(59, 130, 246, 0.30)',
+      badgeBg: '#3b82f6',
+      watermark: 'radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.05) 0%, transparent 60%)',
+    };
+  }
+  // 3. Kesukaran / Al-Masyaqqah -> Tema Oren/Emas (#f59e0b)
+  if (ar.includes('مَشَقَّة') || text.includes('sukar') || text.includes('masyaqqah') || ar.includes('تَيْسِير')) {
+    return {
+      color: '#f59e0b',
+      border: 'rgba(245, 158, 11, 0.30)',
+      badgeBg: '#f59e0b',
+      watermark: 'radial-gradient(circle at 100% 0%, rgba(245, 158, 11, 0.05) 0%, transparent 60%)',
+    };
+  }
+  // 4. Mudarat / Ad-Dharar -> Tema Merah/Ros (#ef4444)
+  if (ar.includes('ضَّرَر') || text.includes('mudarat') || text.includes('dharar') || text.includes('bahaya')) {
+    return {
+      color: '#ef4444',
+      border: 'rgba(239, 68, 68, 0.30)',
+      badgeBg: '#ef4444',
+      watermark: 'radial-gradient(circle at 100% 0%, rgba(239, 68, 68, 0.05) 0%, transparent 60%)',
+    };
+  }
+  // 5. Adat / Al-Adah -> Tema Ungu/Indigo (#8b5cf6)
+  if (ar.includes('عَادَة') || text.includes('adat') || text.includes('adah') || ar.includes('مُحَكَّمَة')) {
+    return {
+      color: '#8b5cf6',
+      border: 'rgba(139, 92, 246, 0.30)',
+      badgeBg: '#8b5cf6',
+      watermark: 'radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.05) 0%, transparent 60%)',
+    };
+  }
+  // Cabang / Lain-lain -> Tema Putih / Kaca biasa (#ffffff)
+  return {
+    color: '#ffffff',
+    border: 'rgba(255, 255, 255, 0.30)',
+    badgeBg: 'rgba(255, 255, 255, 0.20)',
+    watermark: 'radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.05) 0%, transparent 60%)',
+  };
+}
+
 export default function App() {
   const { data } = qawaidData;
 
@@ -2812,6 +2874,8 @@ export default function App() {
               <div className="lg-grid">
                 {filteredData.map((item, index) => {
                   const isBookmarked = bookmarks.some((b) => b.id === item.id);
+                  const theme = getKaedahTheme(item);
+
                   return (
                     <article
                       key={item.id}
@@ -2820,11 +2884,39 @@ export default function App() {
                         animation: 'fadeInUp 0.6s ease-out forwards',
                         opacity: 0,
                         animationDelay: `${index * 0.1}s`,
+                        borderColor: theme.border,
+                        backgroundImage: theme.watermark,
+                        '--theme-color': theme.color,
                       }}
                     >
                       <div>
-                        {/* 1. Neutral Glass Bookmark Button */}
-                        <div className="lg-card-top" style={{ justifyContent: 'flex-end' }}>
+                        {/* 1. Badge Nombor Kaedah (Color Coded) & Neutral Glass Bookmark Button */}
+                        <div
+                          className="lg-card-top"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginBottom: '10px',
+                          }}
+                        >
+                          <span
+                            className="lg-node-chip"
+                            style={{
+                              backgroundColor: theme.badgeBg,
+                              color: '#ffffff',
+                              fontWeight: 700,
+                              fontSize: '0.74rem',
+                              padding: '3px 10px',
+                              borderRadius: 'var(--r-pill, 9999px)',
+                              border: 'none',
+                              boxShadow: `0 2px 8px ${theme.color}40`,
+                              letterSpacing: '0.04em',
+                            }}
+                          >
+                            {item.id}
+                          </span>
+
                           <button
                             type="button"
                             onClick={() => toggleBookmark(item)}
