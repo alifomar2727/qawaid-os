@@ -107,6 +107,7 @@
 *::before,
 *::after {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent !important;
 }
 
 html {
@@ -119,6 +120,7 @@ html {
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-tap-highlight-color: transparent !important;
 }
 
 body {
@@ -129,6 +131,48 @@ body {
   color: var(--text-strong);
   font-family: inherit;
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Halang kotak biru (tap highlight), selection & focus outline pada SEMUA butang & elemen interaktif di mobile */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+[role="button"],
+.lg-brand,
+.lg-brand *,
+.lg-nav-item,
+.lg-nav-item *,
+.lg-subnav-btn,
+.lg-btn,
+.btn,
+.pill,
+.filter-chip,
+.quiz-opt,
+.quiz-option,
+.game-card,
+.flashcard,
+.flashcard-wrap,
+.interactive-item,
+.clickable {
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+/* Buang kotak border/outline bila elemen diklik atau ditap (kekalkan hanya untuk keyboard tab navigation) */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+[role="button"]:focus:not(:focus-visible),
+.lg-brand:focus,
+.lg-brand:active,
+.lg-nav-item:focus,
+.lg-nav-item:active {
+  outline: none !important;
 }
 
 .lg-app-root {
@@ -328,6 +372,26 @@ html.has-svg-refract .lg-header.is-condensed.glass-control--refract {
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  outline: none !important;
+  touch-action: manipulation;
+}
+
+.lg-brand:focus,
+.lg-brand:active,
+.lg-brand:focus-visible {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.lg-brand * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
 
 .lg-brand-icon {

@@ -2865,7 +2865,15 @@ export default function App() {
             onPointerCancel={handleLogoPointerUp}
             onPointerLeave={handleLogoPointerUp}
             title="Qawaid OS (Klik ke Direktori / Tahan 1.5s untuk Admin)"
-            style={{ cursor: 'pointer', userSelect: 'none', touchAction: 'manipulation' }}
+            style={{
+              cursor: 'pointer',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none',
+              WebkitTapHighlightColor: 'transparent',
+              outline: 'none',
+              touchAction: 'manipulation'
+            }}
           >
             <div className="lg-brand-icon">
               <NeonScaleLogo isWeighing={isLogoWeighing} />
