@@ -2268,6 +2268,9 @@ export default function App() {
     },
   ]);
   const chatEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
+  const shouldAutoScrollToBottomRef = useRef(false);
+  const prevChatMessagesLenRef = useRef(chatMessages.length);
   const [isSourceStripExpanded, setIsSourceStripExpanded] = useState(false);
 
   // Refs for sliding glass indicators & sticky header offset
@@ -2316,9 +2319,50 @@ export default function App() {
     };
   }, [updateStickyOffset]);
 
+  // Kawalan Auto-Scroll AI Chatbox:
+  // 1. Jika buka AI Chatbox (klik hero CTA / floating FAB) -> scroll window ke atas & chatContainer.scrollTop = 0 (Ahlan wa Sahlan terpapar kemas di atas)
+  // 2. Jika klik "Tanya AI" pada kad direktori -> scroll window ke atas & chatContainer scroll ke mesej terkini
   useEffect(() => {
     if (viewMode === 'AI_CHAT') {
-      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      if (!shouldAutoScrollToBottomRef.current) {
+        if (typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }
+        if (chatContainerRef.current) {
+          chatContainerRef.current.scrollTop = 0;
+        }
+      } else {
+        if (typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }
+        setTimeout(() => {
+          if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTo({
+              top: chatContainerRef.current.scrollHeight,
+              behavior: 'smooth',
+            });
+          }
+        }, 60);
+      }
+    } else {
+      shouldAutoScrollToBottomRef.current = false;
+    }
+  }, [viewMode]);
+
+  useEffect(() => {
+    if (viewMode !== 'AI_CHAT') return;
+
+    const countChanged = chatMessages.length > prevChatMessagesLenRef.current;
+    prevChatMessagesLenRef.current = chatMessages.length;
+
+    // Hanya auto-scroll ke bawah jika soalan baharu dihantar, jawapan AI masuk, atau sedang memuatkan jawapan
+    if (shouldAutoScrollToBottomRef.current || (countChanged && chatMessages.length > 1) || isLoadingAI) {
+      if (chatContainerRef.current) {
+        chatContainerRef.current.scrollTo({
+          top: chatContainerRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+      }
     }
   }, [chatMessages, isLoadingAI, viewMode]);
 
@@ -2592,6 +2636,7 @@ export default function App() {
     const soalan = (teksPilihan || chatInput).trim();
     if (!soalan || isLoadingAI) return;
 
+    shouldAutoScrollToBottomRef.current = true;
     setChatMessages((prev) => [...prev, { role: 'user', text: soalan }]);
     if (!teksPilihan) setChatInput('');
     setIsLoadingAI(true);
@@ -2834,8 +2879,8 @@ export default function App() {
                   type="button"
                   className="hero-btn-tertiary"
                   onClick={() => {
+                    shouldAutoScrollToBottomRef.current = false;
                     setViewMode('AI_CHAT');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                 >
                   <LucideIcon name="sparkles" size={18} strokeWidth={2} color="#e0be7a" />
@@ -3024,6 +3069,7 @@ export default function App() {
                           <button
                             type="button"
                             onClick={() => {
+                              shouldAutoScrollToBottomRef.current = true;
                               setViewMode('AI_CHAT');
                               hantarSoalanAI(
                                 `Jelaskan kaedah "${item.kaedah_ranting_ar}" (${item.kaedah_ranting_bm}) beserta syarat dan contoh tatbiqatnya dalam kitab القواعد الفقهية وتطبيقاتها في المذاهب الأربعة.`
@@ -4451,17 +4497,7 @@ export default function App() {
             AI TURATH RAG VIEW
            ==================================================================== */}
         {viewMode === 'AI_CHAT' && (
-          <div
-            className="lg-panel glass-card"
-            style={{
-              maxWidth: '840px',
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              height: '75vh',
-              minHeight: '520px',
-            }}
-          >
+          <div className="lg-panel glass-card lg-ai-panel">
             {/* Header */}
             <div
               style={{
@@ -4559,15 +4595,7 @@ export default function App() {
             </div>
 
             {/* Suggested Prompts */}
-            <div
-              style={{
-                display: 'flex',
-                gap: '8px',
-                overflowX: 'auto',
-                padding: '12px 0',
-                borderBottom: '1px solid var(--card-divider)',
-              }}
-            >
+            <div className="lg-ai-prompts">
               {[
                 'Huraikan kaedah الأمور بمقاصدها dan syarat niat berserta halaman Shamela',
                 'Apakah beza syarat niat wuduk antara Hanafi dan Syafie dalam kitab ini?',
@@ -4578,8 +4606,7 @@ export default function App() {
                   key={i}
                   type="button"
                   onClick={() => hantarSoalanAI(contoh)}
-                  className="lg-btn-glass"
-                  style={{ whiteSpace: 'nowrap', fontSize: '0.73rem' }}
+                  className="lg-prompt-chip"
                 >
                   <LucideIcon name="sparkles" size={12} />
                   <span>{contoh}</span>
@@ -4588,31 +4615,11 @@ export default function App() {
             </div>
 
             {/* Messages */}
-            <div
-              style={{
-                flex: 1,
-                overflowY: 'auto',
-                padding: '16px 4px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '14px',
-              }}
-            >
+            <div ref={chatContainerRef} className="lg-ai-messages">
               {chatMessages.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={msg.role === 'user' ? '' : 'lg-inner-well'}
-                  style={{
-                    alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                    maxWidth: '88%',
-                    padding: '14px 18px',
-                    borderRadius: 'var(--r-md)',
-                    background:
-                      msg.role === 'user' ? 'var(--tint-primary)' : undefined,
-                    color: msg.role === 'user' ? '#ffffff' : 'var(--text-strong)',
-                    fontSize: '0.88rem',
-                    lineHeight: 1.65,
-                  }}
+                  className={`lg-chat-bubble ${msg.role === 'user' ? 'lg-chat-bubble--user' : 'lg-inner-well lg-chat-bubble--ai'}`}
                 >
                   <div style={{ whiteSpace: msg.role === 'user' ? 'pre-wrap' : 'normal' }}>
                     {msg.role === 'ai' ? renderFormattedAiText(msg.text) : msg.text}
@@ -4808,26 +4815,19 @@ export default function App() {
                 e.preventDefault();
                 hantarSoalanAI();
               }}
-              style={{
-                display: 'flex',
-                gap: '10px',
-                paddingTop: '12px',
-                borderTop: '1px solid var(--card-divider)',
-              }}
+              className="lg-ai-form"
             >
               <input
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Tanya soalan daripada kitab القواعد الفقهية وتطبيقاتها في المذاهب الأربعة..."
-                className="lg-search-input"
-                style={{ flex: 1, height: '42px', paddingLeft: '16px' }}
+                placeholder="Tanya kaedah fiqh atau rujukan kitab Dr. al-Zuhaili..."
+                className="lg-ai-input"
               />
               <button
                 type="submit"
                 disabled={isLoadingAI}
-                className="lg-btn-primary"
-                style={{ padding: '0 20px', height: '42px' }}
+                className="lg-btn-primary lg-ai-submit-btn"
               >
                 <span>{isLoadingAI ? '...' : 'Hantar'}</span>
                 <LucideIcon name="send" size={14} />
@@ -4875,10 +4875,15 @@ export default function App() {
          ==================================================================== */}
       <button
         type="button"
-        onClick={() =>
-          setViewMode((prev) => (prev === 'AI_CHAT' ? 'EXPLORER' : 'AI_CHAT'))
-        }
-        className="lg-fab-ai glass-control glass-control--refract"
+        onClick={() => {
+          if (viewMode !== 'AI_CHAT') {
+            shouldAutoScrollToBottomRef.current = false;
+          }
+          setViewMode((prev) => (prev === 'AI_CHAT' ? 'EXPLORER' : 'AI_CHAT'));
+        }}
+        className={`lg-fab-ai glass-control glass-control--refract ${
+          viewMode === 'AI_CHAT' ? 'is-in-chat' : ''
+        }`}
         aria-label="AI Chatbox"
         title={viewMode === 'AI_CHAT' ? 'Kembali ke Direktori' : 'Buka AI Chatbox'}
       >
