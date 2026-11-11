@@ -540,7 +540,8 @@ export default function SprintGame() {
             }`}
           >
             {activeGame === 'SPRINT' && <span className="sprint-live-dot" />}
-            <span>⚡ Sprint 60 Saat (Time Attack)</span>
+            <span className="sprint-tab-desktop">⚡ Sprint 60 Saat (Time Attack)</span>
+            <span className="sprint-tab-mobile">⚡ Sprint 60s</span>
           </button>
 
           {/* TAB 2: QAWAID SWIPE (GAYA TINDER / RAPID-FIRE) */}
@@ -552,7 +553,8 @@ export default function SprintGame() {
             }`}
           >
             {activeGame === 'SWIPE' && <span className="sprint-live-dot" />}
-            <span>🔥 Qawaid Swipe (Leret Kad)</span>
+            <span className="sprint-tab-desktop">🔥 Qawaid Swipe (Leret Kad)</span>
+            <span className="sprint-tab-mobile">🔥 Swipe Kad</span>
           </button>
 
           {/* TAB 3: KEMBARA QAWAID */}
@@ -564,19 +566,20 @@ export default function SprintGame() {
             }`}
           >
             {activeGame === 'KEMBARA' && <span className="sprint-live-dot" />}
-            <span>🗺️ Kembara Qawaid</span>
+            <span className="sprint-tab-desktop">🗺️ Kembara Qawaid</span>
+            <span className="sprint-tab-mobile">🗺️ Kembara</span>
           </button>
         </div>
 
         {activeGame === 'SPRINT' && (
           <div className="sprint-arcade-meta">
-            <span className="lg-node-chip">
+            <span className="lg-node-chip sprint-high-score-chip">
               🏆 REKOD TERTINGGI: {highScore.toLocaleString()} MATA
             </span>
             <button
               type="button"
               onClick={() => setSoundEnabled((s) => !s)}
-              className="lg-btn-glass"
+              className="lg-btn-glass sprint-sound-btn"
               title={soundEnabled ? 'Matikan Bunyi' : 'Hidupkan Bunyi'}
             >
               <span>{soundEnabled ? '🔊 Bunyi: Aktif' : '🔇 Bunyi: Senyap'}</span>
@@ -610,10 +613,22 @@ export default function SprintGame() {
             Sprint 60 Saat: Qawaid Time Attack
           </h2>
           <p className="sprint-lobby-desc">
-            Uji ketangkasan anda memadankan <strong>50 Kaedah Fiqhiyyah</strong> dan
+            Uji ketangkasan anda memadankan <strong>59 Kaedah Fiqhiyyah</strong> dan
             aplikasi empat mazhab daripada kitab{' '}
-            <em>القواعد الفقهية وتطبيقاتها في المذاهب الأربعة</em> sebelum masa
-            tamat! Bina <strong>Combo Streak</strong> untuk gandakan mata sehingga{' '}
+            <span
+              dir="rtl"
+              lang="ar"
+              style={{
+                unicodeBidi: 'isolate',
+                fontFamily: "'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif",
+                fontSize: '1.08em',
+                fontStyle: 'normal',
+                color: 'rgba(255, 255, 255, 0.95)',
+              }}
+            >
+              القواعد الفقهية وتطبيقاتها في المذاهب الأربعة
+            </span>{' '}
+            sebelum masa tamat! Bina <strong>Combo Streak</strong> untuk gandakan mata sehingga{' '}
             <strong>4x</strong> dan raih <strong>+2.0 saat masa tambahan</strong>.
           </p>
 
@@ -672,7 +687,7 @@ export default function SprintGame() {
               <span>🧊</span>
               <span>3 Kuasa Bantuan: <strong>Beku Masa, 50:50 &amp; Langkau</strong></span>
             </div>
-            <div className="sprint-rule-pill">
+            <div className="sprint-rule-pill sprint-rule-keyboard">
               <span>⌨️</span>
               <span>Sokongan Kekunci Pantas <strong>[1] [2] [3] [4]</strong></span>
             </div>
