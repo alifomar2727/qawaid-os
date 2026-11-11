@@ -4183,3 +4183,8 @@ summary:focus-visible {
     box-sizing: border-box;
   }
 }
+
+
+#direktori-kad {
+  scroll-margin-top: 110px;
+}

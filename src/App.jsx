@@ -2363,12 +2363,22 @@ export default function App() {
                 <button
                   type="button"
                   className="hero-btn-secondary"
+                  onClick={() => {
+                    const el = document.getElementById('direktori-kad');
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
                 >
                   <span>📖 Selusuri Direktori</span>
                 </button>
                 <button
                   type="button"
                   className="hero-btn-secondary"
+                  onClick={() => {
+                    setViewMode('AI_CHAT');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                 >
                   <span>✨ Bincang Isu dengan AI</span>
                 </button>
