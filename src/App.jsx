@@ -2707,6 +2707,33 @@ export default function App() {
     }
   };
 
+  // Fungsi pintar menghantar kaedah daripada Nota Lengkap / Flashcard terus ke AI Chatbox
+  const handleTanyaAiNota = (nota) => {
+    if (!nota) return;
+    const tArab =
+      nota?.tajukArab ||
+      (nota?.tajuk && nota.tajuk.includes('(')
+        ? nota.tajuk.split('(')[0].trim()
+        : /[\u0600-\u06FF]/.test(nota?.tajuk || '')
+        ? nota?.tajuk
+        : '');
+    const tBm =
+      nota?.tajukBm ||
+      (nota?.tajuk && nota.tajuk.includes('(')
+        ? nota.tajuk.match(/\((.*?)\)/)?.[1]?.trim()
+        : !tArab
+        ? nota?.tajuk
+        : '');
+
+    const prompt = tArab
+      ? `Jelaskan kaedah "${tArab.trim()}"${tBm ? ` (${tBm.trim()})` : ''} beserta syarat dan contoh tatbiqatnya dalam kitab القواعد الفقهية وتطبيقاتها في المذاهب الأربعة.`
+      : `Jelaskan tajuk "${nota.tajuk || 'Qawaid Fiqhiyyah'}" beserta dalil, pecahan dan contoh tatbiqatnya dalam kitab القواعد الفقهية وتطبيقاتها في المذاهب الأربعة.`;
+
+    shouldAutoScrollToBottomRef.current = true;
+    setViewMode('AI_CHAT');
+    hantarSoalanAI(prompt);
+  };
+
   const hantarSoalanAI = async (teksPilihan) => {
     const soalan = (teksPilihan || chatInput).trim();
     if (!soalan || isLoadingAI) return;
@@ -4222,26 +4249,43 @@ export default function App() {
                   >
                     {dataNotaLengkap[flashIndex].kategori || "Qawaid Fiqhiyyah"}
                   </p>
+
+                  {/* Butang Tanya AI (Bawah Pecahan Kaedah di muka hadapan kad) */}
+                  <div style={{ marginTop: '22px' }}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTanyaAiNota(dataNotaLengkap[flashIndex]);
+                      }}
+                      className="lg-btn-glass lg-btn-tanya-ai-card"
+                      title="Tanya AI Chatbox mengenai kaedah ini"
+                    >
+                      <LucideIcon name="sparkles" size={14} />
+                      <span>Tanya AI</span>
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '16px',
-                      paddingBottom: '12px',
-                      borderBottom: '1px solid var(--card-divider)',
-                    }}
-                  >
-                    <span className="lg-node-chip">
+                  <div className="lg-flash-header">
+                    <span className="lg-node-chip lg-flash-chip">
                       {dataNotaLengkap[flashIndex].kategori || "Qawaid Fiqhiyyah"}
                     </span>
                     <button
                       type="button"
+                      onClick={() => handleTanyaAiNota(dataNotaLengkap[flashIndex])}
+                      className="lg-btn-glass lg-flash-tanya-ai"
+                      title="Tanya AI Chatbox mengenai kaedah ini"
+                    >
+                      <LucideIcon name="sparkles" size={14} />
+                      <span>Tanya AI</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setIsFlipped(false)}
-                      className="lg-btn-glass"
+                      className="lg-btn-glass lg-flash-close-btn"
+                      title="Tutup Nota Penuh"
                     >
                       <span>Tutup Nota</span>
                       <LucideIcon name="x" size={14} />
@@ -4418,6 +4462,21 @@ export default function App() {
                             paddingTop: '6px',
                           }}
                         >
+                          <button
+                            type="button"
+                            onClick={() => handleTanyaAiNota(nota)}
+                            className="lg-btn-glass lg-flash-tanya-ai"
+                            style={{
+                              textDecoration: 'none',
+                              padding: '10px 18px',
+                              fontSize: '0.85rem',
+                              fontWeight: 600,
+                            }}
+                            title="Tanya AI Chatbox mengenai kaedah ini"
+                          >
+                            <LucideIcon name="sparkles" size={15} />
+                            <span>Tanya AI Chatbox</span>
+                          </button>
                           {nota.urlShamela && (
                             <a
                               href={nota.urlShamela}
