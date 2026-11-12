@@ -145,8 +145,16 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
       const genConfig = {
         temperature: 0.3,
         topP: 0.95,
-        maxOutputTokens: 3000,
+        maxOutputTokens: 3500,
       };
+
+      // Tetapan keselamatan untuk mengelakkan teks fiqh (taharah, mandi hadas, aurat dsb) daripada disekat
+      const safetySettings = [
+        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+      ];
 
       return fetch(genUrl, {
         method: 'POST',
@@ -157,6 +165,7 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: promptPenuh }] }],
           generationConfig: genConfig,
+          safetySettings,
         }),
       });
     };
@@ -202,7 +211,13 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
 
                   try {
                     const parsed = JSON.parse(jsonStr);
-                    const chunk = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    const parts = parsed?.candidates?.[0]?.content?.parts || [];
+                    let chunk = '';
+                    for (const p of parts) {
+                      if (!p.thought && p.text) {
+                        chunk += p.text;
+                      }
+                    }
                     if (chunk) {
                       totalJawapan += chunk;
                       res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
@@ -218,7 +233,13 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
               if (buffer && buffer.trim().startsWith('data:')) {
                 try {
                   const parsed = JSON.parse(buffer.trim().replace(/^data:\s*/, ''));
-                  const chunk = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+                  const parts = parsed?.candidates?.[0]?.content?.parts || [];
+                  let chunk = '';
+                  for (const p of parts) {
+                    if (!p.thought && p.text) {
+                      chunk += p.text;
+                    }
+                  }
                   if (chunk) {
                     totalJawapan += chunk;
                     res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
@@ -277,7 +298,11 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
 
         if (resGen.ok) {
           const dataGen = await resGen.json();
-          const jawapanText = dataGen?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const parts = dataGen?.candidates?.[0]?.content?.parts || [];
+          let jawapanText = '';
+          for (const p of parts) {
+            if (!p.thought && p.text) jawapanText += p.text;
+          }
           if (jawapanText) {
             return res.status(200).json({
               jawapan: jawapanText,
