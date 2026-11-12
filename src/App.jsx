@@ -4158,138 +4158,140 @@ export default function App() {
               </span>
             </div>
 
-            <div
-              className="lg-panel glass-card"
-              style={{ margin: 0, minHeight: '440px', display: 'flex', flexDirection: 'column' }}
-            >
-              {!isFlipped ? (
-                <div
-                  onClick={() => setIsFlipped(true)}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    padding: '40px 24px 56px',
-                  }}
-                >
-                  <span className="lg-node-chip" style={{ marginBottom: '22px' }}>
-                    TEKAN UNTUK BUKA NOTA PENUH
-                  </span>
-                  {(() => {
-                    const currentNota = dataNotaLengkap[flashIndex];
-                    const tArab =
-                      currentNota?.tajukArab ||
-                      (currentNota?.tajuk && currentNota.tajuk.includes('(')
-                        ? currentNota.tajuk.split('(')[0].trim()
-                        : /[\u0600-\u06FF]/.test(currentNota?.tajuk || '')
-                        ? currentNota?.tajuk
-                        : '');
-                    const tBm =
-                      currentNota?.tajukBm ||
-                      (currentNota?.tajuk && currentNota.tajuk.includes('(')
-                        ? currentNota.tajuk.match(/\((.*?)\)/)?.[1]?.trim()
-                        : !tArab
-                        ? currentNota?.tajuk
-                        : '');
+            <div className="kitab-perspective-wrap">
+              <div
+                key={isFlipped ? `kitab-unfold-${flashIndex}` : `kitab-front-${flashIndex}`}
+                className={`lg-panel glass-card ${isFlipped ? 'kitab-page-unfold' : 'kitab-page-front'}`}
+                style={{ margin: 0, minHeight: '440px', display: 'flex', flexDirection: 'column' }}
+              >
+                {!isFlipped ? (
+                  <div
+                    onClick={() => setIsFlipped(true)}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      padding: '40px 24px 56px',
+                    }}
+                  >
+                    <span className="lg-node-chip" style={{ marginBottom: '22px' }}>
+                      TEKAN UNTUK BUKA NOTA PENUH
+                    </span>
+                    {(() => {
+                      const currentNota = dataNotaLengkap[flashIndex];
+                      const tArab =
+                        currentNota?.tajukArab ||
+                        (currentNota?.tajuk && currentNota.tajuk.includes('(')
+                          ? currentNota.tajuk.split('(')[0].trim()
+                          : /[\u0600-\u06FF]/.test(currentNota?.tajuk || '')
+                          ? currentNota?.tajuk
+                          : '');
+                      const tBm =
+                        currentNota?.tajukBm ||
+                        (currentNota?.tajuk && currentNota.tajuk.includes('(')
+                          ? currentNota.tajuk.match(/\((.*?)\)/)?.[1]?.trim()
+                          : !tArab
+                          ? currentNota?.tajuk
+                          : '');
 
-                    return tArab ? (
-                      <div style={{ width: '100%', maxWidth: '720px', marginBottom: '16px' }}>
-                        <div
-                          dir="rtl"
-                          lang="ar"
-                          style={{
-                            fontFamily: '"Noto Naskh Arabic", serif',
-                            fontSize: '2rem',
-                            fontWeight: 700,
-                            lineHeight: 1.85,
-                            color: 'var(--text-strong)',
-                            margin: '0 0 12px',
-                            textAlign: 'center',
-                          }}
-                        >
-                          {tArab}
-                        </div>
-                        {tBm && (
-                          <p
-                            dir="ltr"
+                      return tArab ? (
+                        <div style={{ width: '100%', maxWidth: '720px', marginBottom: '16px' }}>
+                          <div
+                            dir="rtl"
+                            lang="ar"
                             style={{
-                              fontFamily: 'inherit',
-                              fontSize: '1.05rem',
-                              fontWeight: 600,
-                              lineHeight: 1.55,
-                              color: '#38bdf8',
-                              margin: '0 auto',
-                              maxWidth: '560px',
+                              fontFamily: '"Noto Naskh Arabic", serif',
+                              fontSize: '2rem',
+                              fontWeight: 700,
+                              lineHeight: 1.85,
+                              color: 'var(--text-strong)',
+                              margin: '0 0 12px',
                               textAlign: 'center',
                             }}
                           >
-                            &ldquo;{tBm}&rdquo;
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <h2
-                        style={{
-                          fontSize: '1.65rem',
-                          fontWeight: 700,
-                          lineHeight: 1.5,
-                          color: 'var(--text-strong)',
-                          margin: '0 0 16px',
-                          textAlign: 'center',
-                          maxWidth: '680px',
-                        }}
-                      >
-                        {currentNota?.tajuk}
-                      </h2>
-                    );
-                  })()}
-                  <p
-                    style={{
-                      fontSize: '0.9rem',
-                      fontWeight: 600,
-                      color: 'var(--text-muted)',
-                      margin: 0,
-                    }}
-                  >
-                    {dataNotaLengkap[flashIndex].kategori || "Qawaid Fiqhiyyah"}
-                  </p>
-
-                  {/* Butang Tanya AI (Bawah Pecahan Kaedah di muka hadapan kad) */}
-                  <div style={{ marginTop: '22px' }}>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleTanyaAiNota(dataNotaLengkap[flashIndex]);
+                            {tArab}
+                          </div>
+                          {tBm && (
+                            <p
+                              dir="ltr"
+                              style={{
+                                fontFamily: 'inherit',
+                                fontSize: '1.05rem',
+                                fontWeight: 600,
+                                lineHeight: 1.55,
+                                color: '#38bdf8',
+                                margin: '0 auto',
+                                maxWidth: '560px',
+                                textAlign: 'center',
+                              }}
+                            >
+                              &ldquo;{tBm}&rdquo;
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <h2
+                          style={{
+                            fontSize: '1.65rem',
+                            fontWeight: 700,
+                            lineHeight: 1.5,
+                            color: 'var(--text-strong)',
+                            margin: '0 0 16px',
+                            textAlign: 'center',
+                            maxWidth: '680px',
+                          }}
+                        >
+                          {currentNota?.tajuk}
+                        </h2>
+                      );
+                    })()}
+                    <p
+                      style={{
+                        fontSize: '0.9rem',
+                        fontWeight: 600,
+                        color: 'var(--text-muted)',
+                        margin: 0,
                       }}
-                      className="lg-btn-glass lg-btn-tanya-ai-card"
-                      title="Tanya AI Chatbox mengenai kaedah ini"
                     >
-                      <LucideIcon name="sparkles" size={14} />
-                      <span>Tanya AI</span>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ flex: 1 }}>
-                  <div className="lg-flash-header">
-                    <span className="lg-node-chip lg-flash-chip">
                       {dataNotaLengkap[flashIndex].kategori || "Qawaid Fiqhiyyah"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setIsFlipped(false)}
-                      className="lg-btn-glass lg-flash-close-btn"
-                      title="Tutup Nota Penuh"
-                    >
-                      <span>Tutup Nota</span>
-                      <LucideIcon name="x" size={14} />
-                    </button>
+                    </p>
+
+                    {/* Butang Tanya AI (Bawah Pecahan Kaedah di muka hadapan kad) */}
+                    <div style={{ marginTop: '22px' }}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTanyaAiNota(dataNotaLengkap[flashIndex]);
+                        }}
+                        className="lg-btn-glass lg-btn-tanya-ai-card"
+                        title="Tanya AI Chatbox mengenai kaedah ini"
+                      >
+                        <LucideIcon name="sparkles" size={14} />
+                        <span>Tanya AI</span>
+                      </button>
+                    </div>
                   </div>
+                ) : (
+                  <div className="kitab-stagger-content" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <div className="lg-flash-header">
+                      <span className="lg-node-chip lg-flash-chip">
+                        {dataNotaLengkap[flashIndex].kategori || "Qawaid Fiqhiyyah"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setIsFlipped(false)}
+                        className="lg-btn-glass lg-flash-close-btn"
+                        title="Tutup Nota Penuh"
+                      >
+                        <span>Tutup Nota</span>
+                        <LucideIcon name="x" size={14} />
+                      </button>
+                    </div>
 
                   {(() => {
                     const currentNota = dataNotaLengkap[flashIndex];
@@ -4510,6 +4512,7 @@ export default function App() {
                 </div>
               )}
             </div>
+          </div>
 
             <div
               style={{
