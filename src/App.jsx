@@ -2794,7 +2794,7 @@ export default function App() {
       try {
         abortCtrl.abort();
       } catch {}
-    }, 45000);
+    }, 60000);
 
     try {
       const response = await fetch('/api/chat', {
@@ -2898,18 +2898,23 @@ export default function App() {
         return updated;
       });
     } catch (err) {
+      const displayMsg =
+        err.name === 'AbortError' || (err.message && err.message.includes('aborted'))
+          ? 'Masa sambungan ke pelayan tamat. Sila cuba hantar soalan sekali lagi.'
+          : err.message;
+
       setChatMessages((prev) => {
         const updated = [...prev];
         const last = updated[updated.length - 1];
         if (last && last.role === 'ai') {
           last.text = last.text
-            ? `${last.text}\n\n❌ **Ralat Sambungan:** ${err.message}`
-            : `❌ **Ralat Sambungan:** ${err.message}`;
+            ? `${last.text}\n\n❌ **Ralat Sambungan:** ${displayMsg}`
+            : `❌ **Ralat Sambungan:** ${displayMsg}`;
           last.isStreaming = false;
         } else {
           updated.push({
             role: 'ai',
-            text: `❌ **Ralat Sambungan:** ${err.message}`,
+            text: `❌ **Ralat Sambungan:** ${displayMsg}`,
             sumber: [],
             isStreaming: false,
           });
