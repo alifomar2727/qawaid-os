@@ -2781,12 +2781,6 @@ export default function App() {
     const soalan = (teksPilihan || chatInput).trim();
     if (!soalan || isLoadingAI) return;
 
-    // Hentikan sebarang animasi mesin taip terdahulu yang masih aktif
-    if (typewriterIntervalRef.current) {
-      clearInterval(typewriterIntervalRef.current);
-      typewriterIntervalRef.current = null;
-    }
-
     shouldAutoScrollToBottomRef.current = true;
     setChatMessages((prev) => [
       ...prev,
@@ -2801,13 +2795,14 @@ export default function App() {
       try {
         abortCtrl.abort();
       } catch {}
-    }, 60000);
+    }, 90000); // 90 saat bagi soalan panjang
 
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
         },
         body: JSON.stringify({ soalan }),
         signal: abortCtrl.signal,
@@ -2822,68 +2817,102 @@ export default function App() {
         throw new Error(errMsg);
       }
 
-      const resData = await response.json();
-      const fullText = resData.jawapan || resData.answer || '';
-      const sumberData = resData.sumber || [];
+      const contentType = response.headers.get('content-type') || '';
 
-      if (!fullText) {
-        throw new Error('Jawapan kosong diterima daripada pelayan.');
-      }
-
-      // Animasi Mesin Taip Mantap & Lancar (Client-Side Smooth Typewriter)
-      // Menjamin jawapan 100% lengkap tanpa risiko terputus di tengah jalan oleh proksi
-      const chars = Array.from(fullText);
-      const totalChars = chars.length;
-      let currentLength = 0;
-
-      // Kelajuan taipan: ~1.2 ke 2.2 saat untuk taipan selesai
-      const targetDurationMs = Math.min(2200, Math.max(800, totalChars * 2.5));
-      const tickInterval = 18; // ms
-      const totalTicks = Math.max(1, targetDurationMs / tickInterval);
-      const charsPerTick = Math.max(2, Math.ceil(totalChars / totalTicks));
-
-      typewriterIntervalRef.current = setInterval(() => {
-        currentLength += charsPerTick;
-        if (currentLength >= totalChars) {
-          currentLength = totalChars;
-          if (typewriterIntervalRef.current) {
-            clearInterval(typewriterIntervalRef.current);
-            typewriterIntervalRef.current = null;
+      // Fallback jika pelayan membalas dalam format JSON biasa
+      if (!contentType.includes('text/event-stream') || !response.body) {
+        const resData = await response.json();
+        setChatMessages((prev) => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          if (last && last.role === 'ai') {
+            last.text = resData.jawapan || resData.answer || '';
+            last.sumber = resData.sumber || [];
+            last.isStreaming = false;
           }
-
-          setChatMessages((prev) => {
-            const updated = [...prev];
-            const last = updated[updated.length - 1];
-            if (last && last.role === 'ai') {
-              last.text = fullText;
-              last.sumber = sumberData;
-              last.isStreaming = false;
-            }
-            return updated;
-          });
-        } else {
-          setChatMessages((prev) => {
-            const updated = [...prev];
-            const last = updated[updated.length - 1];
-            if (last && last.role === 'ai') {
-              last.text = chars.slice(0, currentLength).join('');
-              last.sumber = []; // sembunyikan kotak rujukan selagi teks belum selesai
-              last.isStreaming = true;
-            }
-            return updated;
-          });
-        }
-
-        if (chatContainerRef.current && shouldAutoScrollToBottomRef.current) {
-          chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-        }
-      }, tickInterval);
-    } catch (err) {
-      if (typewriterIntervalRef.current) {
-        clearInterval(typewriterIntervalRef.current);
-        typewriterIntervalRef.current = null;
+          return updated;
+        });
+        return;
       }
 
+      // Penstriman Berperingkat (SSE Stream - Efek Mesin Taip Pantas & Selamat)
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      let jawapanPenuh = '';
+      let sumberData = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // simpan baki baris belum lengkap
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          // Abaikan baris kosong atau ulasan keep-alive (: ping / : stream-start)
+          if (!trimmed || trimmed.startsWith(':')) continue;
+          if (!trimmed.startsWith('data:')) continue;
+          const jsonStr = trimmed.replace(/^data:\s*/, '');
+          if (!jsonStr || jsonStr === '[DONE]') continue;
+
+          try {
+            const data = JSON.parse(jsonStr);
+            if (data.chunk) {
+              jawapanPenuh += data.chunk;
+              setChatMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last && last.role === 'ai') {
+                  last.text = jawapanPenuh;
+                  last.isStreaming = true;
+                }
+                return updated;
+              });
+              if (chatContainerRef.current && shouldAutoScrollToBottomRef.current) {
+                chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+              }
+            }
+            if (data.sumber && Array.isArray(data.sumber)) {
+              sumberData = data.sumber;
+            }
+            if (data.done) {
+              setChatMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last && last.role === 'ai') {
+                  last.text = jawapanPenuh;
+                  last.sumber = data.sumber || sumberData;
+                  last.isStreaming = false;
+                }
+                return updated;
+              });
+            }
+            if (data.error) {
+              throw new Error(data.error);
+            }
+          } catch (pe) {
+            if (pe.message && !pe.message.includes('JSON')) {
+              throw pe;
+            }
+          }
+        }
+      }
+
+      // Selesai penstriman: pastikan status kemas
+      setChatMessages((prev) => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last && last.role === 'ai') {
+          last.text = jawapanPenuh || last.text;
+          last.sumber = sumberData.length ? sumberData : last.sumber;
+          last.isStreaming = false;
+        }
+        return updated;
+      });
+    } catch (err) {
       const displayMsg =
         err.name === 'AbortError' || (err.message && err.message.includes('aborted'))
           ? 'Masa sambungan ke pelayan tamat. Sila cuba hantar soalan sekali lagi.'
