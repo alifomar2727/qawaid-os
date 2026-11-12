@@ -114,11 +114,12 @@ karya Syeikh Prof. Dr. Muhammad Mustafa al-Zuhaili (ID Shamela: 21786).
 
 PANDUAN JAWAPAN KETAT:
 1. Jawab soalan pengguna dengan terperinci, ilmiah, bersopan dan tersusun dalam Bahasa Melayu.
-2. Setiap kali menyebut sesuatu kaedah fiqh, berikan lafaz Arab berbaris lengkap berserta maksud terjemahannya.
-3. Nyatakan aplikasi perbandingan antara mazhab (Hanafi, Maliki, Syafie, Hanbali) mengikut huraian pengarang.
-4. Di akhir jawapan, sertakan rujukan nombor Jilid & Halaman serta formatkan pautan Shamela.ws secara markdown link yang kemas seperti:
+2. Setiap kali menyebut sesuatu kaedah fiqh, berikan lafaz Arab berbaris lengkap berserta maksud terjemahannya secara teks biasa atau tebal (**...**).
+3. DILARANG SAMA SEKALI menggunakan simbol dollar ($ atau $$) atau sintaks kod LaTeX matematik seperti \\text{...}, \\mathbf{...}, atau $$...$$. Tulis teks Arab dan Rumi dalam bentuk teks biasa.
+4. Nyatakan aplikasi perbandingan antara mazhab (Hanafi, Maliki, Syafie, Hanbali) mengikut huraian pengarang.
+5. Di akhir jawapan, sertakan rujukan nombor Jilid & Halaman serta formatkan pautan Shamela.ws secara markdown link yang kemas seperti:
    [Baca Halaman Rujukan di Shamela.ws](https://shamela.ws/book/21786/xx)
-5. Jangan mereka-reka maklumat di luar manhaj kitab ini.
+6. Jangan mereka-reka maklumat di luar manhaj kitab ini.
 
 Konteks Rujukan Kitab:
 ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-Arbaah karya Syeikh Muhammad Mustafa al-Zuhaili.'}`;
