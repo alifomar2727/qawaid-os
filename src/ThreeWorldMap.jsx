@@ -172,6 +172,10 @@ export default function ThreeWorldMap({
   mapSeed = 1,
   solvedNpcIds = [],
   onTileClick,
+  isEncounterActive = false,
+  bossNpcId = null,
+  isBossUnlocked = true,
+  isWilayahCompleted = false,
 }) {
   const containerRef = useRef(null);
   const animFrameIdRef = useRef(null);
@@ -182,6 +186,12 @@ export default function ThreeWorldMap({
   const rendererRef = useRef(null);
   const sunLightRef = useRef(null);
   const playerGroupRef = useRef(null);
+
+  // FASA 2: Rujukan Status Zoom Sinematik Dialog NPC
+  const isEncounterActiveRef = useRef(isEncounterActive);
+  useEffect(() => {
+    isEncounterActiveRef.current = isEncounterActive;
+  }, [isEncounterActive]);
 
   // Kawalan Kamera Sinematik & Drag Orbit
   const cameraTargetLookRef = useRef(new THREE.Vector3(0, 0, 0));
@@ -585,10 +595,12 @@ export default function ThreeWorldMap({
         // 4. STRUKTUR MENARA KUBAH / MISI NPC (Bangunan Mini 3D Jelas + Label Nama NPC)
         else if (tile.type === 'NPC' && tile.npc) {
           const isSolved = solvedNpcIds.includes(tile.npc.npcId);
+          const isBoss = bossNpcId ? tile.npc.npcId === bossNpcId : tile.npc.npcId?.endsWith('-4');
+          const isLocked = isBoss && !isBossUnlocked && !isSolved;
           const npcGroup = new THREE.Group();
 
           // Tapak Marmar Putih Bersegi (BoxGeometry)
-          const baseGeo = new THREE.BoxGeometry(0.82, 0.16, 0.82);
+          const baseGeo = new THREE.BoxGeometry(isBoss ? 0.96 : 0.82, 0.16, isBoss ? 0.96 : 0.82);
           const monumentBase = new THREE.Mesh(baseGeo, whiteMarbleMat);
           monumentBase.position.set(0, 0.14, 0);
           monumentBase.receiveShadow = true;
@@ -596,77 +608,81 @@ export default function ThreeWorldMap({
           npcGroup.add(monumentBase);
 
           // Badan Bangunan Putih/Krem Bersegi
-          const bodyGeo = new THREE.BoxGeometry(0.58, 0.46, 0.58);
-          const monumentBody = new THREE.Mesh(bodyGeo, creamWallMat);
-          monumentBody.position.set(0, 0.45, 0);
+          const bodyGeo = new THREE.BoxGeometry(isBoss ? 0.68 : 0.58, isBoss ? 0.54 : 0.46, isBoss ? 0.68 : 0.58);
+          const monumentBody = new THREE.Mesh(bodyGeo, isLocked ? darkDoorMat : creamWallMat);
+          monumentBody.position.set(0, isBoss ? 0.49 : 0.45, 0);
           monumentBody.castShadow = true;
           monumentBody.receiveShadow = true;
           npcGroup.add(monumentBody);
 
           // Pintu Gerbang Kecil di Hadapan Bangunan
-          const doorGeo = new THREE.BoxGeometry(0.22, 0.30, 0.60);
+          const doorGeo = new THREE.BoxGeometry(0.24, 0.32, isBoss ? 0.70 : 0.60);
           const doorMesh = new THREE.Mesh(doorGeo, darkDoorMat);
           doorMesh.position.set(0, 0.37, 0);
           npcGroup.add(doorMesh);
 
           // Bingkai Bumbung Emas (Cornice)
-          const corniceGeo = new THREE.BoxGeometry(0.65, 0.06, 0.65);
+          const corniceGeo = new THREE.BoxGeometry(isBoss ? 0.76 : 0.65, 0.06, isBoss ? 0.76 : 0.65);
           const corniceMesh = new THREE.Mesh(corniceGeo, goldMat);
-          corniceMesh.position.set(0, 0.70, 0);
+          corniceMesh.position.set(0, isBoss ? 0.78 : 0.70, 0);
           npcGroup.add(corniceMesh);
 
           // Kubah Emas Besar di Atas (SphereGeometry Separuh)
-          const domeGeo = new THREE.SphereGeometry(0.32, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55);
+          const domeGeo = new THREE.SphereGeometry(isBoss ? 0.40 : 0.32, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55);
           const dome = new THREE.Mesh(domeGeo, goldMat);
-          dome.position.set(0, 0.72, 0);
+          dome.position.set(0, isBoss ? 0.80 : 0.72, 0);
           dome.castShadow = true;
           npcGroup.add(dome);
 
           // Kristal Berlian (OctahedronGeometry) Terapung Tinggi di Atas Kubah
-          const crystalGeo = new THREE.OctahedronGeometry(0.21, 0);
+          const crystalGeo = new THREE.OctahedronGeometry(isBoss ? 0.28 : 0.21, 0);
           const crystalMat = new THREE.MeshStandardMaterial({
-            color: isSolved ? 0x10b981 : 0xf59e0b,
-            emissive: isSolved ? 0x059669 : 0xd97706,
-            emissiveIntensity: 1.0,
+            color: isSolved ? 0x10b981 : isLocked ? 0xef4444 : 0xf59e0b,
+            emissive: isSolved ? 0x059669 : isLocked ? 0xdc2626 : 0xd97706,
+            emissiveIntensity: isLocked ? 1.5 : 1.0,
             roughness: 0.2,
             flatShading: true,
           });
           const crystal = new THREE.Mesh(crystalGeo, crystalMat);
-          crystal.position.set(0, 1.28, 0);
+          crystal.position.set(0, isBoss ? 1.45 : 1.28, 0);
           npcGroup.add(crystal);
 
-          // PointLight Emas / Hijau
+          // PointLight Emas / Hijau / Merah Terkunci
           const npcLight = new THREE.PointLight(
-            isSolved ? 0x10b981 : 0xfbbf24,
-            isSolved ? 1.5 : 2.6,
-            3.8,
+            isSolved ? 0x10b981 : isLocked ? 0xef4444 : 0xfbbf24,
+            isSolved ? 1.5 : isLocked ? 2.0 : (isBoss ? 3.2 : 2.6),
+            4.2,
             1.8
           );
           npcLight.position.set(0, 1.2, 0);
           npcGroup.add(npcLight);
 
-          // Label Terapung Nama NPC / Nombor Misi (THREE.Sprite CanvasTexture)
+          // Label Terapung Nama NPC / Status Kunci Boss (THREE.Sprite CanvasTexture)
           const questNum = tile.npc.npcId ? tile.npc.npcId.split('-').pop() : '';
           const shortName = tile.npc.nama.split(' ').slice(0, 2).join(' ');
           const labelText = isSolved
-            ? `✓ ${shortName}`
+            ? `✓ ${isBoss ? '👑 ' : ''}${shortName}`
+            : isLocked
+            ? `🔒 KUNCI: ${shortName}`
+            : isBoss
+            ? `👑 BOSS: ${shortName}`
             : `Misi #${questNum}: ${shortName}`;
 
           const { sprite: npcLabel, texture: npcTex } = createFloatingLabelSprite(labelText, {
-            bgColor: 'rgba(8, 14, 32, 0.9)',
-            borderColor: isSolved ? '#10b981' : '#fbbf24',
-            textColor: isSolved ? '#a7f3d0' : '#fef08a',
-            scaleX: 1.48,
+            bgColor: isLocked ? 'rgba(35, 10, 16, 0.92)' : 'rgba(8, 14, 32, 0.9)',
+            borderColor: isSolved ? '#10b981' : isLocked ? '#ef4444' : isBoss ? '#fbbf24' : '#fbbf24',
+            textColor: isSolved ? '#a7f3d0' : isLocked ? '#fca5a5' : isBoss ? '#fef08a' : '#fef08a',
+            scaleX: isBoss ? 1.68 : 1.48,
             scaleY: 0.36,
           });
           disposableTextures.push(npcTex);
-          npcLabel.position.set(0, 1.72, 0);
+          npcLabel.position.set(0, isBoss ? 1.90 : 1.72, 0);
           npcGroup.add(npcLabel);
 
           animatedMeshesRef.current.push({
             mesh: crystal,
-            baseY: 1.28,
-            speed: 1.8,
+            baseY: isBoss ? 1.45 : 1.28,
+            speed: isLocked ? 0.9 : 1.8,
             type: 'BOB_AND_SPIN',
           });
 
@@ -676,9 +692,10 @@ export default function ThreeWorldMap({
           scene.add(npcGroup);
         }
 
-        // 5. GERBANG PORTAL 3D
+        // 5. GERBANG PORTAL 3D (Status Terbuka / Terkunci mengikut FASA 4)
         else if (tile.type === 'PORTAL') {
           const portalGroup = new THREE.Group();
+          const pActive = isWilayahCompleted;
 
           const pBaseGeo = new THREE.CylinderGeometry(0.44, 0.5, 0.15, 8);
           const pBase = new THREE.Mesh(pBaseGeo, plinthMat);
@@ -686,36 +703,61 @@ export default function ThreeWorldMap({
           portalGroup.add(pBase);
 
           const ringGeo = new THREE.TorusGeometry(0.55, 0.09, 8, 24);
-          const portalRing = new THREE.Mesh(ringGeo, portalMat);
+          const pRingMat = pActive
+            ? portalMat
+            : new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.7 });
+          const portalRing = new THREE.Mesh(ringGeo, pRingMat);
           portalRing.position.set(0, 0.72, 0);
           portalGroup.add(portalRing);
 
           const coreGeo = new THREE.SphereGeometry(0.22, 8, 8);
           const coreMat = new THREE.MeshStandardMaterial({
-            color: 0xc084fc,
-            emissive: 0xa855f7,
-            emissiveIntensity: 1.25,
-            roughness: 0.1,
+            color: pActive ? 0xc084fc : 0x64748b,
+            emissive: pActive ? 0xa855f7 : 0x334155,
+            emissiveIntensity: pActive ? 1.25 : 0.25,
+            roughness: 0.2,
           });
           const portalCore = new THREE.Mesh(coreGeo, coreMat);
           portalCore.position.set(0, 0.72, 0);
           portalGroup.add(portalCore);
 
-          const portalLight = new THREE.PointLight(0xa855f7, 2.8, 4.4, 1.6);
+          const portalLight = new THREE.PointLight(
+            pActive ? 0xa855f7 : 0x475569,
+            pActive ? 2.8 : 0.6,
+            4.4,
+            1.6
+          );
           portalLight.position.set(0, 0.75, 0);
           portalGroup.add(portalLight);
 
-          animatedMeshesRef.current.push({
-            mesh: portalRing,
-            type: 'SPIN_Z',
-            speed: 1.4,
-          });
-          animatedMeshesRef.current.push({
-            mesh: portalCore,
-            baseY: 0.72,
-            speed: 2.5,
-            type: 'BOB_PULSE',
-          });
+          // Label Terapung Status Portal
+          const { sprite: pLabel, texture: pTex } = createFloatingLabelSprite(
+            pActive ? '🌀 PORTAL TERBUKA' : '🔒 Portal Tertutup',
+            {
+              bgColor: pActive ? 'rgba(30, 10, 45, 0.9)' : 'rgba(15, 23, 42, 0.85)',
+              borderColor: pActive ? '#c084fc' : '#64748b',
+              textColor: pActive ? '#e9d5ff' : '#94a3b8',
+              scaleX: 1.5,
+              scaleY: 0.34,
+            }
+          );
+          disposableTextures.push(pTex);
+          pLabel.position.set(0, 1.45, 0);
+          portalGroup.add(pLabel);
+
+          if (pActive) {
+            animatedMeshesRef.current.push({
+              mesh: portalRing,
+              type: 'SPIN_Z',
+              speed: 1.4,
+            });
+            animatedMeshesRef.current.push({
+              mesh: portalCore,
+              baseY: 0.72,
+              speed: 2.5,
+              type: 'BOB_PULSE',
+            });
+          }
 
           portalGroup.position.set(x, 0, z);
           portalGroup.userData = { r: rIdx, c: cIdx, type: tile.type };
@@ -938,12 +980,19 @@ export default function ThreeWorldMap({
         playerGroupRef.current.position.y = 0.15 + jumpY;
 
         // D. KAMERA SINEMATIK MENGEKORI WATAK SECARA LEMBUT (camera.position.lerp)
+        const isEncounter = isEncounterActiveRef.current;
         const orbit = orbitOffsetRef.current;
         orbit.angleX += (orbit.targetAngleX - orbit.angleX) * 0.08;
         orbit.angleY += (orbit.targetAngleY - orbit.angleY) * 0.08;
 
-        const camHeight = 7.2 + orbit.angleY * 2.0;
-        const camDistance = 7.6;
+        // FASA 2: Sudut Kamera Zoom Sinematik Apabila Dialog NPC Terbuka
+        const baseCamHeight = isEncounter ? 3.4 : 7.2;
+        const baseCamDistance = isEncounter ? 4.3 : 7.6;
+        const targetLookY = isEncounter ? 1.05 : 0.45;
+        const lerpFactor = isEncounter ? 0.06 : 0.08;
+
+        const camHeight = baseCamHeight + orbit.angleY * (isEncounter ? 1.0 : 2.0);
+        const camDistance = baseCamDistance;
         const orbitCos = Math.cos(orbit.angleX);
         const orbitSin = Math.sin(orbit.angleX);
 
@@ -951,14 +1000,14 @@ export default function ThreeWorldMap({
         const targetCamY = 0.15 + camHeight;
         const targetCamZ = anim.currentZ + camDistance * orbitCos;
 
-        camera.position.x += (targetCamX - camera.position.x) * 0.08;
-        camera.position.y += (targetCamY - camera.position.y) * 0.08;
-        camera.position.z += (targetCamZ - camera.position.z) * 0.08;
+        camera.position.x += (targetCamX - camera.position.x) * lerpFactor;
+        camera.position.y += (targetCamY - camera.position.y) * lerpFactor;
+        camera.position.z += (targetCamZ - camera.position.z) * lerpFactor;
 
-        // Pandang lembut ke paras dada watak
+        // Pandang lembut ke paras muka watak & kubah Menara NPC
         const look = cameraTargetLookRef.current;
         look.x += (anim.currentX - look.x) * 0.1;
-        look.y += (0.45 - look.y) * 0.1;
+        look.y += (targetLookY - look.y) * 0.08;
         look.z += (anim.currentZ - look.z) * 0.1;
         camera.lookAt(look);
 
@@ -1058,7 +1107,17 @@ export default function ThreeWorldMap({
         container.removeChild(container.firstChild);
       }
     };
-  }, [mapGrid, wilayahIdx, mapSeed, solvedNpcIds, getTileWorldPos, onTileClick]);
+  }, [
+    mapGrid,
+    wilayahIdx,
+    mapSeed,
+    solvedNpcIds,
+    bossNpcId,
+    isBossUnlocked,
+    isWilayahCompleted,
+    getTileWorldPos,
+    onTileClick,
+  ]);
 
   return (
     <div
@@ -1087,79 +1146,22 @@ export default function ThreeWorldMap({
         title="Sentuh atau klik mana-mana petak 3D untuk melangkah atau menyapa NPC!"
       />
 
-      {/* Lencana Bioma Aktif (HUD Atas Kiri) */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '12px',
-          left: '14px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '6px 12px',
-          borderRadius: '999px',
-          background: 'rgba(8, 14, 32, 0.72)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255, 255, 255, 0.18)',
-          fontSize: '0.72rem',
-          fontWeight: 600,
-          color: '#ffffff',
-          pointerEvents: 'none',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-        }}
-      >
-        <span
-          style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            background: palette.accentGlow ? `#${palette.accentGlow.toString(16)}` : '#10b981',
-            boxShadow: '0 0 8px currentColor',
-          }}
-        />
-        <span>Low-Poly 3D Diorama Island</span>
-      </div>
-
-      {/* Bar Maklumat Navigasi Sentuh & Koordinat Pemain (Susunan Flex Responsif Tanpa Terpotong) */}
+      {/* Bar Panduan Sentuh 3D di Bawah Kanvas (Kemasan Bersih Tanpa Koordinat Teknikal) */}
       <div
         style={{
           display: 'flex',
-          justifyContent: 'space-between',
+          justifyContent: 'center',
           alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '6px 12px',
-          padding: '9px 14px',
+          padding: '8px 14px',
           background: 'rgba(8, 14, 32, 0.88)',
           borderTop: '1px solid rgba(255, 255, 255, 0.12)',
-          fontSize: '0.75rem',
+          fontSize: '0.74rem',
           lineHeight: 1.4,
+          textAlign: 'center',
+          color: 'rgba(255, 255, 255, 0.88)',
         }}
       >
-        <div
-          style={{
-            color: 'rgba(255, 255, 255, 0.88)',
-            whiteSpace: 'normal',
-            overflow: 'visible',
-          }}
-        >
-          👆 Sentuh petak 3D untuk gerak / seret untuk tinjau
-        </div>
-
-        <div
-          style={{
-            padding: '3px 9px',
-            borderRadius: '6px',
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid rgba(255, 255, 255, 0.14)',
-            color: '#38bdf8',
-            fontWeight: 700,
-            fontFamily: 'monospace',
-            fontSize: '0.75rem',
-            flexShrink: 0,
-          }}
-        >
-          Posisi: ({playerPos.c + 1}, {playerPos.r + 1})
-        </div>
+        <span>👆 Sentuh petak 3D untuk melangkah • Seret untuk tinjau pulau</span>
       </div>
     </div>
   );
