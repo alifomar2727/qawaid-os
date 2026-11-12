@@ -621,6 +621,95 @@ const SENARAI_WILAYAH = [
       },
     ],
   },
+  {
+    id: 'FPQS',
+    nama: 'Lembah Ilmu FPQS (USIM)',
+    gelaran: 'Wilayah 6 • Fakulti Pengajian Quran & Sunnah (USIM)',
+    era: 'Era Kontemporari Kampus Barakah',
+    temaKaedah: 'Integrasi Naqli & Aqli dalam Qawaid Fiqhiyyah Kontemporari',
+    warnaUtama: '#22c55e',
+    warnaLatar: 'rgba(34, 197, 94, 0.14)',
+    ikonWilayah: '🎓',
+    deskripsi:
+      'Lembah keilmuan kontemporari di USIM Nilai. Menyepadukan turath qawaid fiqhiyyah dengan kemajuan penyelidikan di Makmal Tarannum, Makmal Hadis, Makmal Braille, dan Pejabat Dekanat FPQS.',
+    npcs: [
+      {
+        npcId: 'NPC-FPQS-1',
+        nama: 'Dr Anwar Hussein & PM Dr Khairul Amri',
+        peranan: 'Makmal Tarannum & Qiraat',
+        ikon: '🎙️',
+        jenis: 'MAKMAL',
+        makmalType: 'TARANNUM',
+        notaId: 'KP-04',
+        dialogMasalah:
+          '“Ahlan wa sahlan ke Makmal Tarannum FPQS! Kami sedang mengkaji aplikasi hukum bacaan dan maqasid kelonggaran suara ketika tadarus serta solat jemaah. Berikan panduan kaedah fiqh yang tepat bagi menyelesaikan senario penyelidikan makmal kami!”',
+        dialogBerjaya:
+          '“Masyhur dan merdu sekali jawapan anda! Kaedah fiqhiyyah yang anda kemukakan tepat menghuraikan prinsip kemudahan dan objektif ibadah di makmal ini.”',
+        dialogTolak:
+          '“Alunan nada kaedah anda belum tepat dengan intipati perbahasan di Makmal Tarannum. Cuba semak kembali rujukan kitab!”',
+      },
+      {
+        npcId: 'NPC-FPQS-2',
+        nama: 'Dr Helmy Arif & Dr Shamsudin Yani',
+        peranan: 'Makmal Hadis & Pelayan Digital',
+        ikon: '📚',
+        jenis: 'MAKMAL',
+        makmalType: 'HADIS',
+        notaId: 'KP-06',
+        dialogMasalah:
+          '“Selamat datang ke Makmal Hadis & Server Digital Sunnah! Kami sedang menyaring takhrij hadis dan padanan hukum syarak menggunakan algoritma moden. Kaedah fiqh manakah yang menjadi tunjang pembuktian dan penolakan keraguan riwayat?”',
+        dialogBerjaya:
+          '“Alhamdulillah, tepat sekali! Server digital kami telah mengesahkan ketepatan kaedah tersebut dengan sokongan dalil sunnah yang kukuh!”',
+        dialogTolak:
+          '“Data algoritma hadis menunjukkan percanggahan. Kaedah yang anda pilih tidak serasi dengan matlamat penyelidikan hadis ini.”',
+      },
+      {
+        npcId: 'NPC-FPQS-3',
+        nama: 'Prof Noor Najihah & Dr Noor Atirah',
+        peranan: 'Makmal Braille & Aksesibiliti Quran',
+        ikon: '⠃',
+        jenis: 'MAKMAL',
+        makmalType: 'BRAILLE',
+        notaId: 'KP-11',
+        dialogMasalah:
+          '“Marhaban bikum ke Makmal Braille Quran FPQS! Fokus penyelidikan kami adalah mengangkat kesukaran komuniti berkeperluan khas (OKU penglihatan) dalam menyentuh mushaf braille dan melaksanakan ibadah. Kaedah syarak manakah yang menjadi asas rukhsah dan kemudahan ini?”',
+        dialogBerjaya:
+          '“Subhanallah, sungguh bertepatan! Hakikat syariat diturunkan untuk membuka pintu kemudahan bagi sesiapa yang mengalami kesukaran.”',
+        dialogTolak:
+          '“Jawapan ini belum mencerminkan roh rukhsoh dan prinsip kemudahan bagi komuniti berkeperluan khas. Sila cuba lagi!”',
+      },
+      {
+        npcId: 'NPC-FPQS-4',
+        nama: 'Prof Madya Dr Zuhdi Ameen',
+        peranan: 'Dekan FPQS (Pejabat Dekan & Foyer)',
+        ikon: '🏛️',
+        jenis: 'BOSS',
+        makmalType: 'DEKAN',
+        notaId: 'KP-15',
+        dialogMasalah:
+          '“Tahniah kerana berjaya melangkah ke Foyer Pejabat Dekan FPQS setelah menjelajah ketiga-tiga makmal kami! Sebagai ujian kepimpinan ilmu tertinggi, jawablah persoalan maqasid syariah dan tatbiqat empat mazhab ini dengan penuh keyakinan!”',
+        dialogBerjaya:
+          '“Muntaz! Syabas wahai penuntut ilmu sejati. Anda telah membuktikan penguasaan hakiki dalam Qawaid Fiqhiyyah di Lembah Ilmu FPQS USIM!”',
+        dialogTolak:
+          '“Kefahaman anda hampir sempurna, namun jawapan tersebut belum menepati piawaian keilmuan Dekanat FPQS. Teliti semula hujah anda!”',
+      },
+      {
+        npcId: 'NPC-FPQS-5',
+        nama: 'Ebadullah & Ali Shahril',
+        peranan: 'Bilik Nadi PMFPQS (Bilik Rahsia Pelajar)',
+        ikon: '⭐',
+        jenis: 'EASTER_EGG',
+        makmalType: 'BILIK_NADI',
+        notaId: 'KP-05',
+        dialogMasalah:
+          '“Assalamualaikum! Singgah Bilik Nadi rupanya. Dah ready nak hadap Dekan kejap lagi? Relaks je, baca soalan tu betul-betul. Ingat balik apa yang kita bincang masa study group haritu.”',
+        dialogBerjaya:
+          '“Terima kasih singgah di Bilik Nadi PMFPQS! Semoga ukhuwah dan semangat persatuan ini memulihkan tenaga anda!”',
+        dialogTolak:
+          '“Semoga berjaya melengkapkan kembara di Lembah Ilmu FPQS!”',
+      },
+    ],
+  },
 ];
 
 // Konfigurasi Ganjaran Mohor Sanad 5 Wilayah Tamadun (FASA 4)
@@ -720,6 +809,25 @@ const MOHOR_SANAD_INFO = {
     mohorSimbol: '👑',
     motto: '« الْمَعْرُوفُ عُرْفًا كَالْمَشْرُوطِ شَرْطًا »',
   },
+  FPQS: {
+    id: 'FPQS',
+    namaMohor: 'Mohor Sanad Lembah Ilmu FPQS (USIM)',
+    wilayahNama: 'Lembah Ilmu FPQS (USIM)',
+    gelaranSanad: 'Sanad Integrasi Naqli & Aqli FPQS',
+    tokohPemberi: 'Prof Madya Dr Zuhdi Ameen (Dekan FPQS)',
+    kaedahUtama: 'العلم يرفع بيتا لا عماد له (Integrasi Naqli & Aqli)',
+    kaedahArab: 'العِلْمُ يَرْفَعُ بَيْتًا لَا عِمَادَ لَهُ',
+    kaedahBm: 'Puncak Integrasi Wahyu dan Sains Kemanusiaan',
+    huraian:
+      'Ijazah Sanad keilmuan agung yang mengiktiraf penguasaan integrasi ilmu Naqli dan Aqli serta pengamalan qawaid fiqhiyyah dalam penyelidikan moden USIM.',
+    ikon: '🎓',
+    warna: '#22c55e',
+    borderWarna: 'rgba(34, 197, 94, 0.75)',
+    cahayaWarna: 'rgba(34, 197, 94, 0.28)',
+    bgGradient: 'linear-gradient(135deg, rgba(21, 128, 61, 0.28) 0%, rgba(15, 23, 42, 0.95) 100%)',
+    mohorSimbol: '🌟',
+    motto: '« بِسْمِ اللهِ، تَوَكَّلْتُ عَلَى اللهِ، لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللهِ »',
+  },
 };
 
 // Konfigurasi Tema Dynamic Biome (Tekstur Bumi & Tebing 3D Mengikut 5 Wilayah & Peta Rawak)
@@ -766,6 +874,13 @@ const BIOME_THEMES = {
     gelaran: 'Kaca Kosmik Indigo & Ungu Neon',
     warnaAksen: '#c084fc',
   },
+  FPQS: {
+    id: 'FPQS',
+    className: 'biome-fpqs',
+    nama: 'Lembah Ilmu FPQS',
+    gelaran: 'Jubin Foyer & Rumput Kampus USIM',
+    warnaAksen: '#22c55e',
+  },
 };
 
 // Saiz Grid Peta 2D Open-World
@@ -774,6 +889,75 @@ const GRID_ROWS = 8;
 
 // Jana susun atur peta 2D secara prosedural/rawak mengikut Wilayah & seed
 function generateOpenWorldMap(wilayah, seed = 1) {
+  // Tata Letak Khusus Kampus FPQS USIM (Wilayah 6)
+  if (wilayah.id === 'FPQS') {
+    const grid = Array.from({ length: GRID_ROWS }, () =>
+      Array.from({ length: GRID_COLS }, () => ({ type: 'FLOOR', npc: null, decor: null }))
+    );
+
+    // Dinding sempadan perimeter & planter box taman kampus
+    const wallCoords = [
+      { r: 0, c: 3 }, { r: 0, c: 7 }, { r: 2, c: 4 }, { r: 2, c: 7 },
+      { r: 3, c: 2 }, { r: 3, c: 5 }, { r: 5, c: 4 }, { r: 5, c: 8 },
+      { r: 7, c: 2 }, { r: 7, c: 5 }, { r: 7, c: 8 }
+    ];
+    wallCoords.forEach(({ r, c }) => {
+      if (grid[r]?.[c]) grid[r][c].type = 'WALL';
+    });
+
+    // Lanskap pokok kampus & bunga mekar
+    const gardenCoords = [
+      { r: 2, c: 3, decor: '🌳' }, { r: 2, c: 5, decor: '🌿' },
+      { r: 3, c: 7, decor: '🌸' }, { r: 4, c: 8, decor: '🌳' },
+      { r: 6, c: 4, decor: '🌿' }, { r: 7, c: 3, decor: '🌳' },
+    ];
+    gardenCoords.forEach(({ r, c, decor }) => {
+      if (grid[r]?.[c]) grid[r][c].decor = decor;
+    });
+
+    // Kafe Didi (Oasis moden pemulih tenaga di sebelah koridor makmal)
+    grid[3][10] = { type: 'OASIS', npc: null, decor: '☕' };
+
+    // 4 Checkpoint Utama & 1 Bilik Rahsia (NPC Placement)
+    // 1. Makmal Tarannum (Dr Anwar Hussein & PM Dr Khairul Amri)
+    if (wilayah.npcs[0]) grid[1][5] = { type: 'NPC', npc: wilayah.npcs[0], decor: null };
+    // 2. Makmal Hadis (Dr Helmy Arif & Dr Shamsudin Yani)
+    if (wilayah.npcs[1]) grid[1][9] = { type: 'NPC', npc: wilayah.npcs[1], decor: null };
+    // 3. Makmal Braille (Prof Noor Najihah & Dr Noor Atirah)
+    if (wilayah.npcs[2]) grid[5][2] = { type: 'NPC', npc: wilayah.npcs[2], decor: null };
+    // 4. Pejabat Dekan - BOSS (Prof Madya Dr Zuhdi Ameen)
+    if (wilayah.npcs[3]) grid[6][6] = { type: 'NPC', npc: wilayah.npcs[3], decor: null };
+    // 5. Bilik Nadi PMFPQS - EASTER EGG (Ebadullah & Ali Shahril)
+    if (wilayah.npcs[4]) grid[6][1] = { type: 'NPC', npc: wilayah.npcs[4], decor: null };
+
+    // Portal Gerbang Tamat Kampus
+    grid[6][10] = { type: 'PORTAL', npc: null, decor: '🌀' };
+
+    // Pastikan koridor dan jalan pejalan kaki (walkways) sentiasa berhubung lancar
+    const walkwayCoords = [
+      // Dari Lobi (1,1) ke Makmal Tarannum (1,5) & Hadis (1,9)
+      [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 7], [1, 8], [1, 9],
+      // Dari Hadis ke Kafe Didi (3,10)
+      [2, 9], [3, 9], [3, 10],
+      // Dari Lobi (1,1) terus ke Bilik Nadi (6,1)
+      [2, 1], [3, 1], [4, 1], [5, 1], [6, 1],
+      // Cabang ke Makmal Braille (5,2)
+      [4, 2], [5, 2],
+      // Koridor tengah ke Pejabat Dekan (6,6)
+      [4, 3], [4, 4], [4, 5], [4, 6], [5, 6], [6, 6],
+      // Dari Pejabat Dekan ke Portal (6,10)
+      [6, 7], [6, 8], [6, 9], [6, 10],
+    ];
+    walkwayCoords.forEach(([r, c]) => {
+      if (grid[r]?.[c] && grid[r][c].type !== 'NPC' && grid[r][c].type !== 'OASIS' && grid[r][c].type !== 'PORTAL') {
+        grid[r][c].type = 'FLOOR';
+        grid[r][c].decor = null;
+      }
+    });
+
+    return grid;
+  }
+
   // Jenis Tile: 'FLOOR', 'WALL', 'WATER', 'OASIS', 'PORTAL', 'NPC'
   const grid = Array.from({ length: GRID_ROWS }, () =>
     Array.from({ length: GRID_COLS }, () => ({ type: 'FLOOR', npc: null, decor: null }))
@@ -893,6 +1077,7 @@ export default function KembaraQawaidGame() {
   const [inspectSkillId, setInspectSkillId] = useState(null);
   const [encounterStatus, setEncounterStatus] = useState(null); // null | 'SUCCESS' | 'REJECTED'
   const [rejectionMessage, setRejectionMessage] = useState('');
+  const [nadiStep, setNadiStep] = useState(0); // FASA 4: Langkah dialog Bilik Nadi PMFPQS (0: Ali Shahril, 1: Ebadullah)
 
   // Modal Koleksi Grimoire / Kitab Skill (dataNotaLengkap)
   const [showSkillBook, setShowSkillBook] = useState(false);
@@ -1021,14 +1206,16 @@ export default function KembaraQawaidGame() {
   const totalWilayahNpc = currentWilayah.npcs.length;
   const isWilayahAllDone = selesaiWilayahCount >= totalWilayahNpc;
 
-  // Mulakan dialog & susun 4 Skill Qawaid daripada dataNotaLengkap
+  // Mulakan dialog & susun Skill Qawaid dinamik daripada dataNotaLengkap (A, B, C untuk FPQS)
   const openNpcEncounter = useCallback(
     (npc) => {
-      // FASA 4: Sekat interaksi jika NPC ke-4 (Boss Wilayah) belum dibuka
+      // FASA 4: Sekat interaksi jika NPC ke-4 (Boss Wilayah / Pejabat Dekan) belum dibuka
       if (bossNpc && npc.npcId === bossNpc.npcId && !isBossUnlocked && !isBossSolved) {
         soundRef.current?.playCastReject();
         triggerToast(
-          `🔒 Balai Tertutup! Selesaikan 3 permasalahan penduduk di ${currentWilayah.nama.split('(')[0].trim()} dahulu sebelum menghadap ${bossNpc.nama}!`,
+          currentWilayah.id === 'FPQS'
+            ? `🔒 Pejabat Dekan Terkunci! Selesaikan penyelidikan di ketiga-tiga Makmal (Tarannum, Hadis, Braille) dahulu (${earlierSolvedCount}/3).`
+            : `🔒 Balai Tertutup! Selesaikan 3 permasalahan penduduk di ${currentWilayah.nama.split('(')[0].trim()} dahulu sebelum menghadap ${bossNpc.nama}!`,
           'crimson'
         );
         return;
@@ -1041,17 +1228,41 @@ export default function KembaraQawaidGame() {
         } catch {}
       }
       soundRef.current?.playNpcGreet();
+
+      // FASA 4: Mekanik Bilik Nadi PMFPQS (Easter Egg - Tiada kuiz dijana)
+      if (npc.npcId === 'NPC-FPQS-5' || npc.makmalType === 'BILIK_NADI') {
+        setActiveNpc(npc);
+        setNadiStep(0);
+        setSkillOptions([]);
+        setHiddenSkillIds([]);
+        setInspectSkillId(null);
+        setEncounterStatus(null);
+        setRejectionMessage('');
+        return;
+      }
+
+      // FASA 3: Logik Soalan & Hubungan Database Dinamik (A, B, C)
+      // JANGAN hardcode pilihan jawapan mahupun semakan jawapan.
       const targetNota = getNotaById(npc.notaId);
+      const isFPQS = currentWilayah.id === 'FPQS';
+      const distractorCount = isFPQS ? 2 : 3;
+
       const distractors = dataNotaLengkap
         .filter(
           (n) =>
-            Boolean(n.matriksId) &&
-            n.id !== targetNota.id
+            n.id !== targetNota.id &&
+            Boolean(n.tajukArab) &&
+            (Boolean(n.matriksId) || Boolean(n.huraian))
         )
         .sort(() => 0.5 - Math.random())
-        .slice(0, 3);
+        .slice(0, distractorCount);
 
-      const choices = [...distractors, targetNota].sort(() => 0.5 - Math.random());
+      const shuffled = [...distractors, targetNota].sort(() => 0.5 - Math.random());
+      const choices = shuffled.map((item, idx) => ({
+        ...item,
+        choiceLabel: ['A', 'B', 'C', 'D'][idx],
+      }));
+
       setActiveNpc(npc);
       setSkillOptions(choices);
       setHiddenSkillIds([]);
@@ -1059,7 +1270,7 @@ export default function KembaraQawaidGame() {
       setEncounterStatus(null);
       setRejectionMessage('');
     },
-    [bossNpc, isBossUnlocked, isBossSolved, currentWilayah, triggerToast, getNotaById]
+    [bossNpc, isBossUnlocked, isBossSolved, earlierSolvedCount, currentWilayah, triggerToast, getNotaById]
   );
 
   // FASA 1: Cari koordinat NPC dalam mapGrid untuk auto-move
@@ -1089,7 +1300,9 @@ export default function KembaraQawaidGame() {
       if (bossNpc && npc.npcId === bossNpc.npcId && !isBossUnlocked && !isBossSolved) {
         soundRef.current?.playCastReject();
         triggerToast(
-          `🔒 Pintu balai masih berkunci! Selesaikan 3 kes warga di sekitar kota dahulu (${earlierSolvedCount}/3).`,
+          currentWilayah.id === 'FPQS'
+            ? `🔒 Pejabat Dekan Terkunci! Selesaikan penyelidikan di ketiga-tiga Makmal (Tarannum, Hadis, Braille) dahulu (${earlierSolvedCount}/3).`
+            : `🔒 Pintu balai masih berkunci! Selesaikan 3 kes warga di sekitar kota dahulu (${earlierSolvedCount}/3).`,
           'crimson'
         );
         return;
@@ -1106,7 +1319,7 @@ export default function KembaraQawaidGame() {
         }, 120);
       }
     },
-    [bossNpc, isBossUnlocked, isBossSolved, earlierSolvedCount, triggerToast, findNpcCoord, openNpcEncounter]
+    [bossNpc, isBossUnlocked, isBossSolved, earlierSolvedCount, currentWilayah.id, triggerToast, findNpcCoord, openNpcEncounter]
   );
 
   // Pergerakan 1 langkah pada Peta 2D
@@ -1155,11 +1368,14 @@ export default function KembaraQawaidGame() {
           setHikmahMana((m) => Math.min(5, m + 1));
           triggerToast('⛲ Oasis Hikmah: +15 Reputasi & +1 Tenaga Tilik!', 'emerald');
         } else if (targetTile.type === 'PORTAL') {
-          // FASA 4: Gerbang Portal HANYA boleh dilalui jika Misi Boss (semua 4 NPC) telah diselesaikan!
-          if (!isWilayahAllDone) {
+          // FASA 4: Gerbang Portal HANYA boleh dilalui jika Misi Boss (atau semua NPC) telah diselesaikan!
+          const canPassPortal = currentWilayah.id === 'FPQS' ? isBossSolved : isWilayahAllDone;
+          if (!canPassPortal) {
             soundRef.current?.playCastReject();
             triggerToast(
-              `⚡ Gerbang Portal masih tertutup! Kalahkan kes sukar Qadhi Utama (${bossNpc?.nama}) untuk merebut Mohor Sanad & membuka portal.`,
+              currentWilayah.id === 'FPQS'
+                ? `⚡ Gerbang Portal masih tertutup! Selesaikan cabaran Pejabat Dekan (${bossNpc?.nama}) untuk merebut Mohor Sanad FPQS & membuka portal.`
+                : `⚡ Gerbang Portal masih tertutup! Kalahkan kes sukar Qadhi Utama (${bossNpc?.nama}) untuk merebut Mohor Sanad & membuka portal.`,
               'crimson'
             );
             return prev;
@@ -1186,7 +1402,9 @@ export default function KembaraQawaidGame() {
           if (bossNpc && targetTile.npc.npcId === bossNpc.npcId && !isBossUnlocked && !isBossSolved) {
             soundRef.current?.playCastReject();
             triggerToast(
-              `🔒 Balai Tertutup! Selesaikan 3 permasalahan penduduk dahulu sebelum menghadap ${bossNpc.nama}!`,
+              currentWilayah.id === 'FPQS'
+                ? `🔒 Pejabat Dekan Terkunci! Selesaikan penyelidikan di ketiga-tiga Makmal (Tarannum, Hadis, Braille) dahulu (${earlierSolvedCount}/3).`
+                : `🔒 Balai Tertutup! Selesaikan 3 permasalahan penduduk dahulu sebelum menghadap ${bossNpc.nama}!`,
               'crimson'
             );
             return prev;
@@ -1199,7 +1417,7 @@ export default function KembaraQawaidGame() {
         return { r: nr, c: nc };
       });
     },
-    [activeNpc, showSkillBook, mapGrid, wilayahIdx, triggerToast, openNpcEncounter, isWilayahAllDone, bossNpc, isBossUnlocked, isBossSolved]
+    [activeNpc, showSkillBook, mapGrid, wilayahIdx, triggerToast, openNpcEncounter, isWilayahAllDone, bossNpc, isBossUnlocked, isBossSolved, earlierSolvedCount, currentWilayah.id]
   );
 
   // Kawalan Sentuh & Klik 3D (Raycasting pada Kanvas Three.js)
@@ -1212,19 +1430,29 @@ export default function KembaraQawaidGame() {
 
       if (dr === 0 && dc === 0) return;
 
-      // Jika klik petak bersebelahan terus (1 langkah)
-      if (Math.abs(dr) + Math.abs(dc) === 1) {
-        movePlayer(dr, dc);
-        return;
-      }
-
       // Jika klik NPC yang bersebelahan atau jarak dekat untuk berinteraksi
       const targetTile = mapGrid[targetR]?.[targetC];
       if (targetTile?.type === 'NPC' && targetTile?.npc) {
+        if (bossNpc && targetTile.npc.npcId === bossNpc.npcId && !isBossUnlocked && !isBossSolved) {
+          soundRef.current?.playCastReject();
+          triggerToast(
+            currentWilayah.id === 'FPQS'
+              ? `🔒 Pejabat Dekan Terkunci! Selesaikan penyelidikan di ketiga-tiga Makmal (Tarannum, Hadis, Braille) dahulu (${earlierSolvedCount}/3).`
+              : `🔒 Balai Tertutup! Selesaikan 3 permasalahan penduduk dahulu sebelum menghadap ${bossNpc.nama}!`,
+            'crimson'
+          );
+          return;
+        }
         if (Math.abs(dr) <= 1 && Math.abs(dc) <= 1) {
           openNpcEncounter(targetTile.npc);
           return;
         }
+      }
+
+      // Jika klik petak bersebelahan terus (1 langkah)
+      if (Math.abs(dr) + Math.abs(dc) === 1) {
+        movePlayer(dr, dc);
+        return;
       }
 
       // Melangkah 1 langkah ke arah petak sasaran
@@ -1232,7 +1460,7 @@ export default function KembaraQawaidGame() {
       const stepC = stepR === 0 ? Math.sign(dc) : 0;
       movePlayer(stepR, stepC);
     },
-    [playerPos, activeNpc, showSkillBook, movePlayer, mapGrid, openNpcEncounter]
+    [playerPos, activeNpc, showSkillBook, movePlayer, mapGrid, openNpcEncounter, bossNpc, isBossUnlocked, isBossSolved, earlierSolvedCount, currentWilayah.id, triggerToast]
   );
 
   // Cari NPC berdekatan untuk butang "Sapa NPC"
@@ -1301,7 +1529,12 @@ export default function KembaraQawaidGame() {
         setTimeout(() => {
           setShowSanadAwardModal(currentWilayah.id);
         }, 750);
-        triggerToast(`👑 TAHNIAH! Anda memenangi Mohor Sanad ${currentWilayah.nama.split('(')[0].trim()}!`, 'gold');
+        triggerToast(
+          currentWilayah.id === 'FPQS'
+            ? '🏆 TAHNIAH! Dekan FPQS telah mengurniakan Mohor Sanad Integrasi Naqli & Aqli FPQS!'
+            : `👑 TAHNIAH! Anda memenangi Mohor Sanad ${currentWilayah.nama.split('(')[0].trim()}!`,
+          'gold'
+        );
       } else {
         soundRef.current?.playCastSuccess();
         triggerToast('✨ Hujah Kaedah Tepat! +150 XP & +10% Reputasi!', 'emerald');
@@ -1317,17 +1550,23 @@ export default function KembaraQawaidGame() {
     }
   };
 
-  // FASA 2: Bantuan Semak Kitab 50/50 (-1 Reputasi menggelapkan 2 pilihan salah)
+  // FASA 2: Bantuan Semak Kitab 50/50 (-1 Reputasi menggelapkan 1 atau 2 pilihan salah)
   const handleSemakKitab = useCallback(() => {
     if (!activeNpc || hiddenSkillIds.length > 0 || reputation <= 1) return;
     const correctNota = getNotaById(activeNpc.notaId);
+    const hideCount = skillOptions.length === 3 ? 1 : 2;
     const wrongSkills = skillOptions
       .filter((s) => s.id !== correctNota.id)
-      .slice(0, 2)
+      .slice(0, hideCount)
       .map((s) => s.id);
     setHiddenSkillIds(wrongSkills);
     setReputation((rep) => Math.max(1, rep - 1));
-    triggerToast('📜 Anda menyemak kitab turath! 2 hujah salah telah digelapkan (-1 Reputasi)', 'gold');
+    triggerToast(
+      hideCount === 1
+        ? '📜 Anda menyemak kitab turath! 1 pilihan salah telah digelapkan (-1 Reputasi)'
+        : '📜 Anda menyemak kitab turath! 2 hujah salah telah digelapkan (-1 Reputasi)',
+      'gold'
+    );
   }, [activeNpc, hiddenSkillIds, reputation, skillOptions, getNotaById, triggerToast]);
 
   // Gelaran Pangkat Pengembara mengikut XP & Misi Selesai
@@ -1733,9 +1972,13 @@ export default function KembaraQawaidGame() {
               {isWilayahAllDone
                 ? '🎉 Wilayah selesai & Mohor Sanad diraih! Masuk ke Gelung Portal Ungu untuk ke kota seterusnya.'
                 : isBossUnlocked && !isBossSolved
-                ? `👑 MISI BOSS DIBUKA! Menara ${bossNpc?.nama} kini sedia untuk disidangkan!`
+                ? currentWilayah.id === 'FPQS'
+                  ? `👑 PEJABAT DEKAN DIBUKA! Foyer Pejabat Dekan (${bossNpc?.nama}) kini sedia untuk diuji!`
+                  : `👑 MISI BOSS DIBUKA! Menara ${bossNpc?.nama} kini sedia untuk disidangkan!`
                 : nearbyNpc
                 ? `✨ Anda tiba! Tekan butang hijau 'Sapa ${nearbyNpc.nama.split(' ')[0]}' di bawah untuk mula.`
+                : currentWilayah.id === 'FPQS'
+                ? `🎯 Misi: Selesaikan penyelidikan di 3 Makmal (Tarannum, Hadis, Braille) (${earlierSolvedCount}/3 Selesai)`
                 : `🎯 Misi: Selesaikan 3 kes warga di sekitar kota (${earlierSolvedCount}/3 Selesai)`}
             </span>
             {nearbyNpc && (
@@ -1919,7 +2162,9 @@ export default function KembaraQawaidGame() {
                       else {
                         soundRef.current?.playCastReject();
                         triggerToast(
-                          `🔒 Balai Tertutup! Selesaikan 3 kes warga di sekitar kota dahulu (${earlierSolvedCount}/3).`,
+                          currentWilayah.id === 'FPQS'
+                            ? `🔒 Pejabat Dekan Terkunci! Selesaikan penyelidikan di ketiga-tiga Makmal (Tarannum, Hadis, Braille) dahulu (${earlierSolvedCount}/3).`
+                            : `🔒 Balai Tertutup! Selesaikan 3 kes warga di sekitar kota dahulu (${earlierSolvedCount}/3).`,
                           'crimson'
                         );
                       }
@@ -1942,6 +2187,8 @@ export default function KembaraQawaidGame() {
                         ? '4px solid #fbbf24'
                         : isNearby
                         ? '4px solid #38bdf8'
+                        : npc.jenis === 'EASTER_EGG'
+                        ? '4px solid #38bdf8'
                         : '4px solid #f59e0b',
                       background: isLocked
                         ? 'rgba(239, 68, 68, 0.05)'
@@ -1954,7 +2201,9 @@ export default function KembaraQawaidGame() {
                     }}
                     title={
                       isLocked
-                        ? `Misi Boss Terkunci: Selesaikan 3 permasalahan awal dahulu (${earlierSolvedCount}/3)`
+                        ? (currentWilayah.id === 'FPQS'
+                            ? `Misi Dekan Terkunci: Selesaikan penyelidikan 3 Makmal dahulu (${earlierSolvedCount}/3)`
+                            : `Misi Boss Terkunci: Selesaikan 3 permasalahan awal dahulu (${earlierSolvedCount}/3)`)
                         : 'Sentuh kad untuk melangkah terus ke Menara NPC ini'
                     }
                   >
@@ -1986,18 +2235,37 @@ export default function KembaraQawaidGame() {
                               fontWeight: 800,
                             }}
                           >
-                            {isLocked ? '🔒 BOSS TERKUNCI' : '👑 TOKOH UTAMA'}
+                            {isLocked ? (currentWilayah.id === 'FPQS' ? '🔒 DEKAN TERKUNCI' : '🔒 BOSS TERKUNCI') : '👑 TOKOH UTAMA'}
+                          </span>
+                        )}
+                        {npc.jenis === 'EASTER_EGG' && (
+                          <span
+                            className="lg-node-chip"
+                            style={{
+                              fontSize: '0.62rem',
+                              padding: '1px 6px',
+                              background: 'rgba(56, 189, 248, 0.15)',
+                              borderColor: 'rgba(56, 189, 248, 0.45)',
+                              color: '#7dd3fc',
+                              fontWeight: 800,
+                            }}
+                          >
+                            ⭐ BILIK RAHSIA
                           </span>
                         )}
                       </div>
                       <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                         {isSolved ? (
                           <span style={{ color: '#34d399' }}>
-                            ✅ Selesai: {nota.tajuk.split('(')[0].trim()} {isBoss && '• 🏅 Mohor Diperolehi'}
+                            {npc.jenis === 'EASTER_EGG'
+                              ? '✅ Dilawati: Tip Rahsia & +10 Reputasi Dituntut'
+                              : `✅ Selesai: ${nota.tajuk.split('(')[0].trim()} ${isBoss ? '• 🏅 Mohor Diperolehi' : ''}`}
                           </span>
                         ) : isLocked ? (
                           <span style={{ color: '#f87171' }}>
-                            🔒 Terkunci: Selesaikan 3 kes warga dahulu ({earlierSolvedCount}/3)
+                            {currentWilayah.id === 'FPQS'
+                              ? `🔒 Terkunci: Selesaikan 3 Makmal dahulu (${earlierSolvedCount}/3)`
+                              : `🔒 Terkunci: Selesaikan 3 kes warga dahulu (${earlierSolvedCount}/3)`}
                           </span>
                         ) : isBoss ? (
                           <span style={{ color: '#fbbf24', fontWeight: 600 }}>
@@ -2005,6 +2273,8 @@ export default function KembaraQawaidGame() {
                           </span>
                         ) : isNearby ? (
                           <span style={{ color: '#38bdf8' }}>✨ Bersebelahan! Sedia disapa</span>
+                        ) : npc.jenis === 'EASTER_EGG' ? (
+                          <span style={{ color: '#7dd3fc' }}>⭐ Sentuh untuk singgah ke Bilik Nadi</span>
                         ) : (
                           <span>🚀 Sentuh kad untuk terus ke Menara NPC</span>
                         )}
@@ -2585,443 +2855,746 @@ export default function KembaraQawaidGame() {
                   </span>
                 </div>
                 <div style={{ fontSize: '0.74rem', color: 'rgba(255, 255, 255, 0.72)', marginTop: '4px' }}>
-                  {activeNpc.npcId === bossNpc?.npcId
-                    ? `👑 Misi Tokoh Utama Wilayah: Selesaikan kes ini untuk dikurniakan Mohor Sanad ${currentWilayah.nama.split('(')[0].trim()} & mengaktifkan portal!`
+                  {activeNpc.npcId === 'NPC-FPQS-5' || activeNpc.makmalType === 'BILIK_NADI'
+                    ? '⭐ Ruang perjumpaan santai persatuan mahasiswa, ukhuwah & tip rahsia menghadapi Dekan FPQS'
+                    : activeNpc.npcId === bossNpc?.npcId
+                    ? currentWilayah.id === 'FPQS'
+                      ? '👑 Misi Tokoh Utama: Ujian kepimpinan keilmuan tertinggi di Foyer Pejabat Dekan FPQS!'
+                      : `👑 Misi Tokoh Utama Wilayah: Selesaikan kes ini untuk dikurniakan Mohor Sanad ${currentWilayah.nama.split('(')[0].trim()} & mengaktifkan portal!`
                     : '📜 Memohon fatwa hujah syarak bagi menyelesaikan pertikaian uruf & muamalat'}
                 </div>
               </div>
             </div>
 
-            {/* Kotak Dialog Situasi Dilema Hukum (Typewriter Animation) */}
-            <div
-              onClick={handleSkipTypewriter}
-              className="lg-inner-well"
-              style={{
-                marginTop: '14px',
-                padding: '16px 20px',
-                borderRadius: '16px',
-                background: 'rgba(8, 14, 30, 0.85)',
-                border: '1.5px solid rgba(251, 191, 36, 0.4)',
-                boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.5)',
-                cursor: isTypewriterDone ? 'default' : 'pointer',
-              }}
-              title={!isTypewriterDone ? 'Klik untuk terus papar penuh' : undefined}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '8px',
-                }}
-              >
+            {/* FASA 4: Paparan Khas Dialog Bilik Nadi PMFPQS (Easter Egg - Tiada Kuiz) */}
+            {(activeNpc.npcId === 'NPC-FPQS-5' || activeNpc.makmalType === 'BILIK_NADI') ? (
+              <div style={{ marginTop: '16px' }}>
                 <div
+                  className="lg-inner-well"
                   style={{
-                    fontSize: '0.73rem',
-                    fontWeight: 800,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    color: '#fbbf24',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
+                    padding: '20px',
+                    borderRadius: '18px',
+                    border: '1.5px solid rgba(56, 189, 248, 0.5)',
+                    background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 41, 59, 0.85) 100%)',
+                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
                   }}
                 >
-                  <span>⚖️ KES &amp; PERTIKAIAN HUKUM:</span>
-                </div>
-                {!isTypewriterDone ? (
-                  <span
+                  {/* Tab / Langkah Interaksi Bilik Nadi */}
+                  <div
                     style={{
-                      fontSize: '0.68rem',
-                      color: '#38bdf8',
-                      background: 'rgba(56, 189, 248, 0.12)',
-                      padding: '2px 8px',
-                      borderRadius: '10px',
-                      border: '1px solid rgba(56, 189, 248, 0.3)',
-                    }}
-                  >
-                    👆 Klik untuk terus papar penuh
-                  </span>
-                ) : (
-                  <span style={{ fontSize: '0.68rem', color: '#10b981' }}>✓ Sedia untuk dijawab</span>
-                )}
-              </div>
-
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: '0.96rem',
-                  lineHeight: 1.8,
-                  color: '#f8fafc',
-                  minHeight: '48px',
-                }}
-              >
-                {activeNpc.dialogMasalah ? activeNpc.dialogMasalah.slice(0, typewriterIndex) : ''}
-                {!isTypewriterDone && (
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      width: '7px',
-                      height: '15px',
-                      backgroundColor: '#fbbf24',
-                      marginLeft: '4px',
-                      verticalAlign: 'middle',
-                      animation: 'pulse 0.7s infinite',
-                    }}
-                  />
-                )}
-              </p>
-            </div>
-
-            {/* Maklum Balas Jika Salah Pilih Kaedah (NPC Menolak & Reputasi Menurun) */}
-            {encounterStatus === 'REJECTED' && (
-              <div
-                className="lg-inner-well"
-                style={{
-                  marginTop: '14px',
-                  padding: '14px 18px',
-                  borderRadius: '14px',
-                  border: '1.5px solid rgba(248, 113, 113, 0.65)',
-                  background: 'rgba(239, 68, 68, 0.14)',
-                  boxShadow: '0 4px 18px rgba(239, 68, 68, 0.2)',
-                }}
-              >
-                <div style={{ fontWeight: 800, color: '#f87171', marginBottom: '4px', fontSize: '0.92rem' }}>
-                  ❌ Hujah Ditolak oleh {activeNpc.nama}! (-15% Reputasi • Baki: {reputation}%)
-                </div>
-                <p style={{ margin: 0, fontSize: '0.86rem', lineHeight: 1.6, color: '#fee2e2' }}>
-                  {rejectionMessage}
-                </p>
-              </div>
-            )}
-
-            {/* Maklum Balas Jika Berjaya Selesaikan Konflik */}
-            {encounterStatus === 'SUCCESS' ? (
-              <div
-                className="lg-inner-well"
-                style={{
-                  marginTop: '16px',
-                  padding: '20px',
-                  borderRadius: '16px',
-                  border: '1.5px solid rgba(52, 211, 153, 0.65)',
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(5, 150, 105, 0.12) 100%)',
-                  boxShadow: '0 8px 24px rgba(16, 185, 129, 0.25)',
-                }}
-              >
-                <div
-                  style={{
-                    fontWeight: 800,
-                    fontSize: '1.05rem',
-                    color: activeNpc.npcId === bossNpc?.npcId ? '#fbbf24' : '#34d399',
-                    marginBottom: '6px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                >
-                  <span>
-                    {activeNpc.npcId === bossNpc?.npcId
-                      ? `👑 KEMENANGAN FATWA UTAMA! ${activeNpc.nama} Mengurniakan Mohor Sanad Wilayah (+300 XP & +10% Reputasi)`
-                      : `✨ Fatwa Diterima Penuh! ${activeNpc.nama} Berpuas Hati (+150 XP & +10% Reputasi)`}
-                  </span>
-                </div>
-                <p
-                  style={{
-                    margin: '0 0 14px',
-                    fontSize: '0.92rem',
-                    lineHeight: 1.7,
-                    color: '#f8fafc',
-                  }}
-                >
-                  {activeNpc.dialogBerjaya}
-                </p>
-
-                {(() => {
-                  const notaBetul = getNotaById(activeNpc.notaId);
-                  return (
-                    <div
-                      className="lg-inner-well"
-                      style={{
-                        padding: '14px 16px',
-                        marginBottom: '16px',
-                        borderRadius: '12px',
-                        border: '1px solid rgba(251, 191, 36, 0.35)',
-                        background: 'rgba(15, 23, 42, 0.7)',
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: '0.72rem',
-                          fontWeight: 800,
-                          color: '#fbbf24',
-                          letterSpacing: '0.04em',
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        DALIL &amp; KAEDAH FIQH YANG DIAMALKAN:
-                      </div>
-                      <div
-                        dir="rtl"
-                        style={{
-                          fontFamily: '"Noto Naskh Arabic", serif',
-                          fontSize: '1.35rem',
-                          fontWeight: 700,
-                          color: '#f8fafc',
-                          margin: '8px 0',
-                          lineHeight: 1.8,
-                        }}
-                      >
-                        {notaBetul.tajukArab || notaBetul.tajuk}
-                      </div>
-                      {notaBetul.tajukBm && (
-                        <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#38bdf8', marginBottom: '10px' }}>
-                          &ldquo;{notaBetul.tajukBm}&rdquo;
-                        </div>
-                      )}
-                      <p style={{ margin: '4px 0', fontSize: '0.84rem', lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.88)' }}>
-                        <strong style={{ color: '#fbbf24' }}>Huraian:</strong> {notaBetul.huraian}
-                      </p>
-                      <p style={{ margin: '4px 0', fontSize: '0.84rem', lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.88)' }}>
-                        <strong style={{ color: '#fbbf24' }}>Syarat &amp; Pengecualian:</strong> {notaBetul.syarat}
-                      </p>
-                    </div>
-                  );
-                })()}
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
-                  {activeNpc.npcId === bossNpc?.npcId && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveNpc(null);
-                        setShowSanadAwardModal(currentWilayah.id);
-                      }}
-                      className="lg-btn-glass"
-                      style={{
-                        padding: '8px 16px',
-                        fontSize: '0.82rem',
-                        borderColor: '#fbbf24',
-                        color: '#fbbf24',
-                        background: 'rgba(245, 158, 11, 0.15)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                      }}
-                    >
-                      <span>🏅 Buka Sijil Mohor Sanad</span>
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setActiveNpc(null)}
-                    className="lg-btn-primary"
-                    style={{ padding: '8px 18px', fontSize: '0.82rem' }}
-                  >
-                    <span>Teruskan Pengembaraan di Peta →</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* Senarai Kad Hujah / Dalil (Pilihan Jawapan RPG) */
-              <div style={{ marginTop: '18px' }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: '10px',
-                    marginBottom: '12px',
-                  }}
-                >
-                  <span style={{ fontSize: '0.86rem', fontWeight: 800, color: '#f8fafc' }}>
-                    ⚖️ BENTANGKAN KAD HUJAH &amp; KAEDAH FIQH:
-                  </span>
-
-                  {/* Butang Bantuan Semak Kitab (-1 Reputasi) */}
-                  <button
-                    type="button"
-                    disabled={hiddenSkillIds.length > 0 || reputation <= 1}
-                    onClick={handleSemakKitab}
-                    className="lg-btn-glass"
-                    style={{
-                      fontSize: '0.74rem',
-                      padding: '5px 12px',
-                      borderRadius: '20px',
-                      borderColor: hiddenSkillIds.length > 0 ? 'rgba(52, 211, 153, 0.4)' : 'rgba(251, 191, 36, 0.5)',
-                      color: hiddenSkillIds.length > 0 ? '#34d399' : '#fbbf24',
-                      background: hiddenSkillIds.length > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                      display: 'inline-flex',
+                      display: 'flex',
                       alignItems: 'center',
-                      gap: '5px',
+                      justifyContent: 'space-between',
+                      marginBottom: '16px',
+                      paddingBottom: '12px',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                      flexWrap: 'wrap',
+                      gap: '8px',
                     }}
-                    title="Gunakan bantuan semakan kitab untuk menggelapkan 2 pilihan salah dengan kos 1 reputasi"
                   >
-                    <span>
-                      {hiddenSkillIds.length > 0
-                        ? '✓ Kitab Telah Disemak (50/50 Aktif)'
-                        : '📜 Semak Kitab (-1 Reputasi)'}
-                    </span>
-                  </button>
-                </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '1.3rem' }}>⭐</span>
+                      <div>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#fbbf24' }}>
+                          Bilik Nadi PMFPQS • Perkongsian Rahsia
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.65)' }}>
+                          {nadiStep === 0 ? 'Bahagian 1: Nasihat Persediaan' : 'Bahagian 2: Tip Penting Kuiz'}
+                        </div>
+                      </div>
+                    </div>
 
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                    gap: '12px',
-                  }}
-                >
-                  {skillOptions.map((skill, sIdx) => {
-                    const isHidden = hiddenSkillIds.includes(skill.id);
-                    const isInspecting = inspectSkillId === skill.id;
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <span
+                        style={{
+                          padding: '3px 10px',
+                          borderRadius: '10px',
+                          fontSize: '0.70rem',
+                          fontWeight: 700,
+                          background: nadiStep === 0 ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                          color: nadiStep === 0 ? '#38bdf8' : 'rgba(255, 255, 255, 0.4)',
+                          border: nadiStep === 0 ? '1px solid #38bdf8' : '1px solid transparent',
+                        }}
+                      >
+                        1. Ali Shahril
+                      </span>
+                      <span
+                        style={{
+                          padding: '3px 10px',
+                          borderRadius: '10px',
+                          fontSize: '0.70rem',
+                          fontWeight: 700,
+                          background: nadiStep === 1 ? 'rgba(52, 211, 153, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                          color: nadiStep === 1 ? '#34d399' : 'rgba(255, 255, 255, 0.4)',
+                          border: nadiStep === 1 ? '1px solid #34d399' : '1px solid transparent',
+                        }}
+                      >
+                        2. Ebadullah
+                      </span>
+                    </div>
+                  </div>
 
-                    if (isHidden) {
-                      return (
+                  {nadiStep === 0 ? (
+                    /* LANGKAH 1: ALI SHAHRIL */
+                    <div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          marginBottom: '14px',
+                        }}
+                      >
                         <div
-                          key={skill.id}
-                          className="lg-inner-well"
                           style={{
-                            opacity: 0.32,
-                            padding: '16px',
-                            textAlign: 'center',
-                            fontSize: '0.8rem',
-                            borderRadius: '16px',
-                            border: '1px dashed rgba(255, 255, 255, 0.2)',
-                            background: 'rgba(15, 23, 42, 0.4)',
+                            width: '46px',
+                            height: '46px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #1e3a8a 0%, #0284c7 100%)',
+                            border: '2px solid #38bdf8',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            color: 'var(--text-muted)',
+                            fontSize: '1.4rem',
+                            flexShrink: 0,
                           }}
                         >
-                          🌫️ Hujah #{sIdx + 1} ditolak melalui semakan Kitab Turath
+                          🧑‍💼
                         </div>
-                      );
-                    }
+                        <div>
+                          <div style={{ fontSize: '0.94rem', fontWeight: 800, color: '#f8fafc' }}>
+                            Ali Shahril
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: '#38bdf8' }}>
+                            Presiden Persatuan Mahasiswa Fakulti Pengajian Quran & Sunnah
+                          </div>
+                        </div>
+                      </div>
 
-                    return (
                       <div
-                        key={skill.id}
-                        className="lg-inner-well"
                         style={{
-                          padding: '16px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          gap: '12px',
-                          borderRadius: '16px',
-                          border: '1.5px solid rgba(251, 191, 36, 0.35)',
-                          background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.75) 100%)',
-                          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
-                          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                          padding: '16px 18px',
+                          borderRadius: '14px',
+                          background: 'rgba(2, 132, 199, 0.12)',
+                          border: '1px solid rgba(56, 189, 248, 0.35)',
+                          marginBottom: '18px',
                         }}
                       >
-                        <div>
-                          <div
-                            style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              marginBottom: '8px',
-                            }}
-                          >
-                            <span
-                              className="lg-node-chip"
-                              style={{
-                                background: 'rgba(251, 191, 36, 0.12)',
-                                borderColor: 'rgba(251, 191, 36, 0.35)',
-                                color: '#fbbf24',
-                                fontSize: '0.7rem',
-                              }}
-                            >
-                              📜 HUJAH #{sIdx + 1} • {skill.kategori}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setInspectSkillId(isInspecting ? null : skill.id)
-                              }
-                              className="lg-btn-glass"
-                              style={{ fontSize: '0.68rem', padding: '3px 8px', borderRadius: '10px' }}
-                            >
-                              <span>{isInspecting ? 'Tutup Nota' : '📖 Semak Huraian'}</span>
-                            </button>
-                          </div>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: '0.96rem',
+                            lineHeight: 1.8,
+                            color: '#f8fafc',
+                            fontStyle: 'italic',
+                          }}
+                        >
+                          &ldquo;Assalamualaikum! Singgah Bilik Nadi rupanya. Dah ready nak hadap Dekan kejap lagi? Relaks je, baca soalan tu betul-betul. Ingat balik apa yang kita bincang masa study group haritu.&rdquo;
+                        </p>
+                      </div>
 
-                          <div
-                            dir="rtl"
-                            style={{
-                              fontFamily: '"Noto Naskh Arabic", serif',
-                              fontSize: '1.25rem',
-                              fontWeight: 700,
-                              lineHeight: 1.8,
-                              color: '#f8fafc',
-                              textAlign: 'right',
-                              textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
-                            }}
-                          >
-                            {skill.tajukArab || skill.tajuk}
-                          </div>
-
-                          {skill.tajukBm && (
-                            <div
-                              style={{
-                                fontSize: '0.82rem',
-                                fontWeight: 600,
-                                color: '#38bdf8',
-                                marginTop: '4px',
-                                lineHeight: 1.45,
-                              }}
-                            >
-                              &ldquo;{skill.tajukBm}&rdquo;
-                            </div>
-                          )}
-
-                          {isInspecting && (
-                            <div
-                              style={{
-                                marginTop: '10px',
-                                paddingTop: '10px',
-                                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-                                fontSize: '0.78rem',
-                                lineHeight: 1.6,
-                                color: 'rgba(255, 255, 255, 0.85)',
-                                background: 'rgba(0, 0, 0, 0.25)',
-                                padding: '8px 10px',
-                                borderRadius: '8px',
-                              }}
-                            >
-                              <div>
-                                <strong style={{ color: '#fbbf24' }}>Huraian:</strong> {skill.huraian}
-                              </div>
-                              <div style={{ marginTop: '4px' }}>
-                                <strong style={{ color: '#fbbf24' }}>Syarat:</strong> {skill.syarat}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
+                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <button
                           type="button"
-                          onClick={() => handleCastSkill(skill)}
+                          onClick={() => {
+                            soundRef.current?.playStep();
+                            setNadiStep(1);
+                          }}
                           className="lg-btn-primary"
                           style={{
-                            width: '100%',
-                            justifyContent: 'center',
-                            padding: '9px 12px',
-                            fontSize: '0.82rem',
+                            padding: '9px 20px',
+                            fontSize: '0.84rem',
                             fontWeight: 700,
                             borderRadius: '12px',
                           }}
                         >
-                          <span>⚡ Bentangkan Dalil Ini</span>
+                          <span>Dengar Hint Seterusnya (Ebadullah) →</span>
                         </button>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ) : (
+                    /* LANGKAH 2: EBADULLAH */
+                    <div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          marginBottom: '14px',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: '46px',
+                            height: '46px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)',
+                            border: '2px solid #34d399',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '1.4rem',
+                            flexShrink: 0,
+                          }}
+                        >
+                          🧑‍🎓
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.94rem', fontWeight: 800, color: '#f8fafc' }}>
+                            Ebadullah
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: '#34d399' }}>
+                            Exco Akademik & Kepimpinan PMFPQS
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          padding: '16px 18px',
+                          borderRadius: '14px',
+                          background: 'rgba(16, 185, 129, 0.12)',
+                          border: '1px solid rgba(52, 211, 153, 0.35)',
+                          marginBottom: '18px',
+                        }}
+                      >
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: '0.96rem',
+                            lineHeight: 1.8,
+                            color: '#f8fafc',
+                            fontStyle: 'italic',
+                          }}
+                        >
+                          &ldquo;Haa alang-alang dah sampai sini, nak payung hint sikit. Dr. Helmy kat Makmal Hadis tu suka test kefahaman tau. Jangan tertukar kaedah Niat dengan kaedah Darurat. All the best, geng!&rdquo;
+                        </p>
+                      </div>
+
+                      {/* Ganjaran Ukhuwah Bilik Nadi */}
+                      <div
+                        style={{
+                          padding: '12px 16px',
+                          borderRadius: '12px',
+                          background: 'linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(16, 185, 129, 0.10) 100%)',
+                          border: '1px solid rgba(74, 222, 128, 0.4)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          marginBottom: '18px',
+                        }}
+                      >
+                        <span style={{ fontSize: '1.4rem' }}>⚡</span>
+                        <div style={{ fontSize: '0.80rem', color: '#bbf7d0', lineHeight: 1.5 }}>
+                          <strong>Kelebihan Ukhuwah Bilik Nadi:</strong> Memulihkan <strong>+10 Reputasi &amp; Tenaga</strong> secara percuma untuk persediaan berdepan Dekan!
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            soundRef.current?.playStep();
+                            setNadiStep(0);
+                          }}
+                          className="lg-btn-glass"
+                          style={{
+                            padding: '9px 16px',
+                            fontSize: '0.82rem',
+                            borderRadius: '12px',
+                          }}
+                        >
+                          <span>← Ali Shahril</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!solvedNpcIds.includes(activeNpc.npcId)) {
+                              setReputation((r) => Math.min(100, r + 10));
+                              setHikmahMana((m) => Math.min(5, m + 1));
+                              setSolvedNpcIds((prev) => [...prev, activeNpc.npcId]);
+                              triggerToast('⚡ +10 Reputasi & Tenaga diperoleh daripada ukhuwah Bilik Nadi PMFPQS!', 'emerald');
+                            } else {
+                              triggerToast('✨ Ukhuwah Bilik Nadi sentiasa menyokong anda!', 'cyan');
+                            }
+                            soundRef.current?.playOasis();
+                            setActiveNpc(null);
+                          }}
+                          className="lg-btn-primary"
+                          style={{
+                            padding: '9px 20px',
+                            fontSize: '0.84rem',
+                            fontWeight: 700,
+                            borderRadius: '12px',
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            borderColor: '#34d399',
+                          }}
+                        >
+                          <span>Terima Kasih! (+10 Reputasi / Tenaga) ✨</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
+            ) : (
+              /* Paparan Normal: Soalan Senario & Pilihan Kaedah (A, B, C) */
+              <>
+                {/* Kotak Dialog Situasi Dilema Hukum (Typewriter Animation) */}
+                <div
+                  onClick={handleSkipTypewriter}
+                  className="lg-inner-well"
+                  style={{
+                    marginTop: '14px',
+                    padding: '16px 20px',
+                    borderRadius: '16px',
+                    background: 'rgba(8, 14, 30, 0.85)',
+                    border: '1.5px solid rgba(251, 191, 36, 0.4)',
+                    boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.5)',
+                    cursor: isTypewriterDone ? 'default' : 'pointer',
+                  }}
+                  title={!isTypewriterDone ? 'Klik untuk terus papar penuh' : undefined}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: '0.73rem',
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        color: '#fbbf24',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <span>⚖️ {currentWilayah.id === 'FPQS' ? 'SENARIO PENYELIDIKAN MAKMAL:' : 'KES & PERTIKAIAN HUKUM:'}</span>
+                    </div>
+                    {!isTypewriterDone ? (
+                      <span
+                        style={{
+                          fontSize: '0.68rem',
+                          color: '#38bdf8',
+                          background: 'rgba(56, 189, 248, 0.12)',
+                          padding: '2px 8px',
+                          borderRadius: '10px',
+                          border: '1px solid rgba(56, 189, 248, 0.3)',
+                        }}
+                      >
+                        👆 Klik untuk terus papar penuh
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.68rem', color: '#10b981' }}>✓ Sedia untuk dijawab</span>
+                    )}
+                  </div>
+
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: '0.96rem',
+                      lineHeight: 1.8,
+                      color: '#f8fafc',
+                      minHeight: '48px',
+                    }}
+                  >
+                    {activeNpc.dialogMasalah ? activeNpc.dialogMasalah.slice(0, typewriterIndex) : ''}
+                    {!isTypewriterDone && (
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          width: '7px',
+                          height: '15px',
+                          backgroundColor: '#fbbf24',
+                          marginLeft: '4px',
+                          verticalAlign: 'middle',
+                          animation: 'pulse 0.7s infinite',
+                        }}
+                      />
+                    )}
+                  </p>
+                </div>
+
+                {/* Maklum Balas Jika Salah Pilih Kaedah (NPC Menolak & Reputasi Menurun) */}
+                {encounterStatus === 'REJECTED' && (
+                  <div
+                    className="lg-inner-well"
+                    style={{
+                      marginTop: '14px',
+                      padding: '14px 18px',
+                      borderRadius: '14px',
+                      border: '1.5px solid rgba(248, 113, 113, 0.65)',
+                      background: 'rgba(239, 68, 68, 0.14)',
+                      boxShadow: '0 4px 18px rgba(239, 68, 68, 0.2)',
+                    }}
+                  >
+                    <div style={{ fontWeight: 800, color: '#f87171', marginBottom: '4px', fontSize: '0.92rem' }}>
+                      ❌ Hujah Ditolak oleh {activeNpc.nama}! (-15% Reputasi • Baki: {reputation}%)
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.86rem', lineHeight: 1.6, color: '#fee2e2' }}>
+                      {rejectionMessage}
+                    </p>
+                  </div>
+                )}
+
+                {/* Maklum Balas Jika Berjaya Selesaikan Konflik */}
+                {encounterStatus === 'SUCCESS' ? (
+                  <div
+                    className="lg-inner-well"
+                    style={{
+                      marginTop: '16px',
+                      padding: '20px',
+                      borderRadius: '16px',
+                      border: '1.5px solid rgba(52, 211, 153, 0.65)',
+                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(5, 150, 105, 0.12) 100%)',
+                      boxShadow: '0 8px 24px rgba(16, 185, 129, 0.25)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: 800,
+                        fontSize: '1.05rem',
+                        color: activeNpc.npcId === bossNpc?.npcId ? '#fbbf24' : '#34d399',
+                        marginBottom: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      <span>
+                        {activeNpc.npcId === bossNpc?.npcId
+                          ? currentWilayah.id === 'FPQS'
+                            ? `👑 KEMENANGAN ILMU DEKANAT! ${activeNpc.nama} Mengurniakan Mohor Sanad FPQS (+300 XP & +10% Reputasi)`
+                            : `👑 KEMENANGAN FATWA UTAMA! ${activeNpc.nama} Mengurniakan Mohor Sanad Wilayah (+300 XP & +10% Reputasi)`
+                          : `✨ Fatwa Diterima Penuh! ${activeNpc.nama} Berpuas Hati (+150 XP & +10% Reputasi)`}
+                      </span>
+                    </div>
+                    <p
+                      style={{
+                        margin: '0 0 14px',
+                        fontSize: '0.92rem',
+                        lineHeight: 1.7,
+                        color: '#f8fafc',
+                      }}
+                    >
+                      {activeNpc.dialogBerjaya}
+                    </p>
+
+                    {(() => {
+                      const notaBetul = getNotaById(activeNpc.notaId);
+                      return (
+                        <div
+                          className="lg-inner-well"
+                          style={{
+                            padding: '14px 16px',
+                            marginBottom: '16px',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(251, 191, 36, 0.35)',
+                            background: 'rgba(15, 23, 42, 0.7)',
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: '0.72rem',
+                              fontWeight: 800,
+                              color: '#fbbf24',
+                              letterSpacing: '0.04em',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            DALIL &amp; KAEDAH FIQH YANG DIAMALKAN:
+                          </div>
+                          <div
+                            dir="rtl"
+                            style={{
+                              fontFamily: '"Noto Naskh Arabic", serif',
+                              fontSize: '1.35rem',
+                              fontWeight: 700,
+                              color: '#f8fafc',
+                              margin: '8px 0',
+                              lineHeight: 1.8,
+                            }}
+                          >
+                            {notaBetul.tajukArab || notaBetul.tajuk}
+                          </div>
+                          {notaBetul.tajukBm && (
+                            <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#38bdf8', marginBottom: '10px' }}>
+                              &ldquo;{notaBetul.tajukBm}&rdquo;
+                            </div>
+                          )}
+                          <p style={{ margin: '4px 0', fontSize: '0.84rem', lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.88)' }}>
+                            <strong style={{ color: '#fbbf24' }}>Huraian:</strong> {notaBetul.huraian}
+                          </p>
+                          <p style={{ margin: '4px 0', fontSize: '0.84rem', lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.88)' }}>
+                            <strong style={{ color: '#fbbf24' }}>Syarat &amp; Pengecualian:</strong> {notaBetul.syarat}
+                          </p>
+                        </div>
+                      );
+                    })()}
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
+                      {activeNpc.npcId === bossNpc?.npcId && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveNpc(null);
+                            setShowSanadAwardModal(currentWilayah.id);
+                          }}
+                          className="lg-btn-glass"
+                          style={{
+                            padding: '8px 16px',
+                            fontSize: '0.82rem',
+                            borderColor: '#fbbf24',
+                            color: '#fbbf24',
+                            background: 'rgba(245, 158, 11, 0.15)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                          }}
+                        >
+                          <span>🏅 Buka Sijil Mohor Sanad</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setActiveNpc(null)}
+                        className="lg-btn-primary"
+                        style={{ padding: '8px 18px', fontSize: '0.82rem' }}
+                      >
+                        <span>Teruskan Pengembaraan di Peta →</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Senarai Kad Hujah / Dalil (Pilihan Jawapan RPG Dinamik dari Database) */
+                  <div style={{ marginTop: '18px' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '10px',
+                        marginBottom: '12px',
+                      }}
+                    >
+                      <span style={{ fontSize: '0.86rem', fontWeight: 800, color: '#f8fafc' }}>
+                        {currentWilayah.id === 'FPQS'
+                          ? '⚖️ PILIH KAEDAH FIQH (A, B, C) DARI PANGKALAN DATA TURATH:'
+                          : '⚖️ BENTANGKAN KAD HUJAH & KAEDAH FIQH:'}
+                      </span>
+
+                      {/* Butang Bantuan Semak Kitab (-1 Reputasi) */}
+                      <button
+                        type="button"
+                        disabled={hiddenSkillIds.length > 0 || reputation <= 1}
+                        onClick={handleSemakKitab}
+                        className="lg-btn-glass"
+                        style={{
+                          fontSize: '0.74rem',
+                          padding: '5px 12px',
+                          borderRadius: '20px',
+                          borderColor: hiddenSkillIds.length > 0 ? 'rgba(52, 211, 153, 0.4)' : 'rgba(251, 191, 36, 0.5)',
+                          color: hiddenSkillIds.length > 0 ? '#34d399' : '#fbbf24',
+                          background: hiddenSkillIds.length > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                        }}
+                        title={
+                          skillOptions.length === 3
+                            ? 'Gunakan bantuan semakan kitab untuk menggelapkan 1 pilihan salah dengan kos 1 reputasi'
+                            : 'Gunakan bantuan semakan kitab untuk menggelapkan 2 pilihan salah dengan kos 1 reputasi'
+                        }
+                      >
+                        <span>
+                          {hiddenSkillIds.length > 0
+                            ? (skillOptions.length === 3 ? '✓ Kitab Disemak (1 Pilihan Ditolak)' : '✓ Kitab Disemak (50/50 Aktif)')
+                            : '📜 Semak Kitab (-1 Reputasi)'}
+                        </span>
+                      </button>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                        gap: '12px',
+                      }}
+                    >
+                      {skillOptions.map((skill, sIdx) => {
+                        const isHidden = hiddenSkillIds.includes(skill.id);
+                        const isInspecting = inspectSkillId === skill.id;
+                        const choiceChar = skill.choiceLabel || ['A', 'B', 'C', 'D'][sIdx];
+
+                        if (isHidden) {
+                          return (
+                            <div
+                              key={skill.id}
+                              className="lg-inner-well"
+                              style={{
+                                opacity: 0.32,
+                                padding: '16px',
+                                textAlign: 'center',
+                                fontSize: '0.8rem',
+                                borderRadius: '16px',
+                                border: '1px dashed rgba(255, 255, 255, 0.2)',
+                                background: 'rgba(15, 23, 42, 0.4)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'var(--text-muted)',
+                              }}
+                            >
+                              🌫️ Pilihan {choiceChar} ditolak melalui semakan Kitab Turath
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div
+                            key={skill.id}
+                            className="lg-inner-well"
+                            style={{
+                              padding: '16px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'space-between',
+                              gap: '12px',
+                              borderRadius: '16px',
+                              border: '1.5px solid rgba(251, 191, 36, 0.35)',
+                              background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.75) 100%)',
+                              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
+                              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                            }}
+                          >
+                            <div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  marginBottom: '8px',
+                                }}
+                              >
+                                <span
+                                  className="lg-node-chip"
+                                  style={{
+                                    background: 'rgba(251, 191, 36, 0.12)',
+                                    borderColor: 'rgba(251, 191, 36, 0.35)',
+                                    color: '#fbbf24',
+                                    fontSize: '0.72rem',
+                                    fontWeight: 800,
+                                  }}
+                                >
+                                  PILIHAN {choiceChar} • {skill.kategori}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setInspectSkillId(isInspecting ? null : skill.id)
+                                  }
+                                  className="lg-btn-glass"
+                                  style={{ fontSize: '0.68rem', padding: '3px 8px', borderRadius: '10px' }}
+                                >
+                                  <span>{isInspecting ? 'Tutup Nota' : '📖 Semak Huraian'}</span>
+                                </button>
+                              </div>
+
+                              <div
+                                dir="rtl"
+                                style={{
+                                  fontFamily: '"Noto Naskh Arabic", serif',
+                                  fontSize: '1.25rem',
+                                  fontWeight: 700,
+                                  lineHeight: 1.8,
+                                  color: '#f8fafc',
+                                  textAlign: 'right',
+                                  textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
+                                }}
+                              >
+                                {skill.tajukArab || skill.tajuk}
+                              </div>
+
+                              {skill.tajukBm && (
+                                <div
+                                  style={{
+                                    fontSize: '0.82rem',
+                                    fontWeight: 600,
+                                    color: '#38bdf8',
+                                    marginTop: '4px',
+                                    lineHeight: 1.45,
+                                  }}
+                                >
+                                  &ldquo;{skill.tajukBm}&rdquo;
+                                </div>
+                              )}
+
+                              {isInspecting && (
+                                <div
+                                  style={{
+                                    marginTop: '10px',
+                                    paddingTop: '10px',
+                                    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                                    fontSize: '0.78rem',
+                                    lineHeight: 1.6,
+                                    color: 'rgba(255, 255, 255, 0.85)',
+                                    background: 'rgba(0, 0, 0, 0.25)',
+                                    padding: '8px 10px',
+                                    borderRadius: '8px',
+                                  }}
+                                >
+                                  <div>
+                                    <strong style={{ color: '#fbbf24' }}>Huraian:</strong> {skill.huraian}
+                                  </div>
+                                  {skill.syarat && (
+                                    <div style={{ marginTop: '4px' }}>
+                                      <strong style={{ color: '#fbbf24' }}>Syarat:</strong> {skill.syarat}
+                                    </div>
+                                  )}
+                                  {skill.aplikasi && (
+                                    <div style={{ marginTop: '4px' }}>
+                                      <strong style={{ color: '#38bdf8' }}>Aplikasi:</strong> {skill.aplikasi}
+                                    </div>
+                                  )}
+                                  {skill.rujukan && (
+                                    <div style={{ marginTop: '4px', fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+                                      <em>Rujukan: {skill.rujukan} (Jilid {skill.jilid}, m/s {skill.halaman})</em>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleCastSkill(skill)}
+                              className="lg-btn-primary"
+                              style={{
+                                width: '100%',
+                                justifyContent: 'center',
+                                padding: '9px 12px',
+                                fontSize: '0.82rem',
+                                fontWeight: 700,
+                                borderRadius: '12px',
+                              }}
+                            >
+                              <span>⚡ Pilih Jawapan {choiceChar}</span>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

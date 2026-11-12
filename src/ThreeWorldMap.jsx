@@ -106,6 +106,23 @@ const BIOME_PALETTES = {
     skyMid: '#1a0b38',
     skyBottom: '#09071c',
   },
+  FPQS: {
+    ground: 0x22c55e,       // Blok rumput kampus hijau terang (#22c55e)
+    groundAccent: 0x16a34a, // Hijau rumput segar variasi
+    pathTile: 0xe2e8f0,     // Jubin moden kelabu/putih pejalan kaki/foyer (#e2e8f0)
+    foyerTile: 0xf8fafc,    // Jubin foyer marmar putih
+    rock: 0x475569,         // Dinding perimeter kampus
+    rockTop: 0x64748b,      // Tembok / planter box
+    cliff: 0x0f172a,        // Tebing bawah pulau
+    water: 0x0ea5e9,        // Air / kafe
+    flora: 0x15803d,        // Pokok landskap kampus
+    accentGlow: 0x22c55e,   // Cahaya hijau zamrud USIM
+    fogColor: 0x071e16,     // Kabus malam kampus damai
+    lightColor: 0xf0fdf4,   // Cahaya lampu kampus lembut
+    skyTop: '#020b08',
+    skyMid: '#06261a',
+    skyBottom: '#041810',
+  },
 };
 
 /**
@@ -383,8 +400,13 @@ export default function ThreeWorldMap({
       ? 'HIJAZ'
       : wilayahIdx === 3
       ? 'KAHERAH'
-      : 'ANDALUSIA';
+      : wilayahIdx === 4
+      ? 'ANDALUSIA'
+      : wilayahIdx === 5
+      ? 'FPQS'
+      : 'BAGHDAD';
   const palette = BIOME_PALETTES[biomeKey] || BIOME_PALETTES.BAGHDAD;
+  const isFPQS = biomeKey === 'FPQS';
 
   // Kira posisi dunia (X, Z) dari grid (r, c)
   const getTileWorldPos = useCallback((r, c) => {
@@ -772,6 +794,49 @@ export default function ThreeWorldMap({
       metalness: 0.3,
     });
 
+    // FASA 1 & 2 (FPQS): Material Jubin Moden & Makmal Kampus FPQS (USIM)
+    const fpqsTileMat = new THREE.MeshStandardMaterial({
+      color: 0xe2e8f0, // Jubin moden kelabu/putih pejalan kaki (#e2e8f0)
+      roughness: 0.38,
+      metalness: 0.06,
+      flatShading: true,
+    });
+    const fpqsTileBorderMat = new THREE.MeshStandardMaterial({
+      color: 0x94a3b8, // Garisan sempadan jubin slate
+      roughness: 0.5,
+      flatShading: true,
+    });
+    const fpqsAccentGreenMat = new THREE.MeshStandardMaterial({
+      color: 0x16a34a, // Hijau USIM
+      roughness: 0.4,
+      flatShading: true,
+    });
+    const fpqsNavyMat = new THREE.MeshStandardMaterial({
+      color: 0x1e3a8a, // Biru USIM
+      roughness: 0.35,
+      flatShading: true,
+    });
+    const fpqsNeonCyanMat = new THREE.MeshStandardMaterial({
+      color: 0x38bdf8,
+      emissive: 0x0284c7,
+      emissiveIntensity: 2.2,
+      roughness: 0.2,
+      flatShading: true,
+    });
+    const fpqsNeonGreenMat = new THREE.MeshStandardMaterial({
+      color: 0x22c55e,
+      emissive: 0x16a34a,
+      emissiveIntensity: 2.5,
+      roughness: 0.2,
+      flatShading: true,
+    });
+    const fpqsServerMat = new THREE.MeshStandardMaterial({
+      color: 0x0f172a, // Server rack hitam / slate
+      roughness: 0.25,
+      metalness: 0.85,
+      flatShading: true,
+    });
+
     const tileBoxGeo = new THREE.BoxGeometry(TILE_SIZE - 0.03, 0.28, TILE_SIZE - 0.03);
 
     // FASA 3: Pembantu bina pokok kurma low-poly berbatang melengkung & berpelepah kurma
@@ -851,6 +916,191 @@ export default function ThreeWorldMap({
       return olive;
     };
 
+    // FASA 1 (FPQS): Pembantu bina pokok renek taman kampus USIM (Neat Topiary & Flowers)
+    const buildCampusShrub = (scale = 1) => {
+      const shrub = new THREE.Group();
+
+      // Pasu jubin marmar / planter box moden
+      const potGeo = new THREE.BoxGeometry(0.36 * scale, 0.16 * scale, 0.36 * scale);
+      const potMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.4 });
+      const pot = new THREE.Mesh(potGeo, potMat);
+      pot.position.set(0, 0.08 * scale, 0);
+      pot.castShadow = true;
+      pot.receiveShadow = true;
+      shrub.add(pot);
+
+      // Rimbunan bulat daun hijau USIM
+      const bushGeo = new THREE.IcosahedronGeometry(0.24 * scale, 1);
+      const bushMat = new THREE.MeshStandardMaterial({
+        color: 0x16a34a,
+        emissive: 0x14532d,
+        emissiveIntensity: 0.15,
+        roughness: 0.6,
+        flatShading: true,
+      });
+      const bush = new THREE.Mesh(bushGeo, bushMat);
+      bush.position.set(0, 0.28 * scale, 0);
+      bush.castShadow = true;
+      bush.receiveShadow = true;
+      shrub.add(bush);
+
+      // Bunga-bunga kecil kuning keemasan & merah jambu
+      [-0.1, 0.12].forEach((bx, idx) => {
+        const flowerGeo = new THREE.SphereGeometry(0.04 * scale, 4, 4);
+        const flowerMat = new THREE.MeshStandardMaterial({
+          color: idx === 0 ? 0xfbbf24 : 0xf43f5e,
+          emissive: idx === 0 ? 0xd97706 : 0xe11d48,
+          emissiveIntensity: 0.8,
+        });
+        const flower = new THREE.Mesh(flowerGeo, flowerMat);
+        flower.position.set(bx * scale, (0.34 + idx * 0.06) * scale, 0.16 * scale);
+        shrub.add(flower);
+      });
+
+      return shrub;
+    };
+
+    // FASA 2 (FPQS): Pembantu bina patung watak pensyarah / pelajar USIM (Figurine Low-Poly)
+    const buildLecturerFigurine = (options = {}) => {
+      const {
+        gender = 'MALE',
+        suitColor = 0x1e293b,
+        innerColor = 0xffffff,
+        headwear = 'SONGKOK', // 'SONGKOK' | 'HIJAB' | 'NONE'
+        headwearColor = 0x0f172a,
+        scale = 0.80,
+        hasBook = false,
+        hasLanyard = false,
+      } = options;
+
+      const fig = new THREE.Group();
+
+      // Badan / Blazer / Jubah
+      const bodyMat = new THREE.MeshStandardMaterial({
+        color: suitColor,
+        roughness: 0.45,
+        flatShading: true,
+      });
+      const bodyGeo = new THREE.CylinderGeometry(0.11 * scale, 0.17 * scale, 0.44 * scale, 8);
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.position.set(0, 0.22 * scale, 0);
+      body.castShadow = true;
+      body.receiveShadow = true;
+      fig.add(body);
+
+      // Kemeja Putih / Bahagian Depan
+      const innerMat = new THREE.MeshStandardMaterial({
+        color: innerColor,
+        roughness: 0.35,
+        flatShading: true,
+      });
+      const innerGeo = new THREE.BoxGeometry(0.08 * scale, 0.32 * scale, 0.04 * scale);
+      const inner = new THREE.Mesh(innerGeo, innerMat);
+      inner.position.set(0, 0.25 * scale, 0.13 * scale);
+      fig.add(inner);
+
+      // Lanyard Hijau USIM
+      if (hasLanyard) {
+        const lanyardMat = new THREE.MeshStandardMaterial({
+          color: 0x16a34a,
+          emissive: 0x15803d,
+          emissiveIntensity: 0.6,
+          roughness: 0.3,
+        });
+        const lanyGeo = new THREE.TorusGeometry(0.10 * scale, 0.014 * scale, 6, 12);
+        const lany = new THREE.Mesh(lanyGeo, lanyardMat);
+        lany.position.set(0, 0.33 * scale, 0.08 * scale);
+        lany.rotation.x = Math.PI * 0.45;
+        fig.add(lany);
+      }
+
+      // Lengan Kiri & Kanan
+      const armMat = bodyMat;
+      const leftArmGeo = new THREE.CylinderGeometry(0.035 * scale, 0.038 * scale, 0.30 * scale, 6);
+      const leftArm = new THREE.Mesh(leftArmGeo, armMat);
+      leftArm.position.set(-0.15 * scale, 0.22 * scale, 0);
+      leftArm.rotation.z = 0.15;
+      leftArm.castShadow = true;
+      fig.add(leftArm);
+
+      const rightArmGeo = new THREE.CylinderGeometry(0.035 * scale, 0.038 * scale, 0.30 * scale, 6);
+      const rightArm = new THREE.Mesh(rightArmGeo, armMat);
+      rightArm.position.set(0.15 * scale, 0.22 * scale, 0);
+      rightArm.rotation.z = -0.15;
+      rightArm.castShadow = true;
+      fig.add(rightArm);
+
+      // Kepala Bulat Warna Kulit
+      const skinMat = new THREE.MeshStandardMaterial({
+        color: 0xf1c27d,
+        roughness: 0.5,
+        flatShading: true,
+      });
+      const headGeo = new THREE.SphereGeometry(0.11 * scale, 10, 10);
+      const head = new THREE.Mesh(headGeo, skinMat);
+      head.position.set(0, 0.49 * scale, 0);
+      head.castShadow = true;
+      fig.add(head);
+
+      // Penutup Kepala: Songkok / Hijab / Rambut
+      if (headwear === 'SONGKOK') {
+        const songkokMat = new THREE.MeshStandardMaterial({
+          color: headwearColor,
+          roughness: 0.9,
+          flatShading: true,
+        });
+        const songkokGeo = new THREE.CylinderGeometry(0.098 * scale, 0.102 * scale, 0.085 * scale, 10);
+        const songkok = new THREE.Mesh(songkokGeo, songkokMat);
+        songkok.position.set(0, 0.57 * scale, 0);
+        songkok.rotation.x = -0.04;
+        songkok.castShadow = true;
+        fig.add(songkok);
+      } else if (headwear === 'HIJAB') {
+        // Tudung Labuh Anggun & Kemas
+        const hijabMat = new THREE.MeshStandardMaterial({
+          color: headwearColor,
+          roughness: 0.45,
+          flatShading: true,
+        });
+        // Balutan Kepala Tudung
+        const hijabHeadGeo = new THREE.SphereGeometry(0.13 * scale, 12, 10);
+        const hijabHead = new THREE.Mesh(hijabHeadGeo, hijabMat);
+        hijabHead.position.set(0, 0.50 * scale, -0.01 * scale);
+        hijabHead.castShadow = true;
+        fig.add(hijabHead);
+
+        // Labuh Tudung Menutupi Dada & Bahu
+        const drapeGeo = new THREE.ConeGeometry(0.22 * scale, 0.26 * scale, 10);
+        const drape = new THREE.Mesh(drapeGeo, hijabMat);
+        drape.position.set(0, 0.36 * scale, 0.02 * scale);
+        drape.castShadow = true;
+        fig.add(drape);
+      } else {
+        const hairMat = new THREE.MeshStandardMaterial({ color: 0x1c1917, roughness: 0.8 });
+        const hairGeo = new THREE.SphereGeometry(0.12 * scale, 8, 8);
+        const hair = new THREE.Mesh(hairGeo, hairMat);
+        hair.position.set(0, 0.51 * scale, -0.015 * scale);
+        fig.add(hair);
+      }
+
+      // Aksesori Kitab / Nota di Tangan
+      if (hasBook) {
+        const bookMat = new THREE.MeshStandardMaterial({
+          color: 0x0284c7,
+          roughness: 0.3,
+          emissive: 0x0369a1,
+          emissiveIntensity: 0.3,
+        });
+        const bookGeo = new THREE.BoxGeometry(0.08 * scale, 0.12 * scale, 0.035 * scale);
+        const book = new THREE.Mesh(bookGeo, bookMat);
+        book.position.set(0.14 * scale, 0.22 * scale, 0.11 * scale);
+        book.rotation.y = 0.35;
+        fig.add(book);
+      }
+
+      return fig;
+    };
+
     mapGrid.forEach((row, rIdx) => {
       row.forEach((tile, cIdx) => {
         const { x, z } = getTileWorldPos(rIdx, cIdx);
@@ -874,7 +1124,7 @@ export default function ThreeWorldMap({
           mat = rockMat;
         } else if (isPath) {
           groundY = 0.05; // Laluan batu dibuat rata untuk laluan berjalan
-          mat = pathBaseMat;
+          mat = isFPQS ? fpqsTileMat : pathBaseMat;
         } else {
           // Petak tanah biasa dengan variasi mikro semula jadi
           groundY = 0.05 + Math.max(0, elevationNoise);
@@ -889,25 +1139,53 @@ export default function ThreeWorldMap({
         clickableMeshesRef.current.push(tileMesh);
         scene.add(tileMesh);
 
-        // FASA 1: Jika petak ini adalah Laluan Batu Berpasir (Cobblestone Path)
+        // FASA 1: Jika petak ini adalah Laluan Berjalan
         if (isPath) {
-          const paverGroup = new THREE.Group();
-          const paverOffsets = [
-            { ox: -0.22, oz: -0.18, r: 0.16, rot: 0.2 },
-            { ox: 0.20, oz: -0.15, r: 0.14, rot: -0.3 },
-            { ox: -0.12, oz: 0.22, r: 0.15, rot: 0.4 },
-            { ox: 0.22, oz: 0.20, r: 0.14, rot: -0.15 },
-          ];
-          paverOffsets.forEach((po) => {
-            const paverGeo = new THREE.CylinderGeometry(po.r, po.r * 1.08, 0.03, 6);
-            const paverMesh = new THREE.Mesh(paverGeo, stonePaverMat);
-            paverMesh.position.set(po.ox, 0.14, po.oz);
-            paverMesh.rotation.y = po.rot;
-            paverMesh.receiveShadow = true;
-            paverGroup.add(paverMesh);
-          });
-          paverGroup.position.set(x, groundY, z);
-          scene.add(paverGroup);
+          if (isFPQS) {
+            // FASA 1: Jubin Moden Kelabu/Putih (#e2e8f0) Pejalan Kaki & Foyer FPQS (USIM)
+            const tileGroup = new THREE.Group();
+            const modernTileOffsets = [
+              { ox: -0.23, oz: -0.23 },
+              { ox: 0.23, oz: -0.23 },
+              { ox: -0.23, oz: 0.23 },
+              { ox: 0.23, oz: 0.23 },
+            ];
+            const modTileGeo = new THREE.BoxGeometry(0.42, 0.024, 0.42);
+            modernTileOffsets.forEach((pos) => {
+              const paver = new THREE.Mesh(modTileGeo, fpqsTileMat);
+              paver.position.set(pos.ox, 0.14, pos.oz);
+              paver.receiveShadow = true;
+              tileGroup.add(paver);
+            });
+            // Jalur sempadan kemas slate
+            const borderGeo = new THREE.BoxGeometry(0.94, 0.016, 0.035);
+            const border1 = new THREE.Mesh(borderGeo, fpqsTileBorderMat);
+            border1.position.set(0, 0.142, 0.46);
+            const border2 = new THREE.Mesh(borderGeo, fpqsTileBorderMat);
+            border2.position.set(0, 0.142, -0.46);
+            tileGroup.add(border1, border2);
+
+            tileGroup.position.set(x, groundY, z);
+            scene.add(tileGroup);
+          } else {
+            const paverGroup = new THREE.Group();
+            const paverOffsets = [
+              { ox: -0.22, oz: -0.18, r: 0.16, rot: 0.2 },
+              { ox: 0.20, oz: -0.15, r: 0.14, rot: -0.3 },
+              { ox: -0.12, oz: 0.22, r: 0.15, rot: 0.4 },
+              { ox: 0.22, oz: 0.20, r: 0.14, rot: -0.15 },
+            ];
+            paverOffsets.forEach((po) => {
+              const paverGeo = new THREE.CylinderGeometry(po.r, po.r * 1.08, 0.03, 6);
+              const paverMesh = new THREE.Mesh(paverGeo, stonePaverMat);
+              paverMesh.position.set(po.ox, 0.14, po.oz);
+              paverMesh.rotation.y = po.rot;
+              paverMesh.receiveShadow = true;
+              paverGroup.add(paverMesh);
+            });
+            paverGroup.position.set(x, groundY, z);
+            scene.add(paverGroup);
+          }
         }
 
         // FASA 1: Jika petak Air (WATER) — Gerakkan ombak Y & cincin riak air putih
@@ -970,132 +1248,281 @@ export default function ThreeWorldMap({
           scene.add(rockGroup);
         }
 
-        // 2. KOLAM OASIS HIKMAH (Air Biru Berkilat + 2 Pokok Kurma Low-Poly + Kristal)
+        // 2. KOLAM OASIS HIKMAH / KAFE DIDI FPQS (Pulih Reputasi / Tenaga)
         else if (tile.type === 'OASIS') {
-          const oasisGroup = new THREE.Group();
+          if (isFPQS) {
+            // FASA 1: Kafe Didi (Meja Bulat Kecil, Payung Kafe, Cawan Kopi & Wap Panas)
+            const cafeGroup = new THREE.Group();
 
-          // Tebing Batu Kolam
-          const basinGeo = new THREE.CylinderGeometry(0.5, 0.54, 0.12, 8);
-          const basinMat = new THREE.MeshStandardMaterial({
-            color: 0xd6d3d1,
-            roughness: 0.75,
-            flatShading: true,
-          });
-          const basin = new THREE.Mesh(basinGeo, basinMat);
-          basin.position.set(0, 0.04, 0);
-          basin.castShadow = true;
-          basin.receiveShadow = true;
-          oasisGroup.add(basin);
+            // A. Tapak Patio Jubin Moden Putih/Kelabu
+            const patioGeo = new THREE.CylinderGeometry(0.54, 0.58, 0.12, 12);
+            const patioMat = new THREE.MeshStandardMaterial({
+              color: 0xf1f5f9,
+              roughness: 0.38,
+              flatShading: true,
+            });
+            const patio = new THREE.Mesh(patioGeo, patioMat);
+            patio.position.set(0, 0.05, 0);
+            patio.receiveShadow = true;
+            patio.castShadow = true;
+            cafeGroup.add(patio);
 
-          // Permukaan Air Biru Firus Berkilat
-          const oasisWaterGeo = new THREE.CylinderGeometry(0.44, 0.44, 0.14, 8);
-          const oasisWater = new THREE.Mesh(oasisWaterGeo, waterMat);
-          oasisWater.position.set(0, 0.07, 0);
-          oasisWater.receiveShadow = true;
-          oasisGroup.add(oasisWater);
+            // Rim aksen hijau USIM
+            const rimGeo = new THREE.TorusGeometry(0.55, 0.024, 6, 24);
+            const rimMesh = new THREE.Mesh(rimGeo, fpqsAccentGreenMat);
+            rimMesh.rotation.x = Math.PI * 0.5;
+            rimMesh.position.set(0, 0.11, 0);
+            cafeGroup.add(rimMesh);
 
-          // FASA 1: Riak Air Putih pada Kolam Oasis
-          const oasisRippleGeo = new THREE.RingGeometry(0.14, 0.20, 20);
-          const oasisRippleMat = new THREE.MeshBasicMaterial({
-            color: 0xffffff,
-            transparent: true,
-            opacity: 0.75,
-            side: THREE.DoubleSide,
-          });
-          const oasisRipple = new THREE.Mesh(oasisRippleGeo, oasisRippleMat);
-          oasisRipple.rotation.x = -Math.PI * 0.5;
-          oasisRipple.position.set(0, 0.142, 0);
-          oasisGroup.add(oasisRipple);
+            // B. Meja Bulat Kecil Kafe & Tiang Chrome
+            const chromeMat = new THREE.MeshStandardMaterial({
+              color: 0x94a3b8,
+              metalness: 0.85,
+              roughness: 0.2,
+            });
+            const tablePoleGeo = new THREE.CylinderGeometry(0.02, 0.024, 0.32, 8);
+            const tablePole = new THREE.Mesh(tablePoleGeo, chromeMat);
+            tablePole.position.set(0, 0.25, 0);
+            cafeGroup.add(tablePole);
 
-          animatedMeshesRef.current.push({
-            mesh: oasisWater,
-            baseY: 0.07,
-            freq: 2.4,
-            phase: 0.6,
-            type: 'WATER_WAVE',
-          });
-          animatedMeshesRef.current.push({
-            mesh: oasisRipple,
-            baseScale: 0.5,
-            maxScale: 1.85,
-            speed: 1.15,
-            phase: 0.2,
-            type: 'WATER_RIPPLE',
-          });
+            const tableTopGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.025, 16);
+            const tableTopMat = new THREE.MeshStandardMaterial({
+              color: 0xffffff,
+              roughness: 0.25,
+            });
+            const tableTop = new THREE.Mesh(tableTopGeo, tableTopMat);
+            tableTop.position.set(0, 0.41, 0);
+            tableTop.castShadow = true;
+            tableTop.receiveShadow = true;
+            cafeGroup.add(tableTop);
 
-          // Kristal Air Terapung di Tengah Kolam
-          const dropGeo = new THREE.OctahedronGeometry(0.14, 0);
-          const dropMat = new THREE.MeshStandardMaterial({
-            color: 0x38bdf8,
-            emissive: 0x0284c7,
-            emissiveIntensity: 1.0,
-            roughness: 0.1,
-          });
-          const dropMesh = new THREE.Mesh(dropGeo, dropMat);
-          dropMesh.position.set(0, 0.36, 0);
-          dropMesh.castShadow = true;
-          oasisGroup.add(dropMesh);
+            // C. 2 Kerusi Stul Santai Kafe
+            [-0.32, 0.32].forEach((sx) => {
+              const stoolPoleGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.18, 6);
+              const stoolPole = new THREE.Mesh(stoolPoleGeo, chromeMat);
+              stoolPole.position.set(sx, 0.18, 0);
+              cafeGroup.add(stoolPole);
 
-          // FASA 2: Fake Bloom / Volumetric Halo pada Kristal Air Oasis
-          const { sprite: oasisHalo, texture: oasisHaloTex } = createGlowHaloSprite(0x38bdf8, 1.1, 0.88);
-          disposableTextures.push(oasisHaloTex);
-          oasisHalo.position.set(0, 0.36, 0);
-          oasisGroup.add(oasisHalo);
+              const stoolSeatGeo = new THREE.CylinderGeometry(0.10, 0.10, 0.03, 10);
+              const stoolSeatMat = new THREE.MeshStandardMaterial({
+                color: 0x15803d, // Kusyen hijau USIM
+                roughness: 0.5,
+              });
+              const stoolSeat = new THREE.Mesh(stoolSeatGeo, stoolSeatMat);
+              stoolSeat.position.set(sx, 0.27, 0);
+              stoolSeat.castShadow = true;
+              cafeGroup.add(stoolSeat);
+            });
 
-          animatedMeshesRef.current.push({
-            mesh: oasisHalo,
-            baseScale: 1.1,
-            speed: 2.2,
-            type: 'HALO_PULSE',
-          });
+            // D. Payung Kafe (Cafe Umbrella / Parasol)
+            const umbrellaPoleGeo = new THREE.CylinderGeometry(0.018, 0.018, 0.65, 8);
+            const umbrellaPole = new THREE.Mesh(umbrellaPoleGeo, chromeMat);
+            umbrellaPole.position.set(0, 0.58, 0);
+            cafeGroup.add(umbrellaPole);
 
-          // Pokok Kurma Low-Poly #1 & #2 di Tepi Kolam Oasis (Bergoyang Ditiup Angin)
-          const palm1 = buildMiniPalmTree(1.0, 0.18);
-          palm1.position.set(-0.34, 0.05, -0.24);
-          oasisGroup.add(palm1);
+            const umbrellaCanopyGeo = new THREE.ConeGeometry(0.48, 0.22, 10);
+            const umbrellaCanopyMat = new THREE.MeshStandardMaterial({
+              color: 0x16a34a,
+              emissive: 0x14532d,
+              emissiveIntensity: 0.25,
+              roughness: 0.4,
+              flatShading: true,
+            });
+            const umbrellaCanopy = new THREE.Mesh(umbrellaCanopyGeo, umbrellaCanopyMat);
+            umbrellaCanopy.position.set(0, 0.94, 0);
+            umbrellaCanopy.castShadow = true;
+            cafeGroup.add(umbrellaCanopy);
 
-          const palm2 = buildMiniPalmTree(0.78, -0.16);
-          palm2.position.set(0.35, 0.05, -0.20);
-          oasisGroup.add(palm2);
+            // E. Cawan Kopi Panas di Atas Meja
+            const cupMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+            const coffeeMat = new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.1 });
 
-          animatedMeshesRef.current.push({
-            mesh: palm1,
-            baseRotZ: palm1.rotation.z || 0,
-            baseRotX: palm1.rotation.x || 0,
-            phase: 0.5,
-            speed: 1.4,
-            type: 'WIND_SWAY',
-          });
-          animatedMeshesRef.current.push({
-            mesh: palm2,
-            baseRotZ: palm2.rotation.z || 0,
-            baseRotX: palm2.rotation.x || 0,
-            phase: 1.8,
-            speed: 1.55,
-            type: 'WIND_SWAY',
-          });
+            const cupGeo = new THREE.CylinderGeometry(0.032, 0.024, 0.045, 8);
+            const cup1 = new THREE.Mesh(cupGeo, cupMat);
+            cup1.position.set(-0.08, 0.445, 0.04);
+            cafeGroup.add(cup1);
 
-          const oasisLight = new THREE.PointLight(0x38bdf8, 1.6, 3.4, 2);
-          oasisLight.position.set(0, 0.55, 0);
-          oasisGroup.add(oasisLight);
+            const coffeeGeo = new THREE.CylinderGeometry(0.028, 0.028, 0.01, 8);
+            const coffee1 = new THREE.Mesh(coffeeGeo, coffeeMat);
+            coffee1.position.set(-0.08, 0.465, 0.04);
+            cafeGroup.add(coffee1);
 
-          animatedMeshesRef.current.push({
-            mesh: dropMesh,
-            baseY: 0.36,
-            speed: 2.2,
-            type: 'BOB_AND_SPIN',
-          });
+            // F. Partikel Wap Panas Cawan Kopi (Coffee Steam Particles)
+            for (let s = 0; s < 5; s++) {
+              const steamPuffGeo = new THREE.SphereGeometry(0.018 + s * 0.003, 6, 6);
+              const steamMat = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.60 - s * 0.08,
+              });
+              const puff = new THREE.Mesh(steamPuffGeo, steamMat);
+              puff.position.set(
+                -0.08 + (Math.random() - 0.5) * 0.025,
+                0.49 + s * 0.05,
+                0.04 + (Math.random() - 0.5) * 0.025
+              );
+              cafeGroup.add(puff);
+              animatedMeshesRef.current.push({
+                mesh: puff,
+                baseX: -0.08,
+                baseY: 0.48,
+                offsetY: s * 0.05,
+                speed: 1.1 + s * 0.2,
+                type: 'COFFEE_STEAM',
+              });
+            }
 
-          oasisGroup.position.set(x, 0, z);
-          oasisGroup.userData = { r: rIdx, c: cIdx, type: tile.type };
-          clickableMeshesRef.current.push(basin, dropMesh);
-          scene.add(oasisGroup);
+            // G. Cahaya Hangat Kafe
+            const cafeLight = new THREE.PointLight(0xfef08a, 1.4, 3.2, 2);
+            cafeLight.position.set(0, 0.68, 0);
+            cafeGroup.add(cafeLight);
+
+            // Label Terapung Kafe Didi
+            const { sprite: cafeLabel, texture: cafeTex } = createFloatingLabelSprite(
+              '☕ Kafe Didi (Pulih Reputasi)',
+              {
+                bgColor: 'rgba(21, 128, 61, 0.92)',
+                borderColor: '#4ade80',
+                textColor: '#f0fdf4',
+                scaleX: 1.55,
+                scaleY: 0.35,
+              }
+            );
+            disposableTextures.push(cafeTex);
+            cafeLabel.position.set(0, 1.25, 0);
+            cafeGroup.add(cafeLabel);
+
+            cafeGroup.position.set(x, 0, z);
+            cafeGroup.userData = { r: rIdx, c: cIdx, type: tile.type };
+            clickableMeshesRef.current.push(patio, tableTop, umbrellaCanopy);
+            scene.add(cafeGroup);
+          } else {
+            const oasisGroup = new THREE.Group();
+
+            // Tebing Batu Kolam
+            const basinGeo = new THREE.CylinderGeometry(0.5, 0.54, 0.12, 8);
+            const basinMat = new THREE.MeshStandardMaterial({
+              color: 0xd6d3d1,
+              roughness: 0.75,
+              flatShading: true,
+            });
+            const basin = new THREE.Mesh(basinGeo, basinMat);
+            basin.position.set(0, 0.04, 0);
+            basin.castShadow = true;
+            basin.receiveShadow = true;
+            oasisGroup.add(basin);
+
+            // Permukaan Air Biru Firus Berkilat
+            const oasisWaterGeo = new THREE.CylinderGeometry(0.44, 0.44, 0.14, 8);
+            const oasisWater = new THREE.Mesh(oasisWaterGeo, waterMat);
+            oasisWater.position.set(0, 0.07, 0);
+            oasisWater.receiveShadow = true;
+            oasisGroup.add(oasisWater);
+
+            // FASA 1: Riak Air Putih pada Kolam Oasis
+            const oasisRippleGeo = new THREE.RingGeometry(0.14, 0.20, 20);
+            const oasisRippleMat = new THREE.MeshBasicMaterial({
+              color: 0xffffff,
+              transparent: true,
+              opacity: 0.75,
+              side: THREE.DoubleSide,
+            });
+            const oasisRipple = new THREE.Mesh(oasisRippleGeo, oasisRippleMat);
+            oasisRipple.rotation.x = -Math.PI * 0.5;
+            oasisRipple.position.set(0, 0.142, 0);
+            oasisGroup.add(oasisRipple);
+
+            animatedMeshesRef.current.push({
+              mesh: oasisWater,
+              baseY: 0.07,
+              freq: 2.4,
+              phase: 0.6,
+              type: 'WATER_WAVE',
+            });
+            animatedMeshesRef.current.push({
+              mesh: oasisRipple,
+              baseScale: 0.5,
+              maxScale: 1.85,
+              speed: 1.15,
+              phase: 0.2,
+              type: 'WATER_RIPPLE',
+            });
+
+            // Kristal Air Terapung di Tengah Kolam
+            const dropGeo = new THREE.OctahedronGeometry(0.14, 0);
+            const dropMat = new THREE.MeshStandardMaterial({
+              color: 0x38bdf8,
+              emissive: 0x0284c7,
+              emissiveIntensity: 1.0,
+              roughness: 0.1,
+            });
+            const dropMesh = new THREE.Mesh(dropGeo, dropMat);
+            dropMesh.position.set(0, 0.36, 0);
+            dropMesh.castShadow = true;
+            oasisGroup.add(dropMesh);
+
+            // FASA 2: Fake Bloom / Volumetric Halo pada Kristal Air Oasis
+            const { sprite: oasisHalo, texture: oasisHaloTex } = createGlowHaloSprite(0x38bdf8, 1.1, 0.88);
+            disposableTextures.push(oasisHaloTex);
+            oasisHalo.position.set(0, 0.36, 0);
+            oasisGroup.add(oasisHalo);
+
+            animatedMeshesRef.current.push({
+              mesh: oasisHalo,
+              baseScale: 1.1,
+              speed: 2.2,
+              type: 'HALO_PULSE',
+            });
+
+            // Pokok Kurma Low-Poly #1 & #2 di Tepi Kolam Oasis (Bergoyang Ditiup Angin)
+            const palm1 = buildMiniPalmTree(1.0, 0.18);
+            palm1.position.set(-0.34, 0.05, -0.24);
+            oasisGroup.add(palm1);
+
+            const palm2 = buildMiniPalmTree(0.78, -0.16);
+            palm2.position.set(0.35, 0.05, -0.20);
+            oasisGroup.add(palm2);
+
+            animatedMeshesRef.current.push({
+              mesh: palm1,
+              baseRotZ: palm1.rotation.z || 0,
+              baseRotX: palm1.rotation.x || 0,
+              phase: 0.5,
+              speed: 1.4,
+              type: 'WIND_SWAY',
+            });
+            animatedMeshesRef.current.push({
+              mesh: palm2,
+              baseRotZ: palm2.rotation.z || 0,
+              baseRotX: palm2.rotation.x || 0,
+              phase: 1.8,
+              speed: 1.55,
+              type: 'WIND_SWAY',
+            });
+
+            const oasisLight = new THREE.PointLight(0x38bdf8, 1.6, 3.4, 2);
+            oasisLight.position.set(0, 0.55, 0);
+            oasisGroup.add(oasisLight);
+
+            animatedMeshesRef.current.push({
+              mesh: dropMesh,
+              baseY: 0.36,
+              speed: 2.2,
+              type: 'BOB_AND_SPIN',
+            });
+
+            oasisGroup.position.set(x, 0, z);
+            oasisGroup.userData = { r: rIdx, c: cIdx, type: tile.type };
+            clickableMeshesRef.current.push(basin, dropMesh);
+            scene.add(oasisGroup);
+          }
         }
 
-        // 3. FASA 3: POKOK KURMA & POHON ZAITUN LOW-POLY (Bergoyang Ditiup Angin)
+        // 3. FASA 3: POKOK KURMA, POHON ZAITUN & POKOK RENEK KAMPUS FPQS
         else if (tile.decor) {
-          const isPalm = (rIdx * 3 + cIdx * 7) % 2 === 0;
-          const treeGroup = isPalm
+          const treeGroup = isFPQS
+            ? buildCampusShrub(0.95)
+            : (rIdx * 3 + cIdx * 7) % 2 === 0
             ? buildMiniPalmTree(0.92, ((rIdx % 2 === 0) ? 0.16 : -0.16))
             : buildMiniOliveTree(0.95);
 
@@ -1120,20 +1547,652 @@ export default function ThreeWorldMap({
           const isLocked = isBoss && !isBossUnlocked && !isSolved;
           const npcGroup = new THREE.Group();
 
-          // A. FASA 3: Tapak Marmar Bertangga (Stepped Base: Tier 1 & Tier 2)
-          const base1Geo = new THREE.BoxGeometry(isBoss ? 1.04 : 0.90, 0.08, isBoss ? 1.04 : 0.90);
-          const monumentBase1 = new THREE.Mesh(base1Geo, whiteMarbleMat);
-          monumentBase1.position.set(0, 0.04, 0);
-          monumentBase1.receiveShadow = true;
-          monumentBase1.castShadow = true;
-          npcGroup.add(monumentBase1);
+          if (isFPQS) {
+            const makmal = tile.npc.makmalType || (
+              tile.npc.npcId === 'NPC-FPQS-1' ? 'TARANNUM' :
+              tile.npc.npcId === 'NPC-FPQS-2' ? 'HADIS' :
+              tile.npc.npcId === 'NPC-FPQS-3' ? 'BRAILLE' :
+              tile.npc.npcId === 'NPC-FPQS-4' ? 'DEKAN' :
+              tile.npc.npcId === 'NPC-FPQS-5' ? 'BILIK_NADI' : 'MAKMAL'
+            );
 
-          const base2Geo = new THREE.BoxGeometry(isBoss ? 0.90 : 0.78, 0.08, isBoss ? 0.90 : 0.78);
-          const monumentBase2 = new THREE.Mesh(base2Geo, whiteMarbleMat);
-          monumentBase2.position.set(0, 0.12, 0);
-          monumentBase2.receiveShadow = true;
-          monumentBase2.castShadow = true;
-          npcGroup.add(monumentBase2);
+            // 1. MAKMAL TARANNUM (Studio Akustik + Mikrofon 3D + Gelombang Bunyi Equalizer + 2 Pensyarah)
+            if (makmal === 'TARANNUM') {
+              const baseGeo = new THREE.BoxGeometry(0.92, 0.08, 0.92);
+              const studioBase = new THREE.Mesh(baseGeo, whiteMarbleMat);
+              studioBase.position.set(0, 0.04, 0);
+              studioBase.receiveShadow = true;
+              studioBase.castShadow = true;
+              npcGroup.add(studioBase);
+
+              // Dinding Studio Akustik Dark Slate
+              const studioGeo = new THREE.BoxGeometry(0.66, 0.44, 0.58);
+              const studioMat = new THREE.MeshStandardMaterial({
+                color: 0x1e293b,
+                roughness: 0.5,
+                flatShading: true,
+              });
+              const studioMesh = new THREE.Mesh(studioGeo, studioMat);
+              studioMesh.position.set(0, 0.30, 0);
+              studioMesh.castShadow = true;
+              studioMesh.receiveShadow = true;
+              npcGroup.add(studioMesh);
+
+              // Panel Kaca Kedap Bunyi Hadapan
+              const glassGeo = new THREE.BoxGeometry(0.38, 0.22, 0.02);
+              const glassMat = new THREE.MeshStandardMaterial({
+                color: 0x0891b2,
+                roughness: 0.1,
+                transparent: true,
+                opacity: 0.65,
+              });
+              const glassMesh = new THREE.Mesh(glassGeo, glassMat);
+              glassMesh.position.set(0, 0.32, 0.30);
+              npcGroup.add(glassMesh);
+
+              // Mikrofon 3D Kondenser di Bumbung Studio
+              const micStandGeo = new THREE.CylinderGeometry(0.015, 0.018, 0.22, 6);
+              const micStand = new THREE.Mesh(micStandGeo, whiteMarbleMat);
+              micStand.position.set(0, 0.63, 0);
+              npcGroup.add(micStand);
+
+              const micMountGeo = new THREE.TorusGeometry(0.065, 0.01, 6, 16);
+              const micMount = new THREE.Mesh(micMountGeo, goldMat);
+              micMount.position.set(0, 0.74, 0);
+              npcGroup.add(micMount);
+
+              const micCapsuleGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.14, 10);
+              const micCapsuleMat = new THREE.MeshStandardMaterial({
+                color: 0xd4d4d8,
+                metalness: 0.85,
+                roughness: 0.2,
+              });
+              const micCapsule = new THREE.Mesh(micCapsuleGeo, micCapsuleMat);
+              micCapsule.position.set(0, 0.74, 0);
+              micCapsule.castShadow = true;
+              npcGroup.add(micCapsule);
+
+              // Gelombang Bunyi / Equalizer Bars Neon di Bumbung (5 Palang Equalizer)
+              const eqHeights = [0.10, 0.22, 0.34, 0.24, 0.12];
+              const eqOffsets = [-0.18, -0.09, 0, 0.09, 0.18];
+              eqOffsets.forEach((ox, idx) => {
+                const barGeo = new THREE.BoxGeometry(0.035, eqHeights[idx], 0.035);
+                const barMat = idx % 2 === 0 ? fpqsNeonCyanMat : goldMat;
+                const bar = new THREE.Mesh(barGeo, barMat);
+                bar.position.set(ox, 0.52 + eqHeights[idx] * 0.5, -0.15);
+                npcGroup.add(bar);
+                animatedMeshesRef.current.push({
+                  mesh: bar,
+                  baseHeight: eqHeights[idx],
+                  freq: 3.5 + idx * 0.6,
+                  phase: idx * 0.8,
+                  type: 'EQUALIZER_BAR',
+                });
+              });
+
+              // Gabungan 2 Patung Pensyarah: Dr Anwar Hussein & Prof Madya Dr Khairul Amri Mohamad
+              const figAnwar = buildLecturerFigurine({
+                gender: 'MALE',
+                suitColor: 0x1e3a8a, // Blazer biru navy kemas
+                headwear: 'SONGKOK',
+                scale: 0.78,
+                hasBook: true,
+              });
+              figAnwar.position.set(-0.20, 0.08, 0.36);
+              npcGroup.add(figAnwar);
+
+              const figKhairul = buildLecturerFigurine({
+                gender: 'MALE',
+                suitColor: 0x334155, // Blazer kelabu arang kemas
+                headwear: 'SONGKOK',
+                scale: 0.78,
+                hasBook: true,
+              });
+              figKhairul.position.set(0.20, 0.08, 0.36);
+              npcGroup.add(figKhairul);
+
+              // Cahaya & Halo
+              const studioLight = new THREE.PointLight(0x38bdf8, 1.8, 3.8, 2);
+              studioLight.position.set(0, 0.75, 0);
+              npcGroup.add(studioLight);
+
+              const { sprite: micHalo, texture: micHaloTex } = createGlowHaloSprite(0x38bdf8, 1.2, 0.85);
+              disposableTextures.push(micHaloTex);
+              micHalo.position.set(0, 0.78, 0);
+              npcGroup.add(micHalo);
+              animatedMeshesRef.current.push({
+                mesh: micHalo,
+                baseScale: 1.2,
+                speed: 2.4,
+                type: 'HALO_PULSE',
+              });
+
+              // Label Terapung
+              const labelText = isSolved
+                ? '✓ Makmal Tarannum'
+                : '🎙️ Tarannum: Dr Anwar & PM Dr Khairul';
+              const { sprite: nLabel, texture: nTex } = createFloatingLabelSprite(labelText, {
+                bgColor: 'rgba(8, 24, 48, 0.92)',
+                borderColor: isSolved ? '#10b981' : '#38bdf8',
+                textColor: isSolved ? '#a7f3d0' : '#e0f2fe',
+                scaleX: 1.68,
+                scaleY: 0.36,
+              });
+              disposableTextures.push(nTex);
+              nLabel.position.set(0, 1.35, 0);
+              npcGroup.add(nLabel);
+
+              clickableMeshesRef.current.push(studioBase, studioMesh, micCapsule);
+            }
+
+            // 2. MAKMAL HADIS (Rak Buku Kitab + Pelayan Server Digital Biru + Hologram + 2 Pensyarah)
+            else if (makmal === 'HADIS') {
+              const baseGeo = new THREE.BoxGeometry(0.92, 0.08, 0.92);
+              const hadisBase = new THREE.Mesh(baseGeo, whiteMarbleMat);
+              hadisBase.position.set(0, 0.04, 0);
+              hadisBase.receiveShadow = true;
+              hadisBase.castShadow = true;
+              npcGroup.add(hadisBase);
+
+              // Dinding Rak Buku Arkib Hadis Kayu Mahogani
+              const shelfGeo = new THREE.BoxGeometry(0.38, 0.50, 0.22);
+              const shelfMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.6 });
+              const shelf = new THREE.Mesh(shelfGeo, shelfMat);
+              shelf.position.set(-0.16, 0.33, -0.10);
+              shelf.castShadow = true;
+              npcGroup.add(shelf);
+
+              // Barisan Tulang Belakang Kitab Berwarna-warni
+              const bookColors = [0x991b1b, 0x065f46, 0x1e40af, 0xd97706, 0x7c2d12];
+              for (let b = 0; b < 5; b++) {
+                const bGeo = new THREE.BoxGeometry(0.04, 0.12, 0.16);
+                const bMat = new THREE.MeshStandardMaterial({ color: bookColors[b % bookColors.length] });
+                const bMesh = new THREE.Mesh(bGeo, bMat);
+                bMesh.position.set(-0.28 + b * 0.06, 0.36, 0.02);
+                npcGroup.add(bMesh);
+              }
+
+              // Rak Pelayan Digital (Cyber Server Rack)
+              const serverGeo = new THREE.BoxGeometry(0.26, 0.54, 0.26);
+              const serverMesh = new THREE.Mesh(serverGeo, fpqsServerMat);
+              serverMesh.position.set(0.20, 0.35, -0.10);
+              serverMesh.castShadow = true;
+              npcGroup.add(serverMesh);
+
+              // Lampu Penunjuk LED Berkelip pada Server
+              for (let led = 0; led < 4; led++) {
+                const ledGeo = new THREE.SphereGeometry(0.016, 6, 6);
+                const ledMat = led % 2 === 0 ? fpqsNeonCyanMat : fpqsNeonGreenMat;
+                const ledMesh = new THREE.Mesh(ledGeo, ledMat);
+                ledMesh.position.set(0.16 + (led % 2) * 0.08, 0.26 + Math.floor(led / 2) * 0.14, 0.04);
+                npcGroup.add(ledMesh);
+              }
+
+              // Hologram Pelayan Digital Biru Terapung di Atas Bangunan
+              const holoGeo = new THREE.OctahedronGeometry(0.18, 0);
+              const holo = new THREE.Mesh(holoGeo, fpqsNeonCyanMat);
+              holo.position.set(0, 0.76, -0.05);
+              npcGroup.add(holo);
+
+              const { sprite: holoHalo, texture: holoHaloTex } = createGlowHaloSprite(0x0ea5e9, 1.3, 0.85);
+              disposableTextures.push(holoHaloTex);
+              holoHalo.position.set(0, 0.76, -0.05);
+              npcGroup.add(holoHalo);
+
+              animatedMeshesRef.current.push({
+                mesh: holo,
+                type: 'HOLOGRAM_PULSE',
+              });
+              animatedMeshesRef.current.push({
+                mesh: holoHalo,
+                baseScale: 1.3,
+                speed: 2.6,
+                type: 'HALO_PULSE',
+              });
+
+              // Gabungan 2 Patung Pensyarah: Dr Helmy Arif & Dr Shamsudin Yani
+              const figHelmy = buildLecturerFigurine({
+                gender: 'MALE',
+                suitColor: 0x0f172a, // Suit gelap kemas
+                headwear: 'SONGKOK',
+                scale: 0.78,
+                hasBook: true,
+              });
+              figHelmy.position.set(-0.20, 0.08, 0.36);
+              npcGroup.add(figHelmy);
+
+              const figShamsudin = buildLecturerFigurine({
+                gender: 'MALE',
+                suitColor: 0x14532d, // Blazer hijau USIM kemas
+                headwear: 'SONGKOK',
+                scale: 0.78,
+                hasBook: true,
+              });
+              figShamsudin.position.set(0.20, 0.08, 0.36);
+              npcGroup.add(figShamsudin);
+
+              // Cahaya & Label
+              const hadisLight = new THREE.PointLight(0x0ea5e9, 1.9, 4.0, 2);
+              hadisLight.position.set(0, 0.76, 0);
+              npcGroup.add(hadisLight);
+
+              const labelText = isSolved
+                ? '✓ Makmal Hadis'
+                : '📚 Hadis: Dr Helmy & Dr Shamsudin';
+              const { sprite: nLabel, texture: nTex } = createFloatingLabelSprite(labelText, {
+                bgColor: 'rgba(10, 25, 47, 0.92)',
+                borderColor: isSolved ? '#10b981' : '#38bdf8',
+                textColor: isSolved ? '#a7f3d0' : '#bae6fd',
+                scaleX: 1.68,
+                scaleY: 0.36,
+              });
+              disposableTextures.push(nTex);
+              nLabel.position.set(0, 1.35, 0);
+              npcGroup.add(nLabel);
+
+              clickableMeshesRef.current.push(hadisBase, shelf, serverMesh, holo);
+            }
+
+            // 3. MAKMAL BRAILLE (Bangunan Putih + Tekstur Titik Braille Neon + 2 Pensyarah Bertudung)
+            else if (makmal === 'BRAILLE') {
+              const baseGeo = new THREE.BoxGeometry(0.92, 0.08, 0.92);
+              const brailleBase = new THREE.Mesh(baseGeo, whiteMarbleMat);
+              brailleBase.position.set(0, 0.04, 0);
+              brailleBase.receiveShadow = true;
+              brailleBase.castShadow = true;
+              npcGroup.add(brailleBase);
+
+              // Bangunan Putih Moden Bersih
+              const bodyGeo = new THREE.BoxGeometry(0.66, 0.46, 0.58);
+              const bodyMat = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                roughness: 0.25,
+                flatShading: true,
+              });
+              const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+              bodyMesh.position.set(0, 0.31, 0);
+              bodyMesh.castShadow = true;
+              bodyMesh.receiveShadow = true;
+              npcGroup.add(bodyMesh);
+
+              // Tekstur Titik-Titik Braille Neon Hijau (Matriks 2x3 Titik Braille Bercahaya)
+              const brailleOffsets = [
+                // Sel Braille 1
+                [-0.18, 0.38, 0.30], [-0.12, 0.38, 0.30],
+                [-0.18, 0.32, 0.30], [-0.12, 0.32, 0.30],
+                [-0.18, 0.26, 0.30], [-0.12, 0.26, 0.30],
+                // Sel Braille 2
+                [0.12, 0.38, 0.30], [0.18, 0.38, 0.30],
+                [0.12, 0.32, 0.30], [0.18, 0.32, 0.30],
+                [0.12, 0.26, 0.30], [0.18, 0.26, 0.30],
+              ];
+              brailleOffsets.forEach(([bx, by, bz], idx) => {
+                const dotGeo = new THREE.SphereGeometry(0.022, 6, 6);
+                const dotMesh = new THREE.Mesh(dotGeo, fpqsNeonGreenMat);
+                dotMesh.position.set(bx, by, bz);
+                npcGroup.add(dotMesh);
+                animatedMeshesRef.current.push({
+                  mesh: dotMesh,
+                  baseIntensity: 2.5,
+                  speed: 2.8,
+                  phase: idx * 0.4,
+                  type: 'BRAILLE_NEON_PULSE',
+                });
+              });
+
+              // Podium Plat Braille Mushaf di Tengah
+              const podiumGeo = new THREE.BoxGeometry(0.20, 0.05, 0.14);
+              const podium = new THREE.Mesh(podiumGeo, goldMat);
+              podium.position.set(0, 0.60, 0);
+              podium.rotation.x = 0.3;
+              npcGroup.add(podium);
+
+              // Kristal Simbol Aksesibiliti Neon Terapung
+              const symbolGeo = new THREE.OctahedronGeometry(0.15, 0);
+              const symbolMesh = new THREE.Mesh(symbolGeo, fpqsNeonGreenMat);
+              symbolMesh.position.set(0, 0.82, 0);
+              npcGroup.add(symbolMesh);
+
+              const { sprite: brailleHalo, texture: brailleHaloTex } = createGlowHaloSprite(0x22c55e, 1.25, 0.88);
+              disposableTextures.push(brailleHaloTex);
+              brailleHalo.position.set(0, 0.82, 0);
+              npcGroup.add(brailleHalo);
+
+              animatedMeshesRef.current.push({
+                mesh: symbolMesh,
+                baseY: 0.82,
+                speed: 2.0,
+                type: 'BOB_AND_SPIN',
+              });
+              animatedMeshesRef.current.push({
+                mesh: brailleHalo,
+                baseScale: 1.25,
+                speed: 2.6,
+                type: 'HALO_PULSE',
+              });
+
+              // Gabungan 2 Patung Pensyarah: Prof Noor Najihah & Dr Noor Atirah (Tudung Labuh Kemas)
+              const figNajihah = buildLecturerFigurine({
+                gender: 'FEMALE',
+                suitColor: 0x334155,
+                headwear: 'HIJAB',
+                headwearColor: 0xf472b6, // Tudung pastel merah jambu anggun
+                scale: 0.78,
+                hasBook: true,
+              });
+              figNajihah.position.set(-0.20, 0.08, 0.36);
+              npcGroup.add(figNajihah);
+
+              const figAtirah = buildLecturerFigurine({
+                gender: 'FEMALE',
+                suitColor: 0x1e3a8a,
+                headwear: 'HIJAB',
+                headwearColor: 0x38bdf8, // Tudung pastel biru anggun
+                scale: 0.78,
+                hasBook: true,
+              });
+              figAtirah.position.set(0.20, 0.08, 0.36);
+              npcGroup.add(figAtirah);
+
+              // Cahaya & Label
+              const brailleLight = new THREE.PointLight(0x22c55e, 1.9, 4.0, 2);
+              brailleLight.position.set(0, 0.82, 0);
+              npcGroup.add(brailleLight);
+
+              const labelText = isSolved
+                ? '✓ Makmal Braille'
+                : '⠃ Braille: Prof Najihah & Dr Atirah';
+              const { sprite: nLabel, texture: nTex } = createFloatingLabelSprite(labelText, {
+                bgColor: 'rgba(6, 40, 20, 0.92)',
+                borderColor: isSolved ? '#10b981' : '#4ade80',
+                textColor: isSolved ? '#a7f3d0' : '#bbf7d0',
+                scaleX: 1.68,
+                scaleY: 0.36,
+              });
+              disposableTextures.push(nTex);
+              nLabel.position.set(0, 1.35, 0);
+              npcGroup.add(nLabel);
+
+              clickableMeshesRef.current.push(brailleBase, bodyMesh, symbolMesh);
+            }
+
+            // 4. PEJABAT DEKAN (FOYER) - NPC BOSS (Tapak Marmar, Papan Tanda USIM, Tiang Megah, Aura Emas & Dekan)
+            else if (makmal === 'DEKAN') {
+              // Tapak Marmar Bertingkat Foyer
+              const base1Geo = new THREE.BoxGeometry(1.08, 0.10, 1.08);
+              const dekanBase1 = new THREE.Mesh(base1Geo, whiteMarbleMat);
+              dekanBase1.position.set(0, 0.05, 0);
+              dekanBase1.receiveShadow = true;
+              dekanBase1.castShadow = true;
+              npcGroup.add(dekanBase1);
+
+              const base2Geo = new THREE.BoxGeometry(0.92, 0.08, 0.92);
+              const dekanBase2 = new THREE.Mesh(base2Geo, whiteMarbleMat);
+              dekanBase2.position.set(0, 0.14, 0);
+              dekanBase2.receiveShadow = true;
+              dekanBase2.castShadow = true;
+              npcGroup.add(dekanBase2);
+
+              // 4 Tiang Klasik Marmar Megah & Kepala Emas
+              const colPositions = [
+                [-0.34, -0.34], [0.34, -0.34],
+                [-0.34, 0.28], [0.34, 0.28],
+              ];
+              colPositions.forEach(([cx, cz]) => {
+                const colGeo = new THREE.CylinderGeometry(0.04, 0.048, 0.60, 8);
+                const col = new THREE.Mesh(colGeo, whiteMarbleMat);
+                col.position.set(cx, 0.48, cz);
+                col.castShadow = true;
+                npcGroup.add(col);
+
+                const capGeo = new THREE.BoxGeometry(0.12, 0.04, 0.12);
+                const cap = new THREE.Mesh(capGeo, goldMat);
+                cap.position.set(cx, 0.80, cz);
+                npcGroup.add(cap);
+              });
+
+              // Bumbung / Pedimen Foyer Pejabat Dekan
+              const pedimentGeo = new THREE.BoxGeometry(0.84, 0.12, 0.72);
+              const pediment = new THREE.Mesh(pedimentGeo, whiteMarbleMat);
+              pediment.position.set(0, 0.88, -0.03);
+              pediment.castShadow = true;
+              npcGroup.add(pediment);
+
+              const pedimentTrimGeo = new THREE.BoxGeometry(0.88, 0.03, 0.76);
+              const pedimentTrim = new THREE.Mesh(pedimentTrimGeo, goldMat);
+              pedimentTrim.position.set(0, 0.94, -0.03);
+              npcGroup.add(pedimentTrim);
+
+              // Papan Tanda USIM di Hadapan Foyer
+              const signPlinthGeo = new THREE.BoxGeometry(0.50, 0.16, 0.10);
+              const signPlinthMat = new THREE.MeshStandardMaterial({
+                color: 0x14532d, // Hijau USIM
+                roughness: 0.4,
+              });
+              const signPlinth = new THREE.Mesh(signPlinthGeo, signPlinthMat);
+              signPlinth.position.set(0, 0.22, 0.42);
+              signPlinth.castShadow = true;
+              npcGroup.add(signPlinth);
+
+              const signPlateGeo = new THREE.BoxGeometry(0.44, 0.10, 0.02);
+              const signPlate = new THREE.Mesh(signPlateGeo, goldMat);
+              signPlate.position.set(0, 0.22, 0.48);
+              npcGroup.add(signPlate);
+
+              // Aura Keemasan Bersaiz Besar Mengelilingi Tapak
+              const auraRingGeo = new THREE.TorusGeometry(0.82, 0.038, 8, 32);
+              const auraRingMat = new THREE.MeshStandardMaterial({
+                color: isLocked ? 0xef4444 : 0xfbbf24,
+                emissive: isLocked ? 0xdc2626 : 0xd97706,
+                emissiveIntensity: isLocked ? 1.8 : 2.8,
+                roughness: 0.2,
+              });
+              const auraRing = new THREE.Mesh(auraRingGeo, auraRingMat);
+              auraRing.rotation.x = Math.PI * 0.5;
+              auraRing.position.set(0, 0.16, 0);
+              npcGroup.add(auraRing);
+
+              animatedMeshesRef.current.push({
+                mesh: auraRing,
+                baseScale: 1.0,
+                speed: isLocked ? 1.5 : 3.0,
+                type: 'HALO_PULSE',
+              });
+
+              // Halo Sprite Megah & Kristal Prestij Dekanat di Puncak
+              const bossHaloColor = isSolved ? 0x10b981 : isLocked ? 0xef4444 : 0xfbbf24;
+              const { sprite: bossHalo, texture: bossHaloTex } = createGlowHaloSprite(bossHaloColor, 1.8, 0.95);
+              disposableTextures.push(bossHaloTex);
+              bossHalo.position.set(0, 1.20, 0);
+              npcGroup.add(bossHalo);
+
+              const crestGeo = new THREE.OctahedronGeometry(0.24, 0);
+              const crest = new THREE.Mesh(crestGeo, goldMat);
+              crest.position.set(0, 1.20, 0);
+              crest.castShadow = true;
+              npcGroup.add(crest);
+
+              animatedMeshesRef.current.push({
+                mesh: crest,
+                baseY: 1.20,
+                speed: 1.8,
+                type: 'BOB_AND_SPIN',
+              });
+              animatedMeshesRef.current.push({
+                mesh: bossHalo,
+                baseScale: 1.8,
+                speed: 2.8,
+                type: 'HALO_PULSE',
+              });
+
+              // Patung Watak Dekan: Prof Madya Dr Zuhdi Ameen (Jubah Kehormat Dekanat & Songkok)
+              const figDekan = buildLecturerFigurine({
+                gender: 'MALE',
+                suitColor: 0x0f172a, // Jubah akademik dekanat hitam emas
+                headwear: 'SONGKOK',
+                scale: 0.85,
+                hasBook: true,
+              });
+              figDekan.position.set(0, 0.18, 0.05);
+              npcGroup.add(figDekan);
+
+              // Cahaya & Label
+              const dekanLight = new THREE.PointLight(bossHaloColor, 3.2, 5.0, 2);
+              dekanLight.position.set(0, 1.15, 0);
+              npcGroup.add(dekanLight);
+
+              const labelText = isSolved
+                ? '✓ 👑 Dekan: PM Dr Zuhdi'
+                : isLocked
+                ? '🔒 KUNCI: Dekan PM Dr Zuhdi'
+                : '👑 BOSS: Dekan PM Dr Zuhdi';
+              const { sprite: nLabel, texture: nTex } = createFloatingLabelSprite(labelText, {
+                bgColor: isLocked ? 'rgba(40, 10, 16, 0.92)' : 'rgba(25, 20, 5, 0.92)',
+                borderColor: isSolved ? '#10b981' : isLocked ? '#ef4444' : '#fbbf24',
+                textColor: isSolved ? '#a7f3d0' : isLocked ? '#fca5a5' : '#fef08a',
+                scaleX: 1.75,
+                scaleY: 0.38,
+              });
+              disposableTextures.push(nTex);
+              nLabel.position.set(0, 1.68, 0);
+              npcGroup.add(nLabel);
+
+              clickableMeshesRef.current.push(dekanBase1, dekanBase2, pediment, signPlinth, crest);
+            }
+
+            // 5. BILIK NADI PMFPQS - EASTER EGG (Petak Khas Pelajar, Banner Persatuan & 2 Pelajar)
+            else if (makmal === 'BILIK_NADI') {
+              const baseGeo = new THREE.BoxGeometry(0.88, 0.08, 0.88);
+              const nadiBase = new THREE.Mesh(baseGeo, whiteMarbleMat);
+              nadiBase.position.set(0, 0.04, 0);
+              nadiBase.receiveShadow = true;
+              nadiBase.castShadow = true;
+              npcGroup.add(nadiBase);
+
+              // Dinding Bilik Santai Pelajar
+              const loungeGeo = new THREE.BoxGeometry(0.64, 0.42, 0.54);
+              const loungeMat = new THREE.MeshStandardMaterial({
+                color: 0x334155,
+                roughness: 0.45,
+                flatShading: true,
+              });
+              const loungeMesh = new THREE.Mesh(loungeGeo, loungeMat);
+              loungeMesh.position.set(0, 0.29, -0.04);
+              loungeMesh.castShadow = true;
+              npcGroup.add(loungeMesh);
+
+              // Banner Persatuan Pelajar PMFPQS
+              // 2 Tiang Banner Sisi Emas
+              [-0.28, 0.28].forEach((bx) => {
+                const poleGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.42, 6);
+                const pole = new THREE.Mesh(poleGeo, goldMat);
+                pole.position.set(bx, 0.55, 0.26);
+                npcGroup.add(pole);
+
+                const knobGeo = new THREE.SphereGeometry(0.03, 6, 6);
+                const knob = new THREE.Mesh(knobGeo, goldMat);
+                knob.position.set(bx, 0.77, 0.26);
+                npcGroup.add(knob);
+              });
+
+              // Kain Banner PMFPQS (Warna Biru Diraja & Emas Persatuan)
+              const bannerClothGeo = new THREE.BoxGeometry(0.54, 0.20, 0.02);
+              const bannerClothMat = new THREE.MeshStandardMaterial({
+                color: 0x1e3a8a, // Biru USIM PMFPQS
+                emissive: 0x1d4ed8,
+                emissiveIntensity: 0.35,
+                roughness: 0.4,
+              });
+              const bannerCloth = new THREE.Mesh(bannerClothGeo, bannerClothMat);
+              bannerCloth.position.set(0, 0.65, 0.26);
+              bannerCloth.castShadow = true;
+              npcGroup.add(bannerCloth);
+
+              // Bintang / Permata Easter Egg Kuning Bercahaya di Atas
+              const starGeo = new THREE.OctahedronGeometry(0.16, 0);
+              const starMesh = new THREE.Mesh(starGeo, goldMat);
+              starMesh.position.set(0, 0.88, 0);
+              npcGroup.add(starMesh);
+
+              const { sprite: starHalo, texture: starHaloTex } = createGlowHaloSprite(0xfacc15, 1.2, 0.85);
+              disposableTextures.push(starHaloTex);
+              starHalo.position.set(0, 0.88, 0);
+              npcGroup.add(starHalo);
+
+              animatedMeshesRef.current.push({
+                mesh: starMesh,
+                baseY: 0.88,
+                speed: 2.2,
+                type: 'BOB_AND_SPIN',
+              });
+              animatedMeshesRef.current.push({
+                mesh: starHalo,
+                baseScale: 1.2,
+                speed: 2.5,
+                type: 'HALO_PULSE',
+              });
+
+              // Gabungan 2 Patung Pelajar: Ali Shahril & Ebadullah (Lanyard Hijau USIM)
+              const figAli = buildLecturerFigurine({
+                gender: 'MALE',
+                suitColor: 0x1e3a8a, // Varsity jacket navy
+                headwear: 'NONE',
+                scale: 0.76,
+                hasLanyard: true,
+              });
+              figAli.position.set(-0.19, 0.08, 0.35);
+              npcGroup.add(figAli);
+
+              const figEbad = buildLecturerFigurine({
+                gender: 'MALE',
+                suitColor: 0x0f766e, // Kemeja smart casual teal
+                headwear: 'NONE',
+                scale: 0.76,
+                hasLanyard: true,
+              });
+              figEbad.position.set(0.19, 0.08, 0.35);
+              npcGroup.add(figEbad);
+
+              // Cahaya & Label
+              const nadiLight = new THREE.PointLight(0xfacc15, 1.8, 3.6, 2);
+              nadiLight.position.set(0, 0.88, 0);
+              npcGroup.add(nadiLight);
+
+              const labelText = isSolved
+                ? '✓ ⭐ Bilik Nadi: Ebadullah & Ali'
+                : '⭐ Bilik Nadi: Ebadullah & Ali';
+              const { sprite: nLabel, texture: nTex } = createFloatingLabelSprite(labelText, {
+                bgColor: 'rgba(20, 25, 45, 0.92)',
+                borderColor: isSolved ? '#10b981' : '#facc15',
+                textColor: isSolved ? '#a7f3d0' : '#fef08a',
+                scaleX: 1.70,
+                scaleY: 0.36,
+              });
+              disposableTextures.push(nTex);
+              nLabel.position.set(0, 1.35, 0);
+              npcGroup.add(nLabel);
+
+              clickableMeshesRef.current.push(nadiBase, loungeMesh, bannerCloth, starMesh);
+            }
+
+            npcGroup.position.set(x, 0, z);
+            npcGroup.userData = { r: rIdx, c: cIdx, type: tile.type, npc: tile.npc };
+            scene.add(npcGroup);
+          } else {
+            // A. FASA 3: Tapak Marmar Bertangga (Stepped Base: Tier 1 & Tier 2)
+            const base1Geo = new THREE.BoxGeometry(isBoss ? 1.04 : 0.90, 0.08, isBoss ? 1.04 : 0.90);
+            const monumentBase1 = new THREE.Mesh(base1Geo, whiteMarbleMat);
+            monumentBase1.position.set(0, 0.04, 0);
+            monumentBase1.receiveShadow = true;
+            monumentBase1.castShadow = true;
+            npcGroup.add(monumentBase1);
+
+            const base2Geo = new THREE.BoxGeometry(isBoss ? 0.90 : 0.78, 0.08, isBoss ? 0.90 : 0.78);
+            const monumentBase2 = new THREE.Mesh(base2Geo, whiteMarbleMat);
+            monumentBase2.position.set(0, 0.12, 0);
+            monumentBase2.receiveShadow = true;
+            monumentBase2.castShadow = true;
+            npcGroup.add(monumentBase2);
 
           // Anak Tangga Hadapan (Entrance Steps)
           const stepGeo = new THREE.BoxGeometry(0.36, 0.04, 0.12);
@@ -1331,6 +2390,7 @@ export default function ThreeWorldMap({
           npcGroup.userData = { r: rIdx, c: cIdx, type: tile.type, npc: tile.npc };
           clickableMeshesRef.current.push(monumentBase1, monumentBase2, monumentBody, dome, crystal);
           scene.add(npcGroup);
+          }
         }
 
         // 5. GERBANG PORTAL 3D (Status Terbuka / Terkunci mengikut FASA 4)
@@ -1468,26 +2528,65 @@ export default function ThreeWorldMap({
       });
     });
 
-    // 7. ZARAH KELIP-KELIP ATMOSFERA (Atmospheric Glowing Motes)
-    const particleCount = 45;
-    const particlePositions = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-      particlePositions[i * 3] = (Math.random() - 0.5) * (GRID_COLS * TILE_SIZE + 2);
-      particlePositions[i * 3 + 1] = 0.4 + Math.random() * 3.5;
-      particlePositions[i * 3 + 2] = (Math.random() - 0.5) * (GRID_ROWS * TILE_SIZE + 2);
+    // 7. ZARAH ATMOSFERA: Helaian Kertas Kitab (FPQS) vs Kelip-kelip Gurun
+    if (isFPQS) {
+      // FASA 1: Efek helaian kertas putih lutsinar berterbangan perlahan di udara (ilmu FPQS)
+      const paperGroup = new THREE.Group();
+      const paperCount = 38;
+      const paperGeo = new THREE.PlaneGeometry(0.12, 0.16);
+      const paperMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.35,
+        transparent: true,
+        opacity: 0.78,
+        side: THREE.DoubleSide,
+      });
+
+      for (let i = 0; i < paperCount; i++) {
+        const paperMesh = new THREE.Mesh(paperGeo, paperMat);
+        const px = (Math.random() - 0.5) * (GRID_COLS * TILE_SIZE + 2);
+        const py = 0.5 + Math.random() * 3.6;
+        const pz = (Math.random() - 0.5) * (GRID_ROWS * TILE_SIZE + 2);
+        paperMesh.position.set(px, py, pz);
+        paperMesh.rotation.set(
+          Math.random() * Math.PI,
+          Math.random() * Math.PI,
+          Math.random() * Math.PI
+        );
+        paperGroup.add(paperMesh);
+
+        animatedMeshesRef.current.push({
+          mesh: paperMesh,
+          fallSpeed: 0.005 + Math.random() * 0.006,
+          rotSpeedX: (Math.random() - 0.5) * 0.02,
+          rotSpeedY: (Math.random() - 0.5) * 0.025,
+          rotSpeedZ: (Math.random() - 0.5) * 0.02,
+          driftSeed: Math.random() * 100,
+          type: 'FLOATING_PAPER',
+        });
+      }
+      scene.add(paperGroup);
+    } else {
+      const particleCount = 45;
+      const particlePositions = new Float32Array(particleCount * 3);
+      for (let i = 0; i < particleCount; i++) {
+        particlePositions[i * 3] = (Math.random() - 0.5) * (GRID_COLS * TILE_SIZE + 2);
+        particlePositions[i * 3 + 1] = 0.4 + Math.random() * 3.5;
+        particlePositions[i * 3 + 2] = (Math.random() - 0.5) * (GRID_ROWS * TILE_SIZE + 2);
+      }
+      const particleGeo = new THREE.BufferGeometry();
+      particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+      const particleMat = new THREE.PointsMaterial({
+        color: palette.accentGlow,
+        size: 0.08,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending,
+      });
+      const fireflies = new THREE.Points(particleGeo, particleMat);
+      firefliesMeshRef.current = fireflies;
+      scene.add(fireflies);
     }
-    const particleGeo = new THREE.BufferGeometry();
-    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-    const particleMat = new THREE.PointsMaterial({
-      color: palette.accentGlow,
-      size: 0.08,
-      transparent: true,
-      opacity: 0.8,
-      blending: THREE.AdditiveBlending,
-    });
-    const fireflies = new THREE.Points(particleGeo, particleMat);
-    firefliesMeshRef.current = fireflies;
-    scene.add(fireflies);
 
     // 8. FIGUR WATAK PENGEMBARA 3D (Kontras Tinggi: Jubah Biru Diraja & Putih Mutiara)
     const playerGroup = new THREE.Group();
@@ -1701,6 +2800,47 @@ export default function ThreeWorldMap({
           }
         } else if (item.type === 'LIGHT_FLICKER') {
           item.light.intensity = item.baseIntensity + Math.sin(elapsedTime * 11 + item.phase) * 0.22;
+        } else if (item.type === 'FLOATING_PAPER') {
+          // FASA 1 (FPQS): Apungan helaian kertas nota/kitab berterbangan lembut
+          item.mesh.position.y -= item.fallSpeed;
+          item.mesh.position.x += Math.sin(elapsedTime * 1.2 + item.driftSeed) * 0.003;
+          item.mesh.position.z += Math.cos(elapsedTime * 0.9 + item.driftSeed) * 0.003;
+          item.mesh.rotation.x += item.rotSpeedX;
+          item.mesh.rotation.y += item.rotSpeedY;
+          item.mesh.rotation.z += item.rotSpeedZ;
+
+          if (item.mesh.position.y < 0.15) {
+            item.mesh.position.y = 3.6 + Math.random() * 0.6;
+            item.mesh.position.x = (Math.random() - 0.5) * (GRID_COLS * TILE_SIZE + 2);
+            item.mesh.position.z = (Math.random() - 0.5) * (GRID_ROWS * TILE_SIZE + 2);
+          }
+        } else if (item.type === 'COFFEE_STEAM') {
+          // FASA 1 (FPQS): Partikel wap panas berolak naik dari cawan kopi Kafe Didi
+          const steamProgress = (elapsedTime * item.speed + item.offsetY) % 1;
+          item.mesh.position.y = item.baseY + steamProgress * 0.35;
+          const wobble = Math.sin(elapsedTime * 4 + item.offsetY * 10) * 0.025;
+          item.mesh.position.x = item.baseX + wobble;
+          const s = 0.8 + steamProgress * 1.6;
+          item.mesh.scale.set(s, s, s);
+          if (item.mesh.material) {
+            item.mesh.material.opacity = Math.max(0, (1 - steamProgress) * 0.65);
+          }
+        } else if (item.type === 'EQUALIZER_BAR') {
+          // FASA 2 (FPQS): Denyutan gelombang bunyi audio Makmal Tarannum
+          const barScaleY = 0.35 + Math.abs(Math.sin(elapsedTime * item.freq + item.phase)) * 0.85;
+          item.mesh.scale.set(1, barScaleY, 1);
+        } else if (item.type === 'HOLOGRAM_PULSE') {
+          // FASA 2 (FPQS): Putaran & denyutan hologram pelayan digital Makmal Hadis
+          item.mesh.rotation.y = elapsedTime * 1.6;
+          item.mesh.rotation.x = Math.sin(elapsedTime * 0.9) * 0.25;
+          const scale = 1 + Math.sin(elapsedTime * 2.8) * 0.12;
+          item.mesh.scale.set(scale, scale, scale);
+        } else if (item.type === 'BRAILLE_NEON_PULSE') {
+          // FASA 2 (FPQS): Kelipan titik Braille bercahaya neon Makmal Braille
+          if (item.mesh.material) {
+            item.mesh.material.emissiveIntensity =
+              item.baseIntensity + Math.sin(elapsedTime * item.speed + item.phase) * 0.9;
+          }
         }
       });
 
