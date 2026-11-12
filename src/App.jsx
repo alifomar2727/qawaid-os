@@ -293,10 +293,22 @@ function NeonScaleLogo({ isWeighing = false }) {
   );
 }
 
+// Fungsi pembersih sebarang sintaks formula LaTeX ($$, \text{}) daripada AI
+function cleanLatexSyntax(str = '') {
+  return String(str || '')
+    .replace(/\$\$+(?:\\text\{|\\mathbf\{)?\s*([^}$]+?)\s*\}?\$\$+/g, '$1')
+    .replace(/\$+(?:\\text\{|\\mathbf\{)\s*([^}$]+?)\s*\}\$+/g, '$1')
+    .replace(/\\text\{([^}]+)\}/g, '$1')
+    .replace(/\\mathbf\{([^}]+)\}/g, '$1')
+    .replace(/\$\$/g, '')
+    .replace(/\$([A-Za-z\u0600-\u06FF\s]+)\$/g, '$1');
+}
+
 function renderInlineAiTokens(text = '') {
+  const sanitizedText = cleanLatexSyntax(text);
   const tokenRegex =
     /(\[[^\]]+\]\(https?:\/\/[^\s)]+\)|https?:\/\/shamela\.ws\/[^\s)]+|\*\*[^*]+\*\*|\*[^*\n]+\*|`[^`\n]+`|«[^»]+»)/g;
-  const parts = String(text).split(tokenRegex);
+  const parts = String(sanitizedText).split(tokenRegex);
 
   return parts.map((part, idx) => {
     if (!part) return null;
@@ -408,11 +420,41 @@ function renderFormattedAiText(text = '') {
   const elements = [];
 
   lines.forEach((rawLine, i) => {
-    const trimmed = rawLine.trim();
+    const cleanLine = cleanLatexSyntax(rawLine);
+    const trimmed = cleanLine.trim();
 
     // Baris kosong -> jarak kecil
     if (!trimmed) {
       elements.push(<div key={`sp-${i}`} style={{ height: '4px' }} />);
+      return;
+    }
+
+    // Pengesanan Lafaz Kaedah Arab berpusat / mandiri
+    const isPureArabic = /^[\u0600-\u06FF\s،؛ـ«»."']{6,}$/.test(trimmed);
+    if (isPureArabic && !trimmed.startsWith('•') && !trimmed.startsWith('-') && !trimmed.startsWith('*')) {
+      elements.push(
+        <div
+          key={`ar-box-${i}`}
+          dir="rtl"
+          style={{
+            textAlign: 'center',
+            padding: '10px 18px',
+            margin: '8px 0 10px',
+            borderRadius: 'var(--r-md)',
+            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 18, 38, 0.45) 100%)',
+            border: '1px solid rgba(16, 185, 129, 0.35)',
+            fontSize: '1.24rem',
+            fontWeight: 700,
+            color: '#34d399',
+            fontFamily: '"Amiri", "Noto Naskh Arabic", "Traditional Arabic", serif',
+            lineHeight: 1.85,
+            letterSpacing: '0.02em',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
+          }}
+        >
+          {trimmed}
+        </div>
+      );
       return;
     }
 
