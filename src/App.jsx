@@ -4827,7 +4827,7 @@ export default function App() {
               <div className="lg-ai-prompts-grid">
                 {[
                   'Huraikan kaedah الأمور بمقاصدها dan syarat niat berserta halaman Shamela',
-                  'Apakah beza syarat niat wuduk antara Hanafi dan Syafie dalam kitab ini?',
+                  'Bagaimanakah kaedah المشقة تجلب التيسير diaplikasikan dalam rukhsah ibadat?',
                   'Jelaskan kaedah اليقين لا يزول بالشك beserta contoh dan muka suratnya',
                 ].map((contoh, i) => (
                   <button
