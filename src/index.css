@@ -5404,5 +5404,350 @@ summary:focus-visible {
   }
 }
 
+/* ==========================================================================
+   KEMBARA QAWAID: ENJIN 3D ISOMETRIC DIORAMA (HD-2D)
+   FASA 1: Kamera 3D Dinamik & Papan Diorama Berketebalan (3D World Stage)
+   - Pentas perspektif mendalam (1100px)
+   - Papan terapung 3D dengan ketebalan sisi tanah berlapis (layered slabs)
+   - Kamera condong dinamik mengikut koordinat pemain (playerX, playerY)
+   ========================================================================== */
+
+/* 1. Pentas Perspektif 3D (Diorama Viewport Stage) */
+.diorama-viewport {
+  perspective: 1100px;
+  -webkit-perspective: 1100px;
+  overflow: visible;
+  padding: 38px 16px 52px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  touch-action: manipulation;
+}
+
+@media (max-width: 640px) {
+  .diorama-viewport {
+    perspective: 850px;
+    -webkit-perspective: 850px;
+    padding: 24px 6px 38px;
+  }
+}
+
+/* 2. Papan Grid Diorama 3D (Floating Voxel Earth Slab) */
+.diorama-board {
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+  position: relative;
+  /* Ketebalan bongkah tanah 3D & bayang-bayang terapung berlapis di angkasa */
+  box-shadow:
+    0 4px 0 #1e293b,
+    0 8px 0 #0f172a,
+    0 14px 0 #090d16,
+    0 18px 2px rgba(0, 0, 0, 0.45),
+    0 26px 42px rgba(0, 0, 0, 0.7),
+    0 40px 75px rgba(0, 0, 0, 0.52),
+    inset 0 1px 1px rgba(255, 255, 255, 0.25),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* ==========================================================================
+   FASA 2: KETINGGIAN MUKA BUMI 3D (3D Voxel Tiles)
+   - transform-style: preserve-3d pada setiap petak
+   - Dinding sisi ketebalan 3D melalui ::after
+   - Aras ketinggian Z (translateZ):
+     * Gunung/Halangan (⛰️): +16px
+     * Tumbuhan (🌿): +6px
+     * Lantai Biasa: 0px
+     * Air/Oasis (🌊/⛲): -6px (tenggelam dengan animasi kilauan air)
+   ========================================================================== */
+
+.diorama-tile {
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  position: relative;
+  height: 38px;
+  border-radius: 8px;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), background 0.25s ease, box-shadow 0.25s ease;
+  will-change: transform;
+}
+
+/* Dinding Sisi Asas Blok 3D (Voxel Side Wall) */
+.diorama-tile::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 3px;
+  border-radius: 0 0 7px 7px;
+  background: rgba(10, 15, 30, 0.85);
+  transform: translateZ(-1px);
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+/* 1. Petak Gunung / Halangan (Tersembul Tinggi +16px) */
+.diorama-tile--wall {
+  transform: translateZ(16px);
+  background: linear-gradient(180deg, #475569 0%, #334155 100%) !important;
+  border: 1px solid rgba(148, 163, 184, 0.45) !important;
+  box-shadow:
+    0 8px 12px rgba(0, 0, 0, 0.75),
+    0 4px 0 #1e293b,
+    inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+}
+
+.diorama-tile--wall::after {
+  bottom: -9px;
+  height: 9px;
+  border-radius: 0 0 8px 8px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.75);
+}
+
+/* 2. Petak Tumbuhan / Flora (Aras Sedikit Tinggi +6px) */
+.diorama-tile--flora {
+  transform: translateZ(6px);
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.28) 0%, rgba(5, 150, 105, 0.22) 100%) !important;
+  border: 1px solid rgba(52, 211, 153, 0.5) !important;
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.5),
+    0 2px 0 rgba(6, 78, 59, 0.7),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+}
+
+.diorama-tile--flora::after {
+  bottom: -5px;
+  height: 5px;
+  background: linear-gradient(180deg, #064e3b 0%, #022c22 100%);
+}
+
+/* 3. Petak Lantai Biasa (Aras Asas 0px) */
+.diorama-tile--floor {
+  transform: translateZ(0px);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.diorama-tile--floor::after {
+  bottom: -2px;
+  height: 2px;
+  background: rgba(15, 23, 42, 0.65);
+}
+
+/* 4. Petak Air & Oasis (Tenggelam Ke Bawah -6px dengan Animasi Alunan Cahaya) */
+.diorama-tile--water {
+  transform: translateZ(-6px);
+  background: linear-gradient(180deg, rgba(14, 116, 144, 0.55) 0%, rgba(8, 145, 178, 0.42) 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.5) !important;
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.6),
+    inset 0 0 10px rgba(6, 182, 212, 0.3),
+    0 0 12px rgba(6, 182, 212, 0.25) !important;
+  animation: dioramaWaterGleam 3.2s ease-in-out infinite alternate;
+}
+
+.diorama-tile--water::after {
+  display: none; /* Petak tenggelam tidak menampakkan dinding sisi luar */
+}
+
+.diorama-tile--oasis {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.38) 0%, rgba(14, 116, 144, 0.5) 100%) !important;
+  border: 1px solid rgba(52, 211, 153, 0.6) !important;
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.5),
+    0 0 14px rgba(16, 185, 129, 0.4) !important;
+}
+
+@keyframes dioramaWaterGleam {
+  0% {
+    filter: brightness(0.92) saturate(1.1);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6), 0 0 8px rgba(6, 182, 212, 0.2);
+  }
+  100% {
+    filter: brightness(1.22) saturate(1.45);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35), 0 0 18px rgba(56, 189, 248, 0.5);
+  }
+}
+
+/* 5. Petak Portal & NPC */
+.diorama-tile--portal {
+  transform: translateZ(4px);
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.35) 0%, rgba(126, 34, 206, 0.28) 100%) !important;
+  border: 1px solid rgba(192, 132, 252, 0.65) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), 0 0 16px rgba(168, 85, 247, 0.45) !important;
+}
+
+.diorama-tile--npc {
+  transform: translateZ(4px);
+  background: rgba(245, 158, 11, 0.28);
+  border: 1px solid rgba(251, 191, 36, 0.7);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+}
+
+.diorama-tile--npc.is-solved {
+  background: rgba(16, 185, 129, 0.25) !important;
+  border-color: rgba(52, 211, 153, 0.6) !important;
+}
+
+/* 6. Petak Yang Dipijak Pemain (Terangkat +8px) */
+.diorama-tile.is-player-tile {
+  transform: translateZ(8px) scale(1.04) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.65), rgba(16, 185, 129, 0.65)) !important;
+  border: 2px solid #fbbf24 !important;
+  box-shadow:
+    0 0 16px rgba(251, 191, 36, 0.7),
+    0 4px 0 #b45309,
+    0 8px 14px rgba(0, 0, 0, 0.6) !important;
+  z-index: 10;
+}
+
+.diorama-tile.is-player-tile::after {
+  bottom: -6px;
+  height: 6px;
+  background: #b45309;
+}
+
+/* ==========================================================================
+   FASA 3: WATAK "BERDIRI TEGAK" (3D STANDING BILLBOARDS) & ANIMASI LOMPATAN
+   - Semua sprite/ikon berdiri tegak menghadap kamera (rotateX(-52deg))
+   - Bayang-bayang bulat di atas lantai (filter: blur(2.5px))
+   - Animasi lompatan melengkung paksi-Z bagi Pengembara (@keyframes jump3D)
+   - Gelang cahaya emas (glow ring) berdenyut di bawah tapak kaki pemain
+   - Lencana seru NPC (❗) melantun terapung tinggi di paksi-Z
+   - Gerbang Wilayah (🌀) pusaran 3D berputar dengan aura neon ungu
+   ========================================================================== */
+
+/* 1. Pembalut Watak Berdiri Tegak (3D Standing Billboard) */
+.sprite-3d {
+  position: relative;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transform-origin: bottom center;
+  transform: translateZ(26px) rotateX(-52deg) scale(1.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* 2. Bayang-bayang Bulat Di Atas Lantai Di Bawah Kaki Watak */
+.sprite-3d-shadow {
+  position: absolute;
+  bottom: 2px;
+  width: 22px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+  filter: blur(2.5px);
+  pointer-events: none;
+  transform: translateZ(1px);
+  z-index: 2;
+}
+
+/* 3. Gelang Cahaya Emas Di Atas Permukaan Petak Pemain */
+.player-glow-ring {
+  position: absolute;
+  inset: 2px;
+  border-radius: 7px;
+  border: 1.5px solid #fbbf24;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.8), inset 0 0 8px rgba(251, 191, 36, 0.4);
+  animation: playerGlowPulse 1.6s ease-in-out infinite alternate;
+  pointer-events: none;
+  transform: translateZ(2px);
+  z-index: 1;
+}
+
+@keyframes playerGlowPulse {
+  0% {
+    transform: translateZ(2px) scale(0.95);
+    opacity: 0.65;
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.6), inset 0 0 6px rgba(251, 191, 36, 0.3);
+  }
+  100% {
+    transform: translateZ(2px) scale(1.05);
+    opacity: 1;
+    box-shadow: 0 0 18px rgba(251, 191, 36, 0.95), inset 0 0 10px rgba(251, 191, 36, 0.55);
+  }
+}
+
+/* 4. Animasi Lompatan Melengkung Pengembara di Paksi-Z (Parabolic Jump) */
+.sprite-3d--player {
+  animation: jump3D 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes jump3D {
+  0% {
+    transform: translateZ(26px) rotateX(-52deg) scale(1.25) translateY(0);
+  }
+  45% {
+    transform: translateZ(46px) rotateX(-52deg) scale(1.4) translateY(-10px);
+  }
+  100% {
+    transform: translateZ(26px) rotateX(-52deg) scale(1.25) translateY(0);
+  }
+}
+
+/* 5. Lencana Misi NPC (❗) Terapung Lebih Tinggi di Paksi-Z & Melantun */
+.npc-badge-3d {
+  position: absolute;
+  top: -16px;
+  right: -8px;
+  transform-origin: bottom center;
+  transform: translateZ(42px) rotateX(-52deg);
+  animation: npcBadgeBounce 1.5s ease-in-out infinite;
+  display: inline-block;
+  font-size: 0.76rem;
+  font-weight: 900;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.75));
+  z-index: 6;
+}
+
+@keyframes npcBadgeBounce {
+  0%, 100% {
+    transform: translateZ(42px) rotateX(-52deg) translateY(0);
+  }
+  50% {
+    transform: translateZ(52px) rotateX(-52deg) translateY(-6px) scale(1.2);
+  }
+}
+
+/* 6. Gerbang Portal 3D (🌀) Pusaran Berputar Dengan Cahaya Neon Ungu */
+.portal-sprite-3d {
+  transform: translateZ(24px) rotateX(-52deg) scale(1.35);
+  transform-origin: center center;
+  display: inline-block;
+  filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 22px rgba(192, 132, 252, 0.7));
+  animation: portalSpin3D 4.5s linear infinite;
+}
+
+@keyframes portalSpin3D {
+  0% {
+    transform: translateZ(24px) rotateX(-52deg) scale(1.35) rotateZ(0deg);
+  }
+  100% {
+    transform: translateZ(24px) rotateX(-52deg) scale(1.35) rotateZ(360deg);
+  }
+}
+
+/* 7. Sprite Dekorasi / Halangan (Gunung, Tumbuhan) Berdiri Tegak */
+.decor-sprite-3d {
+  transform: translateZ(16px) rotateX(-52deg) scale(1.15);
+  transform-origin: bottom center;
+  display: inline-block;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6));
+}
+
 
 

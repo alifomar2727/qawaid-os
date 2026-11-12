@@ -1026,57 +1026,54 @@ export default function KembaraQawaidGame() {
             </div>
           </div>
 
-          {/* Grid Peta 12 x 8 (Kawalan eksklusif melalui Controller / WASD sahaja) */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: `repeat(${GRID_COLS}, minmax(0, 1fr))`,
-              gap: '4px',
-              background: 'rgba(15, 23, 42, 0.55)',
-              padding: '8px',
-              borderRadius: '14px',
-              border: '1px solid var(--card-divider)',
-              userSelect: 'none',
-            }}
-          >
-            {mapGrid.map((row, rIdx) =>
+          {/* Pentas 3D Isometric Diorama (HD-2D) */}
+          <div className="diorama-viewport">
+            {/* Grid Peta 12 x 8 (Papan Diorama 3D Berketebalan & Kamera Dinamik) */}
+            <div
+              className="diorama-board"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${GRID_COLS}, minmax(0, 1fr))`,
+                gap: '4px',
+                background: 'rgba(15, 23, 42, 0.72)',
+                padding: '10px',
+                borderRadius: '16px',
+                border: '1px solid rgba(255, 255, 255, 0.14)',
+                userSelect: 'none',
+                transform: `rotateX(${52 + (playerPos.r - 4) * 1.2}deg) rotateZ(${(playerPos.c - 4) * -1.5}deg)`,
+                width: '100%',
+                maxWidth: '680px',
+              }}
+            >
+              {mapGrid.map((row, rIdx) =>
               row.map((tile, cIdx) => {
                 const isPlayerHere = playerPos.r === rIdx && playerPos.c === cIdx;
                 const isNpcSolved =
                   tile.npc && solvedNpcIds.includes(tile.npc.npcId);
 
-                let bg = 'rgba(255, 255, 255, 0.04)';
-                let border = '1px solid rgba(255, 255, 255, 0.06)';
-
+                let tileClass = 'diorama-tile diorama-tile--floor';
                 if (tile.type === 'WALL') {
-                  bg = 'rgba(71, 85, 105, 0.48)';
-                  border = '1px solid rgba(148, 163, 184, 0.25)';
+                  tileClass = 'diorama-tile diorama-tile--wall';
                 } else if (tile.type === 'WATER') {
-                  bg = 'rgba(14, 116, 144, 0.42)';
-                  border = '1px solid rgba(56, 189, 248, 0.3)';
+                  tileClass = 'diorama-tile diorama-tile--water';
                 } else if (tile.type === 'OASIS') {
-                  bg = 'rgba(16, 185, 129, 0.22)';
-                  border = '1px solid rgba(52, 211, 153, 0.45)';
+                  tileClass = 'diorama-tile diorama-tile--water diorama-tile--oasis';
                 } else if (tile.type === 'PORTAL') {
-                  bg = 'rgba(168, 85, 247, 0.25)';
-                  border = '1px solid rgba(192, 132, 252, 0.5)';
+                  tileClass = 'diorama-tile diorama-tile--portal';
                 } else if (tile.type === 'NPC') {
-                  bg = isNpcSolved
-                    ? 'rgba(16, 185, 129, 0.22)'
-                    : 'rgba(245, 158, 11, 0.26)';
-                  border = isNpcSolved
-                    ? '1px solid rgba(52, 211, 153, 0.55)'
-                    : '1px solid rgba(251, 191, 36, 0.7)';
+                  tileClass = `diorama-tile diorama-tile--npc ${isNpcSolved ? 'is-solved' : ''}`;
+                } else if (tile.decor) {
+                  tileClass = 'diorama-tile diorama-tile--flora';
                 }
 
                 if (isPlayerHere) {
-                  bg = 'linear-gradient(135deg, rgba(59,130,246,0.55), rgba(16,185,129,0.55))';
-                  border = '2px solid #fbbf24';
+                  tileClass += ' is-player-tile';
                 }
 
                 return (
                   <div
                     key={`${rIdx}-${cIdx}`}
+                    className={tileClass}
                     onClick={() =>
                       triggerToast(
                         '🧭 Gunakan Controller D-Pad atau kekunci WASD / Arrow untuk menggerakkan watak!',
@@ -1092,59 +1089,79 @@ export default function KembaraQawaidGame() {
                         ? 'Gerbang Wilayah Seterusnya'
                         : `Petak (${rIdx + 1}, ${cIdx + 1})`
                     }
-                    style={{
-                      height: '38px',
-                      borderRadius: '8px',
-                      background: bg,
-                      border,
-                      cursor: 'default',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      position: 'relative',
-                      padding: 0,
-                      transition: 'transform 0.15s ease, background 0.2s ease',
-                      transform: isPlayerHere ? 'scale(1.06)' : 'scale(1)',
-                    }}
                   >
-                    {/* Ikon kandungan petak */}
+                    {/* Ikon Kandungan 3D Berdiri Tegak (HD-2D Billboard) */}
                     {isPlayerHere ? (
-                      <span
-                        style={{
-                          fontSize: '1.2rem',
-                          transform: facing === 'LEFT' ? 'scaleX(-1)' : 'none',
-                          filter: 'drop-shadow(0 2px 6px rgba(251,191,36,0.8))',
-                        }}
-                      >
-                        🧙🏽‍♂️
-                      </span>
+                      <>
+                        {/* Gelang cahaya emas mengembang di atas permukaan petak */}
+                        <div className="player-glow-ring" />
+                        {/* Bayang-bayang bulat di atas lantai */}
+                        <div className="sprite-3d-shadow" />
+                        {/* Watak Pengembara Berdiri Tegak & Melompat di Paksi-Z */}
+                        <div
+                          key={`player-jump-${playerPos.r}-${playerPos.c}`}
+                          className="sprite-3d sprite-3d--player"
+                        >
+                          <span
+                            style={{
+                              fontSize: '1.28rem',
+                              display: 'inline-block',
+                              transform: facing === 'LEFT' ? 'scaleX(-1)' : 'none',
+                              filter: 'drop-shadow(0 3px 8px rgba(251, 191, 36, 0.85))',
+                            }}
+                          >
+                            🧙🏽‍♂️
+                          </span>
+                        </div>
+                      </>
                     ) : tile.type === 'NPC' && tile.npc ? (
                       <>
-                        <span style={{ fontSize: '1.1rem' }}>{tile.npc.ikon}</span>
-                        <span
-                          style={{
-                            position: 'absolute',
-                            top: '1px',
-                            right: '2px',
-                            fontSize: '0.56rem',
-                            fontWeight: 900,
-                          }}
-                        >
-                          {isNpcSolved ? '✅' : '❗'}
-                        </span>
+                        {/* Bayang-bayang di bawah kaki NPC */}
+                        <div className="sprite-3d-shadow" />
+                        {/* Watak NPC Berdiri Tegak */}
+                        <div className="sprite-3d">
+                          <span style={{ fontSize: '1.2rem', display: 'inline-block' }}>{tile.npc.ikon}</span>
+                          {/* Lencana Misi NPC Melantun Tinggi di Paksi-Z */}
+                          <span className="npc-badge-3d">
+                            {isNpcSolved ? '✅' : '❗'}
+                          </span>
+                        </div>
+                      </>
+                    ) : tile.type === 'PORTAL' ? (
+                      <>
+                        <div className="sprite-3d-shadow" style={{ width: '24px', height: '9px' }} />
+                        <div className="sprite-3d">
+                          <span className="portal-sprite-3d">
+                            🌀
+                          </span>
+                        </div>
                       </>
                     ) : tile.type === 'WALL' ? (
-                      <span style={{ fontSize: '0.9rem', opacity: 0.75 }}>⛰️</span>
+                      <div className="sprite-3d decor-sprite-3d">
+                        <span style={{ fontSize: '1.1rem', opacity: 0.95 }}>⛰️</span>
+                      </div>
                     ) : tile.type === 'WATER' ? (
-                      <span style={{ fontSize: '0.88rem', opacity: 0.8 }}>🌊</span>
+                      <span style={{ fontSize: '0.88rem', opacity: 0.85 }}>🌊</span>
+                    ) : tile.type === 'OASIS' ? (
+                      <>
+                        <div className="sprite-3d-shadow" style={{ width: '18px', height: '7px' }} />
+                        <div className="sprite-3d decor-sprite-3d">
+                          <span style={{ fontSize: '1.05rem' }}>⛲</span>
+                        </div>
+                      </>
                     ) : tile.decor ? (
-                      <span style={{ fontSize: '0.9rem', opacity: 0.85 }}>{tile.decor}</span>
+                      <>
+                        <div className="sprite-3d-shadow" style={{ width: '18px', height: '7px' }} />
+                        <div className="sprite-3d decor-sprite-3d">
+                          <span style={{ fontSize: '1.05rem', opacity: 0.95 }}>{tile.decor}</span>
+                        </div>
+                      </>
                     ) : null}
                   </div>
                 );
               })
             )}
+            </div>
           </div>
 
           {/* Petunjuk Ikon Peta */}
