@@ -2789,6 +2789,13 @@ export default function App() {
     if (!teksPilihan) setChatInput('');
     setIsLoadingAI(true);
 
+    const abortCtrl = new AbortController();
+    const safetyTimer = setTimeout(() => {
+      try {
+        abortCtrl.abort();
+      } catch {}
+    }, 45000);
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -2797,6 +2804,7 @@ export default function App() {
           'Accept': 'text/event-stream',
         },
         body: JSON.stringify({ soalan, stream: true }),
+        signal: abortCtrl.signal,
       });
 
       if (!response.ok) {
@@ -2909,6 +2917,7 @@ export default function App() {
         return updated;
       });
     } finally {
+      clearTimeout(safetyTimer);
       setIsLoadingAI(false);
     }
   };
