@@ -2739,40 +2739,133 @@ export default function App() {
     if (!soalan || isLoadingAI) return;
 
     shouldAutoScrollToBottomRef.current = true;
-    setChatMessages((prev) => [...prev, { role: 'user', text: soalan }]);
+    setChatMessages((prev) => [
+      ...prev,
+      { role: 'user', text: soalan },
+      { role: 'ai', text: '', sumber: [], isStreaming: true },
+    ]);
     if (!teksPilihan) setChatInput('');
     setIsLoadingAI(true);
 
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ soalan }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
+        },
+        body: JSON.stringify({ soalan, stream: true }),
       });
 
-      const resData = await response.json();
-
       if (!response.ok) {
-        throw new Error(resData.error || 'Gagal mendapatkan jawapan daripada pelayan.');
+        let errMsg = 'Gagal mendapatkan jawapan daripada pelayan.';
+        try {
+          const errData = await response.json();
+          errMsg = errData.error || errMsg;
+        } catch {}
+        throw new Error(errMsg);
       }
 
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          role: 'ai',
-          text: resData.jawapan || resData.answer,
-          sumber: resData.sumber || [],
-        },
-      ]);
+      const contentType = response.headers.get('content-type') || '';
+
+      // Fallback jika pelayan membalas dalam format JSON biasa
+      if (!contentType.includes('text/event-stream') || !response.body) {
+        const resData = await response.json();
+        setChatMessages((prev) => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          if (last && last.role === 'ai') {
+            last.text = resData.jawapan || resData.answer || '';
+            last.sumber = resData.sumber || [];
+            last.isStreaming = false;
+          }
+          return updated;
+        });
+        return;
+      }
+
+      // Penstriman Berperingkat (SSE Stream - Efek Mesin Taip)
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      let jawapanPenuh = '';
+      let sumberData = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // simpan baki baris belum lengkap
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith('data:')) continue;
+          const jsonStr = trimmed.replace(/^data:\s*/, '');
+          if (!jsonStr || jsonStr === '[DONE]') continue;
+
+          try {
+            const data = JSON.parse(jsonStr);
+            if (data.chunk) {
+              jawapanPenuh += data.chunk;
+              setChatMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last && last.role === 'ai') {
+                  last.text = jawapanPenuh;
+                  last.isStreaming = true;
+                }
+                return updated;
+              });
+              if (chatContainerRef.current && shouldAutoScrollToBottomRef.current) {
+                chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+              }
+            }
+            if (data.sumber && Array.isArray(data.sumber)) {
+              sumberData = data.sumber;
+            }
+            if (data.error) {
+              throw new Error(data.error);
+            }
+          } catch (pe) {
+            if (pe.message && !pe.message.includes('JSON')) {
+              throw pe;
+            }
+          }
+        }
+      }
+
+      // Selesai penstriman: kemas kini status akhir
+      setChatMessages((prev) => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last && last.role === 'ai') {
+          last.text = jawapanPenuh || last.text;
+          last.sumber = sumberData;
+          last.isStreaming = false;
+        }
+        return updated;
+      });
     } catch (err) {
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          role: 'ai',
-          text: `❌ **Ralat Sambungan:** ${err.message}`,
-          sumber: [],
-        },
-      ]);
+      setChatMessages((prev) => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last && last.role === 'ai') {
+          last.text = last.text
+            ? `${last.text}\n\n❌ **Ralat Sambungan:** ${err.message}`
+            : `❌ **Ralat Sambungan:** ${err.message}`;
+          last.isStreaming = false;
+        } else {
+          updated.push({
+            role: 'ai',
+            text: `❌ **Ralat Sambungan:** ${err.message}`,
+            sumber: [],
+            isStreaming: false,
+          });
+        }
+        return updated;
+      });
     } finally {
       setIsLoadingAI(false);
     }
@@ -4729,7 +4822,7 @@ export default function App() {
             <div className="lg-ai-prompts">
               <div className="lg-ai-prompts-header">
                 <LucideIcon name="sparkles" size={13} style={{ color: '#10b981', flexShrink: 0 }} />
-                <span>Contoh soalan (ketik untuk tanya terus):</span>
+                <span>Contoh soalan (klik untuk tanya terus):</span>
               </div>
               <div className="lg-ai-prompts-grid">
                 {[
@@ -4752,14 +4845,47 @@ export default function App() {
             </div>
 
             {/* Messages */}
-            <div ref={chatContainerRef} className="lg-ai-messages">
+            <div
+              ref={chatContainerRef}
+              className="lg-ai-messages"
+              onScroll={(e) => {
+                const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+                shouldAutoScrollToBottomRef.current = scrollHeight - scrollTop - clientHeight < 80;
+              }}
+            >
               {chatMessages.map((msg, idx) => (
                 <div
                   key={idx}
                   className={`lg-chat-bubble ${msg.role === 'user' ? 'lg-chat-bubble--user' : 'lg-inner-well lg-chat-bubble--ai'}`}
                 >
                   <div style={{ whiteSpace: msg.role === 'user' ? 'pre-wrap' : 'normal' }}>
-                    {msg.role === 'ai' ? renderFormattedAiText(msg.text) : msg.text}
+                    {msg.role === 'ai' ? (
+                      <>
+                        {msg.text ? (
+                          renderFormattedAiText(msg.text)
+                        ) : (
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
+                            <span className="lg-pulse-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }}></span>
+                            <i>Sedang menyemak kitab al-Zuhaili &amp; merangka jawapan...</i>
+                          </div>
+                        )}
+                        {msg.isStreaming && msg.text && (
+                          <span
+                            className="lg-cursor-blink"
+                            style={{
+                              display: 'inline-block',
+                              width: '2px',
+                              height: '1em',
+                              backgroundColor: '#10b981',
+                              marginLeft: '3px',
+                              verticalAlign: 'text-bottom',
+                            }}
+                          />
+                        )}
+                      </>
+                    ) : (
+                      msg.text
+                    )}
                   </div>
 
                   {msg.sumber && msg.sumber.length > 0 && (
@@ -4935,7 +5061,7 @@ export default function App() {
                 </div>
               ))}
 
-              {isLoadingAI && (
+              {isLoadingAI && chatMessages[chatMessages.length - 1]?.role !== 'ai' && (
                 <div
                   className="lg-inner-well"
                   style={{ alignSelf: 'flex-start', fontSize: '0.84rem' }}

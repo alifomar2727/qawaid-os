@@ -6160,6 +6160,26 @@ summary:focus-visible {
   }
 }
 
+/* AI Streaming Response Animations */
+@keyframes lgCursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.lg-cursor-blink {
+  animation: lgCursorBlink 0.75s infinite;
+}
+
+@keyframes lgPulseDot {
+  0%, 100% { transform: scale(0.75); opacity: 0.4; }
+  50% { transform: scale(1.25); opacity: 1; }
+}
+
+.lg-pulse-dot {
+  animation: lgPulseDot 1.2s infinite ease-in-out;
+}
+
+
 
 
 
