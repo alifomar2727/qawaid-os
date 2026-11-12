@@ -4727,22 +4727,28 @@ export default function App() {
 
             {/* Suggested Prompts */}
             <div className="lg-ai-prompts">
-              {[
-                'Huraikan kaedah الأمور بمقاصدها dan syarat niat berserta halaman Shamela',
-                'Apakah beza syarat niat wuduk antara Hanafi dan Syafie dalam kitab ini?',
-                'Jelaskan kaedah اليقين لا يزول بالشك beserta contoh dan muka suratnya',
-                'Bagaimana kaedah الضرر يزال diaplikasikan dalam empat mazhab?',
-              ].map((contoh, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => hantarSoalanAI(contoh)}
-                  className="lg-prompt-chip"
-                >
-                  <LucideIcon name="sparkles" size={12} />
-                  <span>{contoh}</span>
-                </button>
-              ))}
+              <div className="lg-ai-prompts-header">
+                <LucideIcon name="sparkles" size={13} style={{ color: '#10b981', flexShrink: 0 }} />
+                <span>Contoh soalan (ketik untuk tanya terus):</span>
+              </div>
+              <div className="lg-ai-prompts-grid">
+                {[
+                  'Huraikan kaedah الأمور بمقاصدها dan syarat niat berserta halaman Shamela',
+                  'Apakah beza syarat niat wuduk antara Hanafi dan Syafie dalam kitab ini?',
+                  'Jelaskan kaedah اليقين لا يزول بالشك beserta contoh dan muka suratnya',
+                ].map((contoh, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => hantarSoalanAI(contoh)}
+                    className="lg-prompt-chip"
+                  >
+                    <span className="lg-prompt-num">{i + 1}</span>
+                    <span className="lg-prompt-text">{contoh}</span>
+                    <LucideIcon name="arrow-up-right" size={13} className="lg-prompt-arrow" />
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Messages */}
