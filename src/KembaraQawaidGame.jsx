@@ -1093,58 +1093,19 @@ export default function KembaraQawaidGame() {
               gap: '8px',
             }}
           >
-            <span className="lg-node-chip">
-              🗺️ PETA 2D • GUNA CONTROLLER ATAU KEKUNCI WASD / ARROW
+            <span className="lg-node-chip" style={{ whiteSpace: 'normal' }}>
+              🗺️ PULAU DIORAMA 3D • SENTUH PETAK ATAU GUNA CONTROLLER
             </span>
-            {/* Bar Kawalan Pantas Terus Di Atas Peta */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {nearbyNpc && (
               <button
                 type="button"
-                onClick={() => movePlayer(0, -1)}
-                className="lg-btn-glass"
-                style={{ padding: '4px 9px', fontSize: '0.75rem' }}
-                title="Gerak Kiri (A / ←)"
+                onClick={() => openNpcEncounter(nearbyNpc)}
+                className="lg-btn-primary"
+                style={{ padding: '4px 10px', fontSize: '0.72rem' }}
               >
-                ◀
+                💬 Sapa {nearbyNpc.nama.split(' ')[0]}
               </button>
-              <button
-                type="button"
-                onClick={() => movePlayer(-1, 0)}
-                className="lg-btn-glass"
-                style={{ padding: '4px 9px', fontSize: '0.75rem' }}
-                title="Gerak Atas (W / ↑)"
-              >
-                ▲
-              </button>
-              <button
-                type="button"
-                onClick={() => movePlayer(1, 0)}
-                className="lg-btn-glass"
-                style={{ padding: '4px 9px', fontSize: '0.75rem' }}
-                title="Gerak Bawah (S / ↓)"
-              >
-                ▼
-              </button>
-              <button
-                type="button"
-                onClick={() => movePlayer(0, 1)}
-                className="lg-btn-glass"
-                style={{ padding: '4px 9px', fontSize: '0.75rem' }}
-                title="Gerak Kanan (D / →)"
-              >
-                ▶
-              </button>
-              {nearbyNpc && (
-                <button
-                  type="button"
-                  onClick={() => openNpcEncounter(nearbyNpc)}
-                  className="lg-btn-primary"
-                  style={{ padding: '4px 10px', fontSize: '0.72rem' }}
-                >
-                  💬 Sapa {nearbyNpc.nama.split(' ')[0]}
-                </button>
-              )}
-            </div>
+            )}
           </div>
 
           {/* Enjin Pulau 3D WebGL Sebenar (Three.js Low-Poly Diorama Island) */}
@@ -1158,23 +1119,89 @@ export default function KembaraQawaidGame() {
             onTileClick={handleThreeTileClick}
           />
 
-          {/* Petunjuk Ikon Peta 3D */}
+          {/* Petunjuk Ikon Peta 3D (SVG Khusus Sepadan Objek 3D Sebenar) */}
           <div
             style={{
               display: 'flex',
               flexWrap: 'wrap',
-              gap: '12px',
+              gap: '10px 14px',
               marginTop: '10px',
-              fontSize: '0.72rem',
+              fontSize: '0.74rem',
               color: 'var(--text-muted)',
+              alignItems: 'center',
             }}
           >
-            <span>🧙🏽‍♂️ Figur Pengembara</span>
-            <span>🕌 Menara Kubah (Misi NPC)</span>
-            <span>✨ Kristal Emas / Hijau</span>
-            <span>⛲ Kolam Oasis Hikmah</span>
-            <span>🌀 Gelung Portal 3D</span>
-            <span>⛰️ Puncak Batu Low-Poly</span>
+            {/* 1. Figur Pengembara: Serban Putih, Jubah Biru/Putih & Tongkat Emas */}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+                <ellipse cx="11" cy="21" rx="7" ry="1.8" stroke="#38bdf8" strokeWidth="1.4" />
+                <path d="M6.2 20L8.6 11H13.4L15.8 20H6.2Z" fill="#1d4ed8" stroke="#60a5fa" strokeWidth="0.6" />
+                <path d="M9.4 20L10.1 11H11.9L12.6 20H9.4Z" fill="#f8fafc" />
+                <ellipse cx="11" cy="11" rx="3" ry="1.1" fill="#fbbf24" />
+                <circle cx="11" cy="7.8" r="2.2" fill="#f1c27d" />
+                <ellipse cx="11" cy="6.1" rx="3.1" ry="1.5" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="0.5" />
+                <path d="M8.2 6.4Q11 7.2 13.8 6.4" stroke="#fbbf24" strokeWidth="0.9" fill="none" />
+                <line x1="17.5" y1="20" x2="18.5" y2="6.8" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round" />
+                <polygon points="18.5,3 20.6,5.4 18.5,7.8 16.4,5.4" fill="#38bdf8" stroke="#ffffff" strokeWidth="0.6" />
+              </svg>
+              <span>Figur Pengembara</span>
+            </span>
+
+            {/* 2. Menara Kubah (Misi NPC): Bangunan Putih/Krem Berkubah Emas & Berlian */}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+                <rect x="4" y="18.5" width="16" height="3" rx="0.8" fill="#f1f5f9" stroke="#94a3b8" strokeWidth="0.6" />
+                <rect x="6.5" y="12.5" width="11" height="6" fill="#fefce8" stroke="#fde047" strokeWidth="0.6" />
+                <path d="M10.2 18.5V15.2A1.8 1.8 0 0 1 13.8 15.2V18.5H10.2Z" fill="#0f172a" />
+                <path d="M6.2 12.5A5.8 5.2 0 0 1 17.8 12.5H6.2Z" fill="#fbbf24" stroke="#d97706" strokeWidth="0.7" />
+                <polygon points="12,1.6 14.5,4.4 12,7.2 9.5,4.4" fill="#f59e0b" stroke="#fef08a" strokeWidth="0.7" />
+              </svg>
+              <span>Menara Kubah (Misi NPC)</span>
+            </span>
+
+            {/* 3. Kristal Emas / Hijau: Octahedron Berlian Dua Tona Emas & Zamrud */}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+                <polygon points="8.2,2.5 13,9.2 8.2,16 3.4,9.2" fill="#fbbf24" stroke="#fef08a" strokeWidth="0.7" />
+                <polyline points="3.4,9.2 8.2,10.4 13,9.2" stroke="#b45309" strokeWidth="0.7" fill="none" />
+                <polygon points="16.2,6.5 20.6,12.8 16.2,19 11.8,12.8" fill="#10b981" stroke="#a7f3d0" strokeWidth="0.7" />
+                <polyline points="11.8,12.8 16.2,14 20.6,12.8" stroke="#047857" strokeWidth="0.7" fill="none" />
+              </svg>
+              <span>Kristal Emas / Hijau</span>
+            </span>
+
+            {/* 4. Kolam Oasis Hikmah: Petak Air Biru Firus dengan Kristal Kecil di Tengah */}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+                <polygon points="12,11 21,15.5 12,20 3,15.5" fill="#0284c7" stroke="#38bdf8" strokeWidth="1" />
+                <polygon points="12,12.5 18,15.5 12,18.5 6,15.5" fill="#38bdf8" fillOpacity="0.45" />
+                <path d="M5.8 14.5Q5 9.8 6.8 6.5" stroke="#78350f" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+                <path d="M6.8 6.5L4 7.3M6.8 6.5L5 4.3M6.8 6.5L9.2 4.8M6.8 6.5L9.5 7.2" stroke="#10b981" strokeWidth="1.3" strokeLinecap="round" />
+                <polygon points="13,5.2 15.4,8.5 13,11.8 10.6,8.5" fill="#38bdf8" stroke="#e0f2fe" strokeWidth="0.7" />
+              </svg>
+              <span>Kolam Oasis Hikmah</span>
+            </span>
+
+            {/* 5. Gelung Portal 3D: Cincin Torus Ungu Neon Berlapis */}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+                <ellipse cx="12" cy="20.5" rx="6.5" ry="1.7" fill="#1e1b4b" stroke="#6366f1" strokeWidth="0.7" />
+                <circle cx="12" cy="11" r="7.2" stroke="#9333ea" strokeWidth="2.8" />
+                <circle cx="12" cy="11" r="7.2" stroke="#e9d5ff" strokeWidth="1" strokeDasharray="5 3" />
+                <circle cx="12" cy="11" r="3" fill="#c084fc" stroke="#ffffff" strokeWidth="0.7" />
+              </svg>
+              <span>Gelung Portal 3D</span>
+            </span>
+
+            {/* 6. Puncak Batu Low-Poly: Bongkah Batu Poligon Bersegi Kelabu Gelap (#334155) */}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+                <polygon points="10.2,3.5 2.8,19.5 11.2,19.5" fill="#475569" stroke="#94a3b8" strokeWidth="0.6" strokeLinejoin="round" />
+                <polygon points="10.2,3.5 11.2,19.5 17.2,19.5" fill="#334155" stroke="#64748b" strokeWidth="0.6" strokeLinejoin="round" />
+                <polygon points="17.2,8.5 13.2,19.5 21.2,19.5" fill="#1e293b" stroke="#475569" strokeWidth="0.6" strokeLinejoin="round" />
+              </svg>
+              <span>Puncak Batu Low-Poly</span>
+            </span>
           </div>
         </div>
 
