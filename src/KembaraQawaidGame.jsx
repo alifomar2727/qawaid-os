@@ -1206,7 +1206,7 @@ export default function KembaraQawaidGame() {
   const totalWilayahNpc = currentWilayah.npcs.length;
   const isWilayahAllDone = selesaiWilayahCount >= totalWilayahNpc;
 
-  // Mulakan dialog & susun Skill Qawaid dinamik daripada dataNotaLengkap (A, B, C untuk FPQS)
+  // Mulakan dialog & susun Skill Qawaid dinamik daripada dataNotaLengkap (4 Pilihan: A, B, C, D)
   const openNpcEncounter = useCallback(
     (npc) => {
       // FASA 4: Sekat interaksi jika NPC ke-4 (Boss Wilayah / Pejabat Dekan) belum dibuka
@@ -1241,11 +1241,11 @@ export default function KembaraQawaidGame() {
         return;
       }
 
-      // FASA 3: Logik Soalan & Hubungan Database Dinamik (A, B, C)
+      // FASA 3: Logik Soalan & Hubungan Database Dinamik (4 Pilihan: A, B, C, D)
       // JANGAN hardcode pilihan jawapan mahupun semakan jawapan.
       const targetNota = getNotaById(npc.notaId);
       const isFPQS = currentWilayah.id === 'FPQS';
-      const distractorCount = isFPQS ? 2 : 3;
+      const distractorCount = 3; // 4 pilihan jawapan (A, B, C, D) untuk semua peta termasuk FPQS
 
       const distractors = dataNotaLengkap
         .filter((n) => {
@@ -3136,7 +3136,7 @@ export default function KembaraQawaidGame() {
                 </div>
               </div>
             ) : (
-              /* Paparan Normal: Soalan Senario & Pilihan Kaedah (A, B, C) */
+              /* Paparan Normal: Soalan Senario & Pilihan Kaedah (A, B, C, D) */
               <>
                 {/* Kotak Dialog Situasi Dilema Hukum (Typewriter Animation) */}
                 <div
@@ -3384,7 +3384,7 @@ export default function KembaraQawaidGame() {
                     >
                       <span style={{ fontSize: '0.86rem', fontWeight: 800, color: '#f8fafc' }}>
                         {currentWilayah.id === 'FPQS'
-                          ? '⚖️ PILIH KAEDAH FIQH (A, B, C) DARI PANGKALAN DATA TURATH:'
+                          ? '⚖️ PILIH KAEDAH FIQH (A, B, C, D) DARI PANGKALAN DATA TURATH:'
                           : '⚖️ BENTANGKAN KAD HUJAH & KAEDAH FIQH:'}
                       </span>
 
@@ -3405,15 +3405,11 @@ export default function KembaraQawaidGame() {
                           alignItems: 'center',
                           gap: '5px',
                         }}
-                        title={
-                          skillOptions.length === 3
-                            ? 'Gunakan bantuan semakan kitab untuk menggelapkan 1 pilihan salah dengan kos 1 reputasi'
-                            : 'Gunakan bantuan semakan kitab untuk menggelapkan 2 pilihan salah dengan kos 1 reputasi'
-                        }
+                        title="Gunakan bantuan semakan kitab untuk menggelapkan 2 pilihan salah dengan kos 1 reputasi"
                       >
                         <span>
                           {hiddenSkillIds.length > 0
-                            ? (skillOptions.length === 3 ? '✓ Kitab Disemak (1 Pilihan Ditolak)' : '✓ Kitab Disemak (50/50 Aktif)')
+                            ? '✓ Kitab Disemak (50/50 Aktif)'
                             : '📜 Semak Kitab (-1 Reputasi)'}
                         </span>
                       </button>
