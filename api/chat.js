@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Kaedah HTTP tidak dibenarkan. Sila gunakan POST.' });
   }
 
-  const { soalan } = req.body || {};
+  const { soalan, stream = true } = req.body || {};
   if (!soalan || typeof soalan !== 'string' || !soalan.trim()) {
     return res.status(400).json({ error: 'Soalan diperlukan.' });
   }
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
   try {
     const qNorm = soalan.toLowerCase().trim();
 
-    // 1. Carian Konteks Tempatan daripada 52+ Nota Lengkap Kitab
+    // 1. Carian Konteks Tempatan pantas daripada 52+ Nota Lengkap Kitab (<1ms)
     const konteksRelevan = [];
     const sumberPilihan = [];
 
@@ -82,7 +82,7 @@ export default async function handler(req, res) {
       if (n.urlShamela) {
         konteksTeks += `Pautan Sah Shamela: ${n.urlShamela}\n`;
         sumberPilihan.push({
-          kitab: 'القواعد الفقهية وتطبيقاتها في المذاهب الأربعة',
+          kitab: 'القواعد الفقهية وتطبيقاتها في المذاهb الأربعة',
           tajuk: n.tajukArab || n.tajukBm || 'Rujukan Kaedah',
           jilidHalaman: n.jilidHalaman || 'Jil. 1',
           urlShamela: n.urlShamela,
@@ -110,44 +110,167 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
 
     const promptPenuh = `${systemPrompt}\n\nSoalan Pengguna:\n${soalan}`;
 
-    let jawapanText = '';
-    let successModel = '';
-    const logRalat = [];
-
-    // Senarai model aktif Google Gemini (disusun daripada model laju tanpa kesesakan 503)
+    // Senarai model aktif Google Gemini (disusun mengikut kelajuan & kestabilan)
     const modelsToTry = [
-      'gemini-3.1-flash-lite',
+      'gemini-2.5-flash',
+      'gemini-2.5-flash-lite',
       'gemini-3.5-flash-lite',
       'gemini-3.8-flash',
-      'gemini-3.6-flash',
       'gemini-flash-latest',
     ];
 
+    const logRalat = [];
+
+    // Fungsi pembantu untuk membuat panggilan ke Gemini API
+    const callGemini = async (modelName, withThinkingBudget = true, isStreaming = true) => {
+      const endpoint = isStreaming ? ':streamGenerateContent?alt=sse&' : ':generateContent?';
+      const genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}${endpoint}key=${encodeURIComponent(apiKey)}`;
+
+      const genConfig = {
+        temperature: 0.25,
+        topP: 0.95,
+        maxOutputTokens: 2048,
+      };
+
+      // Matikan thinking budget untuk respon serta-merta tanpa delay 3-5 saat berfikir
+      if (withThinkingBudget) {
+        genConfig.thinkingConfig = { thinkingBudget: 0 };
+      }
+
+      return fetch(genUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey,
+        },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: promptPenuh }] }],
+          generationConfig: genConfig,
+        }),
+      });
+    };
+
+    // Aliran Penstriman (Streaming Mode / SSE)
+    if (stream) {
+      for (const m of modelsToTry) {
+        try {
+          let resGen = await callGemini(m, true, true);
+
+          // Jika model tidak menyokong thinkingConfig (HTTP 400), cuba semula tanpa thinkingConfig
+          if (resGen.status === 400) {
+            resGen = await callGemini(m, false, true);
+          }
+
+          if (resGen.ok && resGen.body) {
+            // Berjaya bersambung ke model! Hantar header SSE ke klien
+            res.writeHead(200, {
+              'Content-Type': 'text/event-stream; charset=utf-8',
+              'Cache-Control': 'no-cache, no-transform',
+              'Connection': 'keep-alive',
+              'X-Accel-Buffering': 'no',
+            });
+
+            const reader = resGen.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let buffer = '';
+            let totalJawapan = '';
+
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop(); // simpan baki pecahan baris
+
+                for (const line of lines) {
+                  const trimmed = line.trim();
+                  if (!trimmed || !trimmed.startsWith('data:')) continue;
+                  const jsonStr = trimmed.replace(/^data:\s*/, '');
+                  if (!jsonStr || jsonStr === '[DONE]') continue;
+
+                  try {
+                    const parsed = JSON.parse(jsonStr);
+                    const chunk = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (chunk) {
+                      totalJawapan += chunk;
+                      res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+                    }
+                  } catch (e) {}
+                }
+              }
+
+              // Flush baki buffer terakhir
+              if (buffer && buffer.trim().startsWith('data:')) {
+                try {
+                  const parsed = JSON.parse(buffer.trim().replace(/^data:\s*/, ''));
+                  const chunk = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+                  if (chunk) {
+                    totalJawapan += chunk;
+                    res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+                  }
+                } catch (e) {}
+              }
+
+              if (totalJawapan.length > 0) {
+                // Selesai penstriman jawapan
+                res.write(
+                  `data: ${JSON.stringify({
+                    done: true,
+                    sumber: sumberPilihan.slice(0, 3),
+                    model: m,
+                  })}\n\n`
+                );
+                res.end();
+                return; // Tamat dengan jayanya!
+              }
+            } catch (streamErr) {
+              logRalat.push(`${m} stream cut: ${streamErr.message}`);
+              res.write(
+                `data: ${JSON.stringify({
+                  error: `Terputus semasa menjana jawapan: ${streamErr.message}`,
+                })}\n\n`
+              );
+              res.end();
+              return;
+            }
+          } else {
+            const errGenText = await resGen.text();
+            let msgGen = errGenText;
+            try {
+              msgGen = JSON.parse(errGenText)?.error?.message || errGenText;
+            } catch {}
+            logRalat.push(`${m} (${resGen.status}): ${msgGen}`);
+          }
+        } catch (eGen) {
+          logRalat.push(`${m}: ${eGen.message}`);
+        }
+      }
+
+      // Jika kesemua model gagal sebelum streaming bermula
+      return res.status(502).json({
+        error: `Pelayan Google Gemini sibuk: ${logRalat.join(' | ')}`,
+      });
+    }
+
+    // Mod Tradisional Bukan Penstriman (Non-streaming fallback)
     for (const m of modelsToTry) {
       try {
-        const genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(apiKey)}`;
-        const resGen = await fetch(genUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey,
-          },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: promptPenuh }] }],
-            generationConfig: {
-              temperature: 0.25,
-              topP: 0.95,
-              maxOutputTokens: 2048,
-            },
-          }),
-        });
+        let resGen = await callGemini(m, true, false);
+        if (resGen.status === 400) {
+          resGen = await callGemini(m, false, false);
+        }
 
         if (resGen.ok) {
           const dataGen = await resGen.json();
-          jawapanText = dataGen?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const jawapanText = dataGen?.candidates?.[0]?.content?.parts?.[0]?.text || '';
           if (jawapanText) {
-            successModel = m;
-            break; // Berjaya, keluar daripada gelung
+            return res.status(200).json({
+              jawapan: jawapanText,
+              model: m,
+              sumber: sumberPilihan.slice(0, 3),
+            });
           }
         } else {
           const errGenText = await resGen.text();
@@ -156,27 +279,14 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
             msgGen = JSON.parse(errGenText)?.error?.message || errGenText;
           } catch {}
           logRalat.push(`${m} (${resGen.status}): ${msgGen}`);
-
-          // Jika server Google mengalami 503 (high demand), tunggu sebentar sebelum cuba model seterusnya
-          if (resGen.status === 503) {
-            await new Promise((resolve) => setTimeout(resolve, 800));
-          }
         }
       } catch (eGen) {
         logRalat.push(`${m}: ${eGen.message}`);
       }
     }
 
-    if (!jawapanText) {
-      return res.status(502).json({
-        error: `Pelayan Google Gemini sibuk: ${logRalat.join(' | ')}`,
-      });
-    }
-
-    return res.status(200).json({
-      jawapan: jawapanText,
-      model: successModel,
-      sumber: sumberPilihan.slice(0, 3),
+    return res.status(502).json({
+      error: `Pelayan Google Gemini sibuk: ${logRalat.join(' | ')}`,
     });
   } catch (error) {
     console.error('Ralat dalam handler chat:', error);
