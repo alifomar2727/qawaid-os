@@ -126,32 +126,25 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
 
     const promptPenuh = `${systemPrompt}\n\nSoalan Pengguna:\n${soalan}`;
 
-    // Senarai model aktif Google Gemini (disusun mengikut kelajuan & kestabilan)
+    // Senarai model aktif Google Gemini (disusun mengikut kestabilan & kelajuan)
     const modelsToTry = [
       'gemini-2.5-flash',
-      'gemini-2.5-flash-lite',
-      'gemini-3.5-flash-lite',
-      'gemini-3.8-flash',
       'gemini-flash-latest',
+      'gemini-2.5-flash-lite',
     ];
 
     const logRalat = [];
 
     // Fungsi pembantu untuk membuat panggilan ke Gemini API
-    const callGemini = async (modelName, withThinkingBudget = true, isStreaming = true) => {
+    const callGemini = async (modelName, isStreaming = true) => {
       const endpoint = isStreaming ? ':streamGenerateContent?alt=sse&' : ':generateContent?';
       const genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}${endpoint}key=${encodeURIComponent(apiKey)}`;
 
       const genConfig = {
-        temperature: 0.25,
+        temperature: 0.3,
         topP: 0.95,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 3000,
       };
-
-      // Matikan thinking budget untuk respon serta-merta tanpa delay 3-5 saat berfikir
-      if (withThinkingBudget) {
-        genConfig.thinkingConfig = { thinkingBudget: 0 };
-      }
 
       return fetch(genUrl, {
         method: 'POST',
@@ -170,12 +163,7 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
     if (stream) {
       for (const m of modelsToTry) {
         try {
-          let resGen = await callGemini(m, true, true);
-
-          // Jika model tidak menyokong thinkingConfig (HTTP 400), cuba semula tanpa thinkingConfig
-          if (resGen.status === 400) {
-            resGen = await callGemini(m, false, true);
-          }
+          const resGen = await callGemini(m, true);
 
           if (resGen.ok && resGen.body) {
             // Berjaya bersambung ke model! Hantar header SSE ke klien
@@ -185,6 +173,10 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
               'Connection': 'keep-alive',
               'X-Accel-Buffering': 'no',
             });
+
+            if (typeof res.flushHeaders === 'function') {
+              res.flushHeaders();
+            }
 
             const reader = resGen.body.getReader();
             const decoder = new TextDecoder('utf-8');
@@ -212,6 +204,9 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
                     if (chunk) {
                       totalJawapan += chunk;
                       res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+                      if (typeof res.flush === 'function') {
+                        res.flush();
+                      }
                     }
                   } catch (e) {}
                 }
@@ -229,7 +224,7 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
                 } catch (e) {}
               }
 
-              if (totalJawapan.length > 0) {
+              if (totalJawapan.length > 50) {
                 // Selesai penstriman jawapan
                 res.write(
                   `data: ${JSON.stringify({
@@ -238,6 +233,9 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
                     model: m,
                   })}\n\n`
                 );
+                if (typeof res.flush === 'function') {
+                  res.flush();
+                }
                 res.end();
                 return; // Tamat dengan jayanya!
               }
@@ -273,10 +271,7 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
     // Mod Tradisional Bukan Penstriman (Non-streaming fallback)
     for (const m of modelsToTry) {
       try {
-        let resGen = await callGemini(m, true, false);
-        if (resGen.status === 400) {
-          resGen = await callGemini(m, false, false);
-        }
+        const resGen = await callGemini(m, false);
 
         if (resGen.ok) {
           const dataGen = await resGen.json();
