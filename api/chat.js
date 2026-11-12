@@ -1,6 +1,6 @@
 // qawaid-explorer/api/chat.js
 // Vercel Serverless Function untuk AI Chatbox Qawaid OS
-// Berasaskan: "القواعد الفقهية وتطبيقاتها في المذاهb الأربعة" — Syeikh Prof. Dr. Muhammad Mustafa al-Zuhaili
+// Berasaskan: "القواعد الفقهية وتطبيقاتها في المذاهب الأربعة" — Syeikh Prof. Dr. Muhammad Mustafa al-Zuhaili
 
 import { dataNotaLengkap } from '../src/dataNota.js';
 
@@ -117,8 +117,8 @@ PANDUAN JAWAPAN KETAT:
 2. Setiap kali menyebut sesuatu kaedah fiqh, berikan lafaz Arab berbaris lengkap berserta maksud terjemahannya secara teks biasa atau tebal (**...**).
 3. DILARANG SAMA SEKALI menggunakan simbol dollar ($ atau $$) atau sintaks kod LaTeX matematik seperti \\text{...}, \\mathbf{...}, atau $$...$$. Tulis teks Arab dan Rumi dalam bentuk teks biasa.
 4. Nyatakan aplikasi perbandingan antara mazhab (Hanafi, Maliki, Syafie, Hanbali) mengikut huraian pengarang.
-5. Huraikan jawapan dengan gaya bahasa syarahan dan perbincangan ilmiah anda sendiri secara lengkap (mukadimah, huraian kaedah, perbezaan mazhab, dan kesimpulan). JANGAN salin bulat-bulat frasa daripada petikan konteks bagi memastikan jawapan mengalir secara natural dan tidak terpotong.
-6. Sempurnakan setiap ayat dan huraian sehingga noktah penuh, jangan tinggalkan ayat yang tergantung.
+5. Huraikan jawapan dengan gaya bahasa syarahan dan penerangan anda sendiri. JANGAN menyalin perkataan secara bulat-bulat daripada nota rujukan bagi mengelakkan sekatan sistem recitation.
+6. Sempurnakan setiap ayat dan perenggan hingga ke noktah akhir, jangan tinggalkan ayat yang tergantung.
 7. Di akhir jawapan, sertakan rujukan nombor Jilid & Halaman serta formatkan pautan Shamela.ws secara markdown link yang kemas seperti:
    [Baca Halaman Rujukan di Shamela.ws](https://shamela.ws/book/21786/xx)
 8. Jangan mereka-reka maklumat di luar manhaj kitab ini.
@@ -128,29 +128,32 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
 
     const promptPenuh = `${systemPrompt}\n\nSoalan Pengguna:\n${soalan}`;
 
-    // Senarai model aktif rasmi Google Gemini (mengikut keutamaan kepantasan dan kualiti)
+    // Senarai model aktif Google Gemini (disusun mengikut kepantasan tindak balas)
     const modelsToTry = [
       'gemini-3.5-flash-lite',
       'gemini-3.8-flash',
       'gemini-3.1-flash-lite',
-      'gemini-3.6-flash',
       'gemini-flash-latest',
     ];
 
     const logRalat = [];
 
-    // Fungsi pembantu untuk membuat panggilan ke Gemini API secara atomik (Unary Payload)
-    // Pendekatan ini 100% kebal daripada isu penstriman terputus di tengah jalan oleh proksi Vercel/Lambda
-    const callGemini = async (modelName) => {
-      const genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    // Fungsi membuat panggilan penstriman ke Gemini API
+    const callGeminiStream = async (modelName, useThinkingConfig = true) => {
+      const genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`;
 
       const genConfig = {
         temperature: 0.3,
         topP: 0.95,
-        maxOutputTokens: 4096,
+        maxOutputTokens: 3500,
       };
 
-      // Tetapan keselamatan untuk mengelakkan teks fiqh (taharah, mandi hadas, aurat dsb) daripada disekat
+      if (useThinkingConfig) {
+        genConfig.thinkingConfig = {
+          thinkingLevel: 'MINIMAL',
+        };
+      }
+
       const safetySettings = [
         { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
         { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
@@ -172,39 +175,119 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
       });
     };
 
-    // Panggil model mengikut turutan keutamaan
+    // Alirkan jawapan kepada klien secara masa nyata (SSE Streaming)
     for (const m of modelsToTry) {
       try {
-        const resGen = await callGemini(m);
+        let resGen = await callGeminiStream(m, true);
 
-        if (resGen.ok) {
-          const dataGen = await resGen.json();
-          const candidate = dataGen?.candidates?.[0];
-          const finishReason = candidate?.finishReason;
-          const parts = candidate?.content?.parts || [];
+        // Jika model tidak menyokong thinkingConfig, cuba semula tanpa thinkingConfig
+        if (!resGen.ok && resGen.status === 400) {
+          resGen = await callGeminiStream(m, false);
+        }
 
-          let jawapanText = '';
-          for (const p of parts) {
-            if (!p.thought && p.text) {
-              jawapanText += p.text;
-            }
+        if (resGen.ok && resGen.body) {
+          // Tetapkan header SSE untuk aliran segera ke klien
+          res.writeHead(200, {
+            'Content-Type': 'text/event-stream; charset=utf-8',
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no',
+          });
+
+          if (typeof res.flushHeaders === 'function') {
+            res.flushHeaders();
           }
-          jawapanText = jawapanText.trim();
 
-          // Semak kesempurnaan jawapan:
-          // Pastikan jawapan mempunyai panjang mencukupi (>120 aksara) dan tidak disekat/terputus secara abnormal
-          const isComplete =
-            jawapanText.length >= 120 &&
-            (finishReason === 'STOP' || finishReason === undefined);
+          // Hantar signal awal supaya sambungan tidak dianggap melahu oleh proksi Vercel
+          res.write(': stream-start\n\n');
+          if (typeof res.flush === 'function') res.flush();
 
-          if (isComplete) {
-            return res.status(200).json({
-              jawapan: jawapanText,
-              model: m,
-              sumber: sumberPilihan.slice(0, 3),
-            });
-          } else {
-            logRalat.push(`${m} terhenti pramatang (finishReason: ${finishReason}, panjang: ${jawapanText.length})`);
+          // Heartbeat timer (ping) setiap 2 saat untuk mengekalkan soket Vercel sentiasa aktif
+          const pingInterval = setInterval(() => {
+            try {
+              res.write(': ping\n\n');
+              if (typeof res.flush === 'function') res.flush();
+            } catch {}
+          }, 2000);
+
+          const reader = resGen.body.getReader();
+          const decoder = new TextDecoder('utf-8');
+          let buffer = '';
+          let totalJawapan = '';
+
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split('\n');
+              buffer = lines.pop(); // simpan baki pecahan baris
+
+              for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed || !trimmed.startsWith('data:')) continue;
+                const jsonStr = trimmed.replace(/^data:\s*/, '');
+                if (!jsonStr || jsonStr === '[DONE]') continue;
+
+                try {
+                  const parsed = JSON.parse(jsonStr);
+                  const candidate = parsed?.candidates?.[0];
+                  const parts = candidate?.content?.parts || [];
+
+                  let chunk = '';
+                  for (const p of parts) {
+                    if (!p.thought && p.text) {
+                      chunk += p.text;
+                    }
+                  }
+
+                  if (chunk) {
+                    totalJawapan += chunk;
+                    res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+                    if (typeof res.flush === 'function') {
+                      res.flush();
+                    }
+                  }
+                } catch (e) {}
+              }
+            }
+
+            // Flush baki buffer terakhir jika ada
+            if (buffer && buffer.trim().startsWith('data:')) {
+              try {
+                const parsed = JSON.parse(buffer.trim().replace(/^data:\s*/, ''));
+                const parts = parsed?.candidates?.[0]?.content?.parts || [];
+                let chunk = '';
+                for (const p of parts) {
+                  if (!p.thought && p.text) {
+                    chunk += p.text;
+                  }
+                }
+                if (chunk) {
+                  totalJawapan += chunk;
+                  res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+                }
+              } catch (e) {}
+            }
+          } finally {
+            clearInterval(pingInterval);
+          }
+
+          if (totalJawapan.length > 50) {
+            // Selesai penstriman jawapan dengan jayanya
+            res.write(
+              `data: ${JSON.stringify({
+                done: true,
+                sumber: sumberPilihan.slice(0, 3),
+                model: m,
+              })}\n\n`
+            );
+            if (typeof res.flush === 'function') {
+              res.flush();
+            }
+            res.end();
+            return;
           }
         } else {
           const errGenText = await resGen.text();
