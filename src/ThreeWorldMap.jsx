@@ -14,7 +14,7 @@ const TILE_SIZE = 1.15;
 const GRID_ROWS = 8;
 const GRID_COLS = 12;
 
-// Tema Warna Mengikut Wilayah & Atmosfera Sinematik
+// Tema Warna Mengikut Wilayah & Atmosfera Sinematik (FASA 2: Langit Senja/Malam Islamik)
 const BIOME_PALETTES = {
   BAGHDAD: {
     ground: 0x064e3b,       // Zamrud gelap
@@ -27,6 +27,9 @@ const BIOME_PALETTES = {
     accentGlow: 0xf59e0b,   // Emas
     fogColor: 0x041914,     // Kabus zamrud malam
     lightColor: 0xfffbeb,
+    skyTop: '#010d0b',
+    skyMid: '#062920',
+    skyBottom: '#041914',
   },
   DAMSYIK: {
     ground: 0x1e293b,       // Marmar kelabu zaitun
@@ -39,6 +42,9 @@ const BIOME_PALETTES = {
     accentGlow: 0x38bdf8,
     fogColor: 0x0a1120,     // Kabus malam Syam
     lightColor: 0xf0fdf4,
+    skyTop: '#020617',
+    skyMid: '#0c1b33',
+    skyBottom: '#0a1120',
   },
   HIJAZ: {
     ground: 0xb45309,       // Pasir gurun hangat
@@ -51,6 +57,9 @@ const BIOME_PALETTES = {
     accentGlow: 0xf59e0b,
     fogColor: 0x1a0f07,     // Haze jingga gurun
     lightColor: 0xfef3c7,
+    skyTop: '#0f0502',
+    skyMid: '#2e1206',
+    skyBottom: '#1a0f07',
   },
   KAHERAH: {
     ground: 0x854d0e,       // Batu kapur Mesir
@@ -63,6 +72,9 @@ const BIOME_PALETTES = {
     accentGlow: 0xfbbf24,
     fogColor: 0x170f07,     // Haze batu kapur
     lightColor: 0xfef9c3,
+    skyTop: '#0d0702',
+    skyMid: '#261706',
+    skyBottom: '#170f07',
   },
   ANDALUSIA: {
     ground: 0x0369a1,       // Biru firus laut
@@ -75,6 +87,9 @@ const BIOME_PALETTES = {
     accentGlow: 0x2dd4bf,
     fogColor: 0x041624,     // Kabus pesisir pantai
     lightColor: 0xe0f2fe,
+    skyTop: '#020b17',
+    skyMid: '#06203d',
+    skyBottom: '#041624',
   },
   COSMIC: {
     ground: 0x312e81,       // Indigo kosmik
@@ -87,8 +102,80 @@ const BIOME_PALETTES = {
     accentGlow: 0xc084fc,
     fogColor: 0x09071c,     // Nebula ungu
     lightColor: 0xf3e8ff,
+    skyTop: '#070314',
+    skyMid: '#1a0b38',
+    skyBottom: '#09071c',
   },
 };
+
+/**
+ * FASA 1: Cari rangkaian petak laluan menyambungkan permulaan pemain (1,1) ke semua NPC, Oasis & Portal
+ */
+function findPathTiles(grid, startR = 1, startC = 1) {
+  const pathSet = new Set();
+  if (!grid || !grid.length) return pathSet;
+
+  const rows = grid.length;
+  const cols = grid[0].length;
+  const targets = [];
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const tile = grid[r][c];
+      if (tile && (tile.type === 'NPC' || tile.type === 'PORTAL' || tile.type === 'OASIS')) {
+        targets.push({ r, c });
+      }
+    }
+  }
+
+  targets.forEach((target) => {
+    const queue = [[startR, startC]];
+    const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+    const parent = Array.from({ length: rows }, () => Array(cols).fill(null));
+    visited[startR][startC] = true;
+    let found = false;
+
+    while (queue.length > 0) {
+      const [currR, currC] = queue.shift();
+      if (currR === target.r && currC === target.c) {
+        found = true;
+        break;
+      }
+
+      const dirs = [
+        [0, 1],
+        [1, 0],
+        [0, -1],
+        [-1, 0],
+      ];
+      for (const [dr, dc] of dirs) {
+        const nr = currR + dr;
+        const nc = currC + dc;
+        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !visited[nr][nc]) {
+          const t = grid[nr][nc];
+          if (t && t.type !== 'WALL' && t.type !== 'WATER') {
+            visited[nr][nc] = true;
+            parent[nr][nc] = [currR, currC];
+            queue.push([nr, nc]);
+          }
+        }
+      }
+    }
+
+    if (found) {
+      let curr = [target.r, target.c];
+      while (curr) {
+        const [cr, cc] = curr;
+        if (grid[cr]?.[cc]?.type === 'FLOOR') {
+          pathSet.add(`${cr},${cc}`);
+        }
+        curr = parent[cr][cc];
+      }
+    }
+  });
+
+  return pathSet;
+}
 
 /**
  * Bina THREE.Sprite Label Terapung menggunakan HTML5 CanvasTexture
@@ -164,6 +251,74 @@ function createFloatingLabelSprite(
   return { sprite, texture, material: spriteMat };
 }
 
+/**
+ * FASA 2: Hasilkan tekstur gradien langit malam / senja Islamik
+ */
+function createSkyGradientTexture(skyTop, skyMid, skyBottom) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    const grad = ctx.createLinearGradient(0, 0, 0, 256);
+    grad.addColorStop(0, skyTop);
+    grad.addColorStop(0.52, skyMid);
+    grad.addColorStop(1, skyBottom);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 128, 256);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+  return texture;
+}
+
+/**
+ * FASA 2: Hasilkan Fake Bloom / Volumetric Halo Sprite
+ * Menggunakan AdditiveBlending dan tekstur radial gradient
+ */
+function createGlowHaloSprite(colorHex, scale = 1.2, opacity = 0.85) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+
+  if (ctx) {
+    const col = new THREE.Color(colorHex);
+    const r = Math.round(col.r * 255);
+    const g = Math.round(col.g * 255);
+    const b = Math.round(col.b * 255);
+
+    const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+    grad.addColorStop(0.18, `rgba(${r}, ${g}, ${b}, 0.88)`);
+    grad.addColorStop(0.52, `rgba(${r}, ${g}, ${b}, 0.28)`);
+    grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 128, 128);
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+
+  const spriteMat = new THREE.SpriteMaterial({
+    map: texture,
+    color: 0xffffff,
+    transparent: true,
+    opacity: opacity,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+
+  const sprite = new THREE.Sprite(spriteMat);
+  sprite.scale.set(scale, scale, 1);
+  return { sprite, texture, material: spriteMat };
+}
+
 export default function ThreeWorldMap({
   mapGrid,
   playerPos,
@@ -212,6 +367,9 @@ export default function ThreeWorldMap({
   const animatedMeshesRef = useRef([]); // NPC crystals, portals, water, player ring
   const clickableMeshesRef = useRef([]); // Meshes untuk Raycaster
   const firefliesMeshRef = useRef(null); // Zarah kelip-kelip
+  const starsPointsRef = useRef(null); // FASA 2: 150 Bintang angkasa berkelip
+  const footstepParticlesRef = useRef([]); // FASA 3: Zarah debu langkah kaki
+  const prevPlayerPosRef = useRef({ r: playerPos.r, c: playerPos.c });
 
   // Tentukan tema bioma
   const biomeKey =
@@ -240,8 +398,46 @@ export default function ThreeWorldMap({
 
   // Kemas kini kedudukan sasaran watak apabila playerPos berubah
   useEffect(() => {
+    const prev = prevPlayerPosRef.current;
+    const hasMoved = prev.r !== playerPos.r || prev.c !== playerPos.c;
+    prevPlayerPosRef.current = { r: playerPos.r, c: playerPos.c };
+
     const target = getTileWorldPos(playerPos.r, playerPos.c);
     if (playerAnimStateRef.current) {
+      // FASA 3: Jika watak berpindah petak, letuskan 5 sfera debu keemasan di tapak kaki lama
+      if (hasMoved && sceneRef.current) {
+        const spawnX = playerAnimStateRef.current.currentX;
+        const spawnZ = playerAnimStateRef.current.currentZ;
+        for (let i = 0; i < 5; i++) {
+          const geo = new THREE.DodecahedronGeometry(0.045 + Math.random() * 0.025, 0);
+          const mat = new THREE.MeshBasicMaterial({
+            color: 0xfde68a,
+            transparent: true,
+            opacity: 0.85,
+          });
+          const dustMesh = new THREE.Mesh(geo, mat);
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 0.05 + Math.random() * 0.12;
+          dustMesh.position.set(
+            spawnX + Math.cos(angle) * dist,
+            0.12 + Math.random() * 0.05,
+            spawnZ + Math.sin(angle) * dist
+          );
+          sceneRef.current.add(dustMesh);
+
+          footstepParticlesRef.current.push({
+            mesh: dustMesh,
+            geo,
+            mat,
+            vx: Math.cos(angle) * 0.025 + (Math.random() - 0.5) * 0.015,
+            vy: 0.035 + Math.random() * 0.03,
+            vz: Math.sin(angle) * 0.025 + (Math.random() - 0.5) * 0.015,
+            life: 0,
+            maxLife: 0.48, // Hilang dalam ~0.5 saat
+          });
+        }
+      }
+
       playerAnimStateRef.current.targetX = target.x;
       playerAnimStateRef.current.targetZ = target.z;
       playerAnimStateRef.current.jumpProgress = 0; // Cetuskan lompatan lembut
@@ -273,8 +469,16 @@ export default function ThreeWorldMap({
     // 1. Scene & Kabus Atmosfera Sinematik (THREE.FogExp2)
     const scene = new THREE.Scene();
     sceneRef.current = scene;
-    scene.background = new THREE.Color(palette.fogColor);
-    scene.fog = new THREE.FogExp2(palette.fogColor, 0.025);
+
+    // FASA 2: Gradien Langit Malam / Senja Islamik yang Kaya
+    const skyTexture = createSkyGradientTexture(
+      palette.skyTop || '#020617',
+      palette.skyMid || '#0b1d3a',
+      palette.skyBottom || '#041624'
+    );
+    disposableTextures.push(skyTexture);
+    scene.background = skyTexture;
+    scene.fog = new THREE.FogExp2(palette.fogColor, 0.022);
 
     // 2. PerspectiveCamera (Sudut Sinematik Rapat & Dramatik)
     const aspect = width / height;
@@ -301,68 +505,209 @@ export default function ThreeWorldMap({
     renderer.toneMappingExposure = 1.18;
     container.appendChild(renderer.domElement);
 
-    // 4. Pencahayaan Sinematik (Ambient, Directional with Shadows, Fill)
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    // 4. Pencahayaan Sinematik (Ambient, Directional with PCFSoftShadowMap, Fill)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.78);
     scene.add(ambientLight);
 
     const sunLight = new THREE.DirectionalLight(palette.lightColor, 1.45);
     sunLightRef.current = sunLight;
     sunLight.position.set(initialPos.x + 10, 16, initialPos.z + 8);
     sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 1024;
-    sunLight.shadow.mapSize.height = 1024;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
     sunLight.shadow.camera.near = 1;
-    sunLight.shadow.camera.far = 38;
-    sunLight.shadow.camera.left = -9;
-    sunLight.shadow.camera.right = 9;
-    sunLight.shadow.camera.top = 7;
-    sunLight.shadow.camera.bottom = -7;
-    sunLight.shadow.bias = -0.0006;
+    sunLight.shadow.camera.far = 42;
+    sunLight.shadow.camera.left = -11;
+    sunLight.shadow.camera.right = 11;
+    sunLight.shadow.camera.top = 9;
+    sunLight.shadow.camera.bottom = -9;
+    sunLight.shadow.bias = -0.0004;
+    sunLight.shadow.radius = 2.5;
     scene.add(sunLight);
 
     const fillLight = new THREE.DirectionalLight(0x60a5fa, 0.42);
     fillLight.position.set(-10, 8, -8);
     scene.add(fillLight);
 
-    // 5. Tapak Pulau 3D Berketebalan (Low-Poly Floating Diorama Island Plinth)
-    const islandWidth = GRID_COLS * TILE_SIZE + 0.85;
-    const islandDepth = GRID_ROWS * TILE_SIZE + 0.85;
-    const plinthGeo = new THREE.BoxGeometry(islandWidth, 1.15, islandDepth);
-    const plinthMat = new THREE.MeshStandardMaterial({
+    // FASA 2: 150 Bintang Halus Berkelip di Ruang Angkasa Mengelilingi Pulau
+    const starCount = 150;
+    const starPositions = new Float32Array(starCount * 3);
+    const starColors = new Float32Array(starCount * 3);
+
+    for (let i = 0; i < starCount; i++) {
+      const radius = 18 + Math.random() * 18;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * (Math.PI * 0.44) + 0.06;
+
+      starPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+      starPositions[i * 3 + 1] = radius * Math.cos(phi) + 1.2;
+      starPositions[i * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
+
+      const colorRoll = Math.random();
+      if (colorRoll < 0.35) {
+        // Emas hangat lembut (#fde68a)
+        starColors[i * 3] = 0.99;
+        starColors[i * 3 + 1] = 0.90;
+        starColors[i * 3 + 2] = 0.54;
+      } else if (colorRoll < 0.72) {
+        // Putih mutiara berkilau (#ffffff)
+        starColors[i * 3] = 1.0;
+        starColors[i * 3 + 1] = 1.0;
+        starColors[i * 3 + 2] = 1.0;
+      } else {
+        // Biru langit malam firus (#bae6fd)
+        starColors[i * 3] = 0.73;
+        starColors[i * 3 + 1] = 0.90;
+        starColors[i * 3 + 2] = 0.99;
+      }
+    }
+
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+
+    const starMat = new THREE.PointsMaterial({
+      size: 0.16,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.88,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const starField = new THREE.Points(starGeo, starMat);
+    starsPointsRef.current = { points: starField, material: starMat };
+    scene.add(starField);
+
+    // 5. FASA 1: Tapak Pulau Terapung Organik & Tebing Tirus ke Bawah (Monument Valley Style)
+    animatedMeshesRef.current = [];
+    clickableMeshesRef.current = [];
+
+    const islandWidth = GRID_COLS * TILE_SIZE + 0.95;
+    const islandDepth = GRID_ROWS * TILE_SIZE + 0.95;
+
+    // A. Plat Atas Pulau (Top Layer Rim)
+    const topPlinthGeo = new THREE.BoxGeometry(islandWidth, 0.45, islandDepth);
+    const topPlinthMat = new THREE.MeshStandardMaterial({
       color: palette.cliff,
       roughness: 0.88,
       metalness: 0.08,
       flatShading: true,
     });
-    const plinthMesh = new THREE.Mesh(plinthGeo, plinthMat);
-    plinthMesh.position.set(0, -0.68, 0);
-    plinthMesh.receiveShadow = true;
-    scene.add(plinthMesh);
+    const topPlinth = new THREE.Mesh(topPlinthGeo, topPlinthMat);
+    topPlinth.position.set(0, -0.22, 0);
+    topPlinth.receiveShadow = true;
+    scene.add(topPlinth);
 
-    // Rim Emas / Cahaya Tepi Pulau
-    const rimGeo = new THREE.BoxGeometry(islandWidth + 0.06, 0.07, islandDepth + 0.06);
+    // B. Rim Emas / Cahaya Tepi Atas Pulau
+    const rimGeo = new THREE.BoxGeometry(islandWidth + 0.08, 0.08, islandDepth + 0.08);
     const rimMat = new THREE.MeshStandardMaterial({
       color: palette.accentGlow,
       emissive: palette.accentGlow,
-      emissiveIntensity: 0.45,
+      emissiveIntensity: 0.5,
       roughness: 0.4,
     });
     const rimMesh = new THREE.Mesh(rimGeo, rimMat);
-    rimMesh.position.set(0, -0.08, 0);
+    rimMesh.position.set(0, -0.04, 0);
     scene.add(rimMesh);
 
-    // 6. Prosedural Low-Poly Meshes untuk Setiap Petak
-    animatedMeshesRef.current = [];
-    clickableMeshesRef.current = [];
+    // C. Tebing Batu Tirus Ke Bawah (Inverted Bedrock Cone - Menghapuskan Ruang Kosong Bawah)
+    const bedrockGroup = new THREE.Group();
 
-    const floorMatA = new THREE.MeshStandardMaterial({
-      color: palette.ground,
-      roughness: 0.72,
+    // Kon Batuan Tirus Utama (Main Inverted Rocky Keel)
+    const keelGeo = new THREE.CylinderGeometry(
+      islandWidth * 0.46, // Atas
+      0.8,                // Bawah (tirus runcing)
+      4.2,                // Ketinggian dalam ke bawah
+      8,                  // 8 faset bergeometri low-poly
+      2
+    );
+    // Tambah sedikit herotan organik pada bucu bawah
+    const keelPos = keelGeo.attributes.position;
+    for (let i = 0; i < keelPos.count; i++) {
+      const vy = keelPos.getY(i);
+      if (vy < 0) {
+        const distortX = Math.sin(i * 3.7) * 0.28;
+        const distortZ = Math.cos(i * 4.3) * 0.28;
+        keelPos.setX(i, keelPos.getX(i) + distortX);
+        keelPos.setZ(i, keelPos.getZ(i) + distortZ);
+      }
+    }
+    keelGeo.computeVertexNormals();
+
+    const bedrockMat = new THREE.MeshStandardMaterial({
+      color: palette.cliff,
+      roughness: 0.94,
+      metalness: 0.05,
       flatShading: true,
     });
-    const floorMatB = new THREE.MeshStandardMaterial({
-      color: palette.groundAccent,
-      roughness: 0.72,
+    const keelMesh = new THREE.Mesh(keelGeo, bedrockMat);
+    keelMesh.position.set(0, -2.45, 0);
+    keelMesh.receiveShadow = true;
+    bedrockGroup.add(keelMesh);
+
+    // Pancang Batuan Gantung Tambahan (Underhanging Stalactite Spires)
+    const underSpikes = [
+      { x: -3.2, z: -1.4, h: 2.6, r: 0.95, rot: 0.4 },
+      { x: 2.8, z: 1.6, h: 3.0, r: 1.1, rot: -0.5 },
+      { x: -1.8, z: 2.2, h: 2.2, r: 0.8, rot: 0.3 },
+      { x: 2.0, z: -2.0, h: 2.5, r: 0.85, rot: -0.2 },
+      { x: 0.1, z: 0.2, h: 4.6, r: 0.75, rot: 0.1 },
+    ];
+    underSpikes.forEach((sp) => {
+      const spGeo = new THREE.ConeGeometry(sp.r, sp.h, 6);
+      const spMesh = new THREE.Mesh(spGeo, bedrockMat);
+      spMesh.position.set(sp.x, -1.8 - sp.h * 0.45, sp.z);
+      spMesh.rotation.x = Math.PI + sp.rot * 0.25;
+      spMesh.rotation.y = sp.rot * 2.5;
+      spMesh.castShadow = true;
+      spMesh.receiveShadow = true;
+      bedrockGroup.add(spMesh);
+    });
+
+    scene.add(bedrockGroup);
+
+    // D. Serpihan Batu Apung di Angkasa Sekitar Bawah Pulau (Floating Debris)
+    const debrisList = [
+      { x: -4.8, y: -3.8, z: 2.2, size: 0.35, speed: 0.45 },
+      { x: 4.4, y: -4.2, z: -2.4, size: 0.28, speed: 0.65 },
+      { x: 1.2, y: -4.8, z: 3.2, size: 0.4, speed: 0.5 },
+      { x: -2.6, y: -4.5, z: -3.2, size: 0.3, speed: 0.55 },
+    ];
+    debrisList.forEach((deb) => {
+      const dGeo = new THREE.DodecahedronGeometry(deb.size, 0);
+      const dMesh = new THREE.Mesh(dGeo, bedrockMat);
+      dMesh.position.set(deb.x, deb.y, deb.z);
+      dMesh.castShadow = true;
+      scene.add(dMesh);
+      animatedMeshesRef.current.push({
+        mesh: dMesh,
+        baseY: deb.y,
+        speed: deb.speed,
+        type: 'FLOATING_DEBRIS',
+      });
+    });
+
+    // 6. Prosedural Low-Poly Meshes untuk Setiap Petak
+    // FASA 1: Cari rangkaian laluan batu berpasir dari (1,1) ke semua NPC, Oasis & Portal
+    const pathTiles = findPathTiles(mapGrid, 1, 1);
+
+    // FASA 1: Material Tanah Organik (Bukan Corak Dam Catur)
+    const groundMat = new THREE.MeshStandardMaterial({
+      color: palette.ground,
+      roughness: 0.78,
+      flatShading: true,
+    });
+    // FASA 1: Laluan Batu Berpasir Krem / Emas Lembut
+    const pathBaseMat = new THREE.MeshStandardMaterial({
+      color: 0xe5d5be, // Krem pasir hangat
+      roughness: 0.65,
+      metalness: 0.05,
+      flatShading: true,
+    });
+    const stonePaverMat = new THREE.MeshStandardMaterial({
+      color: 0xd8c3a5, // Batu papak krem berpasir
+      roughness: 0.7,
+      metalness: 0.08,
       flatShading: true,
     });
     const waterMat = new THREE.MeshStandardMaterial({
@@ -429,45 +774,97 @@ export default function ThreeWorldMap({
 
     const tileBoxGeo = new THREE.BoxGeometry(TILE_SIZE - 0.03, 0.28, TILE_SIZE - 0.03);
 
-    // Pembantu bina pokok kurma low-poly untuk Oasis
+    // FASA 3: Pembantu bina pokok kurma low-poly berbatang melengkung & berpelepah kurma
     const buildMiniPalmTree = (scale = 1, tiltZ = 0.15) => {
       const palm = new THREE.Group();
-      const pTrunkGeo = new THREE.CylinderGeometry(0.035 * scale, 0.065 * scale, 0.46 * scale, 5);
-      const pTrunk = new THREE.Mesh(pTrunkGeo, trunkMat);
-      pTrunk.position.set(0, 0.23 * scale, 0);
-      pTrunk.rotation.z = tiltZ;
-      pTrunk.castShadow = true;
-      palm.add(pTrunk);
 
-      const topX = -Math.sin(tiltZ) * 0.22 * scale;
-      const topY = 0.45 * scale;
+      // Batang melengkung bersegmen
+      const trunk1Geo = new THREE.CylinderGeometry(0.04 * scale, 0.065 * scale, 0.28 * scale, 5);
+      const trunk1 = new THREE.Mesh(trunk1Geo, trunkMat);
+      trunk1.position.set(0, 0.14 * scale, 0);
+      trunk1.rotation.z = tiltZ * 0.7;
+      trunk1.castShadow = true;
+      trunk1.receiveShadow = true;
+      palm.add(trunk1);
 
-      // Gugusan daun pelepah kurma di puncak
-      for (let f = 0; f < 5; f++) {
-        const angle = (f / 5) * Math.PI * 2;
-        const frondGeo = new THREE.ConeGeometry(0.08 * scale, 0.26 * scale, 4);
+      const midX = -Math.sin(tiltZ * 0.7) * 0.25 * scale;
+      const midY = 0.26 * scale;
+
+      const trunk2Geo = new THREE.CylinderGeometry(0.03 * scale, 0.042 * scale, 0.26 * scale, 5);
+      const trunk2 = new THREE.Mesh(trunk2Geo, trunkMat);
+      trunk2.position.set(midX, midY + 0.12 * scale, 0);
+      trunk2.rotation.z = tiltZ * 1.35;
+      trunk2.castShadow = true;
+      trunk2.receiveShadow = true;
+      palm.add(trunk2);
+
+      const topX = midX - Math.sin(tiltZ * 1.35) * 0.24 * scale;
+      const topY = midY + 0.24 * scale;
+
+      // Gugusan 6 pelepah kurma organik
+      for (let f = 0; f < 6; f++) {
+        const angle = (f / 6) * Math.PI * 2;
+        const frondGeo = new THREE.ConeGeometry(0.085 * scale, 0.30 * scale, 4);
         const frond = new THREE.Mesh(frondGeo, palmLeafMat);
         frond.position.set(
           topX + Math.cos(angle) * 0.11 * scale,
           topY,
           Math.sin(angle) * 0.11 * scale
         );
-        frond.rotation.z = -Math.cos(angle) * 1.1;
-        frond.rotation.x = Math.sin(angle) * 1.1;
+        frond.rotation.z = -Math.cos(angle) * 1.15;
+        frond.rotation.x = Math.sin(angle) * 1.15;
         frond.castShadow = true;
+        frond.receiveShadow = true;
         palm.add(frond);
       }
       return palm;
+    };
+
+    // FASA 3: Pembantu bina pohon zaitun / pokok taman Islamik low-poly
+    const buildMiniOliveTree = (scale = 1) => {
+      const olive = new THREE.Group();
+
+      const trunkGeo = new THREE.CylinderGeometry(0.05 * scale, 0.08 * scale, 0.40 * scale, 5);
+      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      trunk.position.set(0, 0.20 * scale, 0);
+      trunk.rotation.z = 0.08;
+      trunk.castShadow = true;
+      trunk.receiveShadow = true;
+      olive.add(trunk);
+
+      // 3 Gugusan dedaunan awan zaitun
+      const foliageOffsets = [
+        { ox: 0, oy: 0.44 * scale, oz: 0, r: 0.24 * scale },
+        { ox: -0.12 * scale, oy: 0.38 * scale, oz: 0.08 * scale, r: 0.19 * scale },
+        { ox: 0.11 * scale, oy: 0.39 * scale, oz: -0.07 * scale, r: 0.18 * scale },
+      ];
+
+      foliageOffsets.forEach((fo) => {
+        const folGeo = new THREE.IcosahedronGeometry(fo.r, 0);
+        const folMesh = new THREE.Mesh(folGeo, floraMat);
+        folMesh.position.set(fo.ox, fo.oy, fo.oz);
+        folMesh.castShadow = true;
+        folMesh.receiveShadow = true;
+        olive.add(folMesh);
+      });
+
+      return olive;
     };
 
     mapGrid.forEach((row, rIdx) => {
       row.forEach((tile, cIdx) => {
         const { x, z } = getTileWorldPos(rIdx, cIdx);
 
-        // A. Jubin Muka Bumi Asas (Seamless Undulating Terrain)
-        const isAlternate = (rIdx + cIdx) % 2 === 0;
+        // A. FASA 1: Jubin Muka Bumi Bebas Corak Dam (Organik + Laluan Batu Berpasir)
+        const isPath = pathTiles.has(`${rIdx},${cIdx}`) && tile.type === 'FLOOR';
+
+        // Variasi mikro ketinggian (0.02 - 0.12) untuk tanah biasa supaya tidak rata seperti meja
+        const elevationNoise =
+          Math.sin(rIdx * 1.15 + cIdx * 0.95 + mapSeed) * 0.045 +
+          Math.cos(rIdx * 1.35 - cIdx * 1.15 + mapSeed * 2) * 0.035;
+
         let groundY = 0.05;
-        let mat = isAlternate ? floorMatA : floorMatB;
+        let mat = groundMat;
 
         if (tile.type === 'WATER' || tile.type === 'OASIS') {
           groundY = -0.08;
@@ -475,6 +872,12 @@ export default function ThreeWorldMap({
         } else if (tile.type === 'WALL') {
           groundY = 0.18;
           mat = rockMat;
+        } else if (isPath) {
+          groundY = 0.05; // Laluan batu dibuat rata untuk laluan berjalan
+          mat = pathBaseMat;
+        } else {
+          // Petak tanah biasa dengan variasi mikro semula jadi
+          groundY = 0.05 + Math.max(0, elevationNoise);
         }
 
         const tileMesh = new THREE.Mesh(tileBoxGeo, mat);
@@ -485,6 +888,60 @@ export default function ThreeWorldMap({
         tileMesh.userData = { r: rIdx, c: cIdx, type: tile.type, tileData: tile };
         clickableMeshesRef.current.push(tileMesh);
         scene.add(tileMesh);
+
+        // FASA 1: Jika petak ini adalah Laluan Batu Berpasir (Cobblestone Path)
+        if (isPath) {
+          const paverGroup = new THREE.Group();
+          const paverOffsets = [
+            { ox: -0.22, oz: -0.18, r: 0.16, rot: 0.2 },
+            { ox: 0.20, oz: -0.15, r: 0.14, rot: -0.3 },
+            { ox: -0.12, oz: 0.22, r: 0.15, rot: 0.4 },
+            { ox: 0.22, oz: 0.20, r: 0.14, rot: -0.15 },
+          ];
+          paverOffsets.forEach((po) => {
+            const paverGeo = new THREE.CylinderGeometry(po.r, po.r * 1.08, 0.03, 6);
+            const paverMesh = new THREE.Mesh(paverGeo, stonePaverMat);
+            paverMesh.position.set(po.ox, 0.14, po.oz);
+            paverMesh.rotation.y = po.rot;
+            paverMesh.receiveShadow = true;
+            paverGroup.add(paverMesh);
+          });
+          paverGroup.position.set(x, groundY, z);
+          scene.add(paverGroup);
+        }
+
+        // FASA 1: Jika petak Air (WATER) — Gerakkan ombak Y & cincin riak air putih
+        if (tile.type === 'WATER') {
+          animatedMeshesRef.current.push({
+            mesh: tileMesh,
+            baseY: -0.08,
+            freq: 2.0,
+            phase: rIdx * 0.7 + cIdx * 0.9,
+            type: 'WATER_WAVE',
+          });
+
+          // Cincin Riak Air Putih
+          const rippleGeo = new THREE.RingGeometry(0.12, 0.18, 16);
+          const rippleMat = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.65,
+            side: THREE.DoubleSide,
+          });
+          const rippleMesh = new THREE.Mesh(rippleGeo, rippleMat);
+          rippleMesh.rotation.x = -Math.PI * 0.5;
+          rippleMesh.position.set(x, 0.065, z);
+          scene.add(rippleMesh);
+
+          animatedMeshesRef.current.push({
+            mesh: rippleMesh,
+            baseScale: 0.5,
+            maxScale: 2.1,
+            speed: 0.9,
+            phase: ((rIdx * 3 + cIdx * 5) % 10) * 0.1,
+            type: 'WATER_RIPPLE',
+          });
+        }
 
         // B. Objek Geometri Low-Poly Mengikut Jenis Petak
         // 1. GUNUNG / HALANGAN BATU
@@ -504,6 +961,7 @@ export default function ThreeWorldMap({
           subRock.position.set(0.22, 0.45, -0.15);
           subRock.rotation.y = cIdx * 1.2;
           subRock.castShadow = true;
+          subRock.receiveShadow = true;
           rockGroup.add(subRock);
 
           rockGroup.position.set(x, 0.1, z);
@@ -525,13 +983,45 @@ export default function ThreeWorldMap({
           });
           const basin = new THREE.Mesh(basinGeo, basinMat);
           basin.position.set(0, 0.04, 0);
+          basin.castShadow = true;
+          basin.receiveShadow = true;
           oasisGroup.add(basin);
 
           // Permukaan Air Biru Firus Berkilat
           const oasisWaterGeo = new THREE.CylinderGeometry(0.44, 0.44, 0.14, 8);
           const oasisWater = new THREE.Mesh(oasisWaterGeo, waterMat);
           oasisWater.position.set(0, 0.07, 0);
+          oasisWater.receiveShadow = true;
           oasisGroup.add(oasisWater);
+
+          // FASA 1: Riak Air Putih pada Kolam Oasis
+          const oasisRippleGeo = new THREE.RingGeometry(0.14, 0.20, 20);
+          const oasisRippleMat = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.75,
+            side: THREE.DoubleSide,
+          });
+          const oasisRipple = new THREE.Mesh(oasisRippleGeo, oasisRippleMat);
+          oasisRipple.rotation.x = -Math.PI * 0.5;
+          oasisRipple.position.set(0, 0.142, 0);
+          oasisGroup.add(oasisRipple);
+
+          animatedMeshesRef.current.push({
+            mesh: oasisWater,
+            baseY: 0.07,
+            freq: 2.4,
+            phase: 0.6,
+            type: 'WATER_WAVE',
+          });
+          animatedMeshesRef.current.push({
+            mesh: oasisRipple,
+            baseScale: 0.5,
+            maxScale: 1.85,
+            speed: 1.15,
+            phase: 0.2,
+            type: 'WATER_RIPPLE',
+          });
 
           // Kristal Air Terapung di Tengah Kolam
           const dropGeo = new THREE.OctahedronGeometry(0.14, 0);
@@ -543,9 +1033,23 @@ export default function ThreeWorldMap({
           });
           const dropMesh = new THREE.Mesh(dropGeo, dropMat);
           dropMesh.position.set(0, 0.36, 0);
+          dropMesh.castShadow = true;
           oasisGroup.add(dropMesh);
 
-          // Pokok Kurma Low-Poly #1 & #2 di Tepi Kolam Oasis
+          // FASA 2: Fake Bloom / Volumetric Halo pada Kristal Air Oasis
+          const { sprite: oasisHalo, texture: oasisHaloTex } = createGlowHaloSprite(0x38bdf8, 1.1, 0.88);
+          disposableTextures.push(oasisHaloTex);
+          oasisHalo.position.set(0, 0.36, 0);
+          oasisGroup.add(oasisHalo);
+
+          animatedMeshesRef.current.push({
+            mesh: oasisHalo,
+            baseScale: 1.1,
+            speed: 2.2,
+            type: 'HALO_PULSE',
+          });
+
+          // Pokok Kurma Low-Poly #1 & #2 di Tepi Kolam Oasis (Bergoyang Ditiup Angin)
           const palm1 = buildMiniPalmTree(1.0, 0.18);
           palm1.position.set(-0.34, 0.05, -0.24);
           oasisGroup.add(palm1);
@@ -554,7 +1058,24 @@ export default function ThreeWorldMap({
           palm2.position.set(0.35, 0.05, -0.20);
           oasisGroup.add(palm2);
 
-          const oasisLight = new THREE.PointLight(0x38bdf8, 1.5, 3.2, 2);
+          animatedMeshesRef.current.push({
+            mesh: palm1,
+            baseRotZ: palm1.rotation.z || 0,
+            baseRotX: palm1.rotation.x || 0,
+            phase: 0.5,
+            speed: 1.4,
+            type: 'WIND_SWAY',
+          });
+          animatedMeshesRef.current.push({
+            mesh: palm2,
+            baseRotZ: palm2.rotation.z || 0,
+            baseRotX: palm2.rotation.x || 0,
+            phase: 1.8,
+            speed: 1.55,
+            type: 'WIND_SWAY',
+          });
+
+          const oasisLight = new THREE.PointLight(0x38bdf8, 1.6, 3.4, 2);
           oasisLight.position.set(0, 0.55, 0);
           oasisGroup.add(oasisLight);
 
@@ -571,25 +1092,25 @@ export default function ThreeWorldMap({
           scene.add(oasisGroup);
         }
 
-        // 3. POKOK & TUMBUHAN BIASA (Flora Low-Poly)
+        // 3. FASA 3: POKOK KURMA & POHON ZAITUN LOW-POLY (Bergoyang Ditiup Angin)
         else if (tile.decor) {
-          const treeGroup = new THREE.Group();
-
-          const trunkGeo = new THREE.CylinderGeometry(0.06, 0.09, 0.38, 5);
-          const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-          trunk.position.set(0, 0.22, 0);
-          trunk.castShadow = true;
-          treeGroup.add(trunk);
-
-          const leafGeo = new THREE.IcosahedronGeometry(0.32, 0);
-          const leaves = new THREE.Mesh(leafGeo, floraMat);
-          leaves.position.set(0, 0.48, 0);
-          leaves.rotation.y = rIdx * 1.5 + cIdx;
-          leaves.castShadow = true;
-          treeGroup.add(leaves);
+          const isPalm = (rIdx * 3 + cIdx * 7) % 2 === 0;
+          const treeGroup = isPalm
+            ? buildMiniPalmTree(0.92, ((rIdx % 2 === 0) ? 0.16 : -0.16))
+            : buildMiniOliveTree(0.95);
 
           treeGroup.position.set(x, 0, z);
+          treeGroup.rotation.y = (rIdx * 1.7 + cIdx * 2.3);
           scene.add(treeGroup);
+
+          animatedMeshesRef.current.push({
+            mesh: treeGroup,
+            baseRotZ: treeGroup.rotation.z || 0,
+            baseRotX: treeGroup.rotation.x || 0,
+            phase: (x * 1.5 + z * 2.1),
+            speed: 1.45,
+            type: 'WIND_SWAY',
+          });
         }
 
         // 4. STRUKTUR MENARA KUBAH / MISI NPC (Bangunan Mini 3D Jelas + Label Nama NPC)
@@ -599,62 +1120,174 @@ export default function ThreeWorldMap({
           const isLocked = isBoss && !isBossUnlocked && !isSolved;
           const npcGroup = new THREE.Group();
 
-          // Tapak Marmar Putih Bersegi (BoxGeometry)
-          const baseGeo = new THREE.BoxGeometry(isBoss ? 0.96 : 0.82, 0.16, isBoss ? 0.96 : 0.82);
-          const monumentBase = new THREE.Mesh(baseGeo, whiteMarbleMat);
-          monumentBase.position.set(0, 0.14, 0);
-          monumentBase.receiveShadow = true;
-          monumentBase.castShadow = true;
-          npcGroup.add(monumentBase);
+          // A. FASA 3: Tapak Marmar Bertangga (Stepped Base: Tier 1 & Tier 2)
+          const base1Geo = new THREE.BoxGeometry(isBoss ? 1.04 : 0.90, 0.08, isBoss ? 1.04 : 0.90);
+          const monumentBase1 = new THREE.Mesh(base1Geo, whiteMarbleMat);
+          monumentBase1.position.set(0, 0.04, 0);
+          monumentBase1.receiveShadow = true;
+          monumentBase1.castShadow = true;
+          npcGroup.add(monumentBase1);
 
-          // Badan Bangunan Putih/Krem Bersegi
-          const bodyGeo = new THREE.BoxGeometry(isBoss ? 0.68 : 0.58, isBoss ? 0.54 : 0.46, isBoss ? 0.68 : 0.58);
+          const base2Geo = new THREE.BoxGeometry(isBoss ? 0.90 : 0.78, 0.08, isBoss ? 0.90 : 0.78);
+          const monumentBase2 = new THREE.Mesh(base2Geo, whiteMarbleMat);
+          monumentBase2.position.set(0, 0.12, 0);
+          monumentBase2.receiveShadow = true;
+          monumentBase2.castShadow = true;
+          npcGroup.add(monumentBase2);
+
+          // Anak Tangga Hadapan (Entrance Steps)
+          const stepGeo = new THREE.BoxGeometry(0.36, 0.04, 0.12);
+          const stepMesh = new THREE.Mesh(stepGeo, whiteMarbleMat);
+          stepMesh.position.set(0, 0.04, isBoss ? 0.52 : 0.44);
+          stepMesh.receiveShadow = true;
+          stepMesh.castShadow = true;
+          npcGroup.add(stepMesh);
+
+          // B. Dinding Utama Putih Gading (Main Sanctuary)
+          const bodyH = isBoss ? 0.54 : 0.46;
+          const bodyW = isBoss ? 0.66 : 0.56;
+          const bodyGeo = new THREE.BoxGeometry(bodyW, bodyH, bodyW);
           const monumentBody = new THREE.Mesh(bodyGeo, isLocked ? darkDoorMat : creamWallMat);
-          monumentBody.position.set(0, isBoss ? 0.49 : 0.45, 0);
+          monumentBody.position.set(0, 0.16 + bodyH * 0.5, 0);
           monumentBody.castShadow = true;
           monumentBody.receiveShadow = true;
           npcGroup.add(monumentBody);
 
-          // Pintu Gerbang Kecil di Hadapan Bangunan
-          const doorGeo = new THREE.BoxGeometry(0.24, 0.32, isBoss ? 0.70 : 0.60);
+          // C. 4 Tiang Penjuru Marmar dengan Kepala Emas (4 Corner Pillars)
+          const colOffset = bodyW * 0.48;
+          const colHeight = bodyH + 0.04;
+          const corners = [
+            [-colOffset, -colOffset],
+            [colOffset, -colOffset],
+            [-colOffset, colOffset],
+            [colOffset, colOffset],
+          ];
+
+          corners.forEach(([cx, cz]) => {
+            const pillarGeo = new THREE.CylinderGeometry(0.036, 0.044, colHeight, 6);
+            const pillar = new THREE.Mesh(pillarGeo, whiteMarbleMat);
+            pillar.position.set(cx, 0.16 + colHeight * 0.5, cz);
+            pillar.castShadow = true;
+            pillar.receiveShadow = true;
+            npcGroup.add(pillar);
+
+            const capGeo = new THREE.BoxGeometry(0.10, 0.04, 0.10);
+            const capMesh = new THREE.Mesh(capGeo, goldMat);
+            capMesh.position.set(cx, 0.16 + colHeight + 0.02, cz);
+            capMesh.castShadow = true;
+            npcGroup.add(capMesh);
+          });
+
+          // D. Pintu Gerbang Melengkung & Ark Emas (Arched Portal Doorway)
+          const doorGeo = new THREE.BoxGeometry(0.24, 0.32, 0.04);
           const doorMesh = new THREE.Mesh(doorGeo, darkDoorMat);
-          doorMesh.position.set(0, 0.37, 0);
+          doorMesh.position.set(0, 0.16 + 0.16, bodyW * 0.5 + 0.02);
+          doorMesh.castShadow = true;
           npcGroup.add(doorMesh);
 
-          // Bingkai Bumbung Emas (Cornice)
-          const corniceGeo = new THREE.BoxGeometry(isBoss ? 0.76 : 0.65, 0.06, isBoss ? 0.76 : 0.65);
+          const doorArchGeo = new THREE.TorusGeometry(0.12, 0.025, 6, 12, Math.PI);
+          const doorArch = new THREE.Mesh(doorArchGeo, goldMat);
+          doorArch.position.set(0, 0.16 + 0.32, bodyW * 0.5 + 0.02);
+          doorArch.rotation.z = Math.PI;
+          npcGroup.add(doorArch);
+
+          // E. 2 Lentera Api Kecil di Pintu Masuk (Warm Entrance Lanterns with Flame Light)
+          const lanternMat = new THREE.MeshStandardMaterial({
+            color: 0xf59e0b,
+            emissive: 0xd97706,
+            emissiveIntensity: 2.2,
+            roughness: 0.2,
+          });
+
+          [-0.18, 0.18].forEach((lx) => {
+            const postGeo = new THREE.CylinderGeometry(0.015, 0.02, 0.18, 5);
+            const post = new THREE.Mesh(postGeo, goldMat);
+            post.position.set(lx, 0.16 + 0.09, bodyW * 0.5 + 0.08);
+            post.castShadow = true;
+            npcGroup.add(post);
+
+            const lampGeo = new THREE.BoxGeometry(0.065, 0.085, 0.065);
+            const lamp = new THREE.Mesh(lampGeo, lanternMat);
+            lamp.position.set(lx, 0.16 + 0.20, bodyW * 0.5 + 0.08);
+            npcGroup.add(lamp);
+          });
+
+          // Cahaya Api Lentera Pintu Masuk
+          const lanternLight = new THREE.PointLight(0xf59e0b, 1.1, 2.4, 2);
+          lanternLight.position.set(0, 0.16 + 0.25, bodyW * 0.5 + 0.12);
+          npcGroup.add(lanternLight);
+
+          // F. Bumbung Bertingkat & Kubah Emas Berjalur (Ribbed Golden Dome)
+          const corniceGeo = new THREE.BoxGeometry(bodyW + 0.10, 0.06, bodyW + 0.10);
           const corniceMesh = new THREE.Mesh(corniceGeo, goldMat);
-          corniceMesh.position.set(0, isBoss ? 0.78 : 0.70, 0);
+          corniceMesh.position.set(0, 0.16 + bodyH + 0.03, 0);
+          corniceMesh.castShadow = true;
           npcGroup.add(corniceMesh);
 
-          // Kubah Emas Besar di Atas (SphereGeometry Separuh)
-          const domeGeo = new THREE.SphereGeometry(isBoss ? 0.40 : 0.32, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55);
+          // Kubah Emas Berjalur (Ribbed Spherical Dome)
+          const domeRadius = isBoss ? 0.38 : 0.30;
+          const domeGeo = new THREE.SphereGeometry(domeRadius, 16, 8, 0, Math.PI * 2, 0, Math.PI * 0.55);
           const dome = new THREE.Mesh(domeGeo, goldMat);
-          dome.position.set(0, isBoss ? 0.80 : 0.72, 0);
+          dome.position.set(0, 0.16 + bodyH + 0.05, 0);
           dome.castShadow = true;
           npcGroup.add(dome);
 
-          // Kristal Berlian (OctahedronGeometry) Terapung Tinggi di Atas Kubah
-          const crystalGeo = new THREE.OctahedronGeometry(isBoss ? 0.28 : 0.21, 0);
+          // Kemuncak Finial Emas
+          const spireGeo = new THREE.ConeGeometry(0.04, 0.18, 6);
+          const spire = new THREE.Mesh(spireGeo, goldMat);
+          spire.position.set(0, 0.16 + bodyH + 0.05 + domeRadius + 0.09, 0);
+          spire.castShadow = true;
+          npcGroup.add(spire);
+
+          // Bulan Sabit Emas di Kemuncak (Crescent Moon Finial)
+          const crescentGeo = new THREE.TorusGeometry(0.065, 0.016, 6, 16, Math.PI * 1.35);
+          const crescent = new THREE.Mesh(crescentGeo, goldMat);
+          crescent.position.set(0, 0.16 + bodyH + 0.05 + domeRadius + 0.20, 0);
+          crescent.rotation.z = Math.PI * 0.35;
+          npcGroup.add(crescent);
+
+          // G. Kristal Berlian Terapung di Atas Bulan Sabit
+          const crystalY = 0.16 + bodyH + 0.05 + domeRadius + 0.38;
+          const crystalGeo = new THREE.OctahedronGeometry(isBoss ? 0.26 : 0.19, 0);
           const crystalMat = new THREE.MeshStandardMaterial({
             color: isSolved ? 0x10b981 : isLocked ? 0xef4444 : 0xf59e0b,
             emissive: isSolved ? 0x059669 : isLocked ? 0xdc2626 : 0xd97706,
-            emissiveIntensity: isLocked ? 1.5 : 1.0,
+            emissiveIntensity: isLocked ? 1.6 : 1.1,
             roughness: 0.2,
             flatShading: true,
           });
           const crystal = new THREE.Mesh(crystalGeo, crystalMat);
-          crystal.position.set(0, isBoss ? 1.45 : 1.28, 0);
+          crystal.position.set(0, crystalY, 0);
+          crystal.castShadow = true;
           npcGroup.add(crystal);
 
-          // PointLight Emas / Hijau / Merah Terkunci
+          // FASA 2: Fake Bloom / Volumetric Halo pada Kristal Menara NPC
+          const haloColor = isSolved ? 0x10b981 : isLocked ? 0xef4444 : isBoss ? 0xfbbf24 : 0xf59e0b;
+          const haloBaseScale = isBoss ? 1.55 : 1.22;
+          const { sprite: npcHalo, texture: npcHaloTex } = createGlowHaloSprite(
+            haloColor,
+            haloBaseScale,
+            isBoss ? 0.92 : 0.82
+          );
+          disposableTextures.push(npcHaloTex);
+          npcHalo.position.set(0, crystalY, 0);
+          npcGroup.add(npcHalo);
+
+          animatedMeshesRef.current.push({
+            mesh: npcHalo,
+            baseScale: haloBaseScale,
+            speed: isLocked ? 1.2 : 2.5,
+            type: 'HALO_PULSE',
+          });
+
+          // PointLight Utama Menara
           const npcLight = new THREE.PointLight(
             isSolved ? 0x10b981 : isLocked ? 0xef4444 : 0xfbbf24,
-            isSolved ? 1.5 : isLocked ? 2.0 : (isBoss ? 3.2 : 2.6),
-            4.2,
+            isSolved ? 1.6 : isLocked ? 2.0 : (isBoss ? 3.4 : 2.8),
+            4.4,
             1.8
           );
-          npcLight.position.set(0, 1.2, 0);
+          npcLight.position.set(0, crystalY - 0.1, 0);
           npcGroup.add(npcLight);
 
           // Label Terapung Nama NPC / Status Kunci Boss (THREE.Sprite CanvasTexture)
@@ -676,19 +1309,27 @@ export default function ThreeWorldMap({
             scaleY: 0.36,
           });
           disposableTextures.push(npcTex);
-          npcLabel.position.set(0, isBoss ? 1.90 : 1.72, 0);
+          npcLabel.position.set(0, crystalY + 0.44, 0);
           npcGroup.add(npcLabel);
 
           animatedMeshesRef.current.push({
             mesh: crystal,
-            baseY: isBoss ? 1.45 : 1.28,
+            baseY: crystalY,
             speed: isLocked ? 0.9 : 1.8,
             type: 'BOB_AND_SPIN',
           });
 
+          // FASA 3: Kelipan Halus Lentera Pintu Masuk
+          animatedMeshesRef.current.push({
+            light: lanternLight,
+            baseIntensity: 1.1,
+            phase: (x * 3.7 + z * 5.1),
+            type: 'LIGHT_FLICKER',
+          });
+
           npcGroup.position.set(x, 0, z);
           npcGroup.userData = { r: rIdx, c: cIdx, type: tile.type, npc: tile.npc };
-          clickableMeshesRef.current.push(monumentBase, monumentBody, dome, crystal);
+          clickableMeshesRef.current.push(monumentBase1, monumentBase2, monumentBody, dome, crystal);
           scene.add(npcGroup);
         }
 
@@ -700,6 +1341,8 @@ export default function ThreeWorldMap({
           const pBaseGeo = new THREE.CylinderGeometry(0.44, 0.5, 0.15, 8);
           const pBase = new THREE.Mesh(pBaseGeo, plinthMat);
           pBase.position.set(0, 0.1, 0);
+          pBase.castShadow = true;
+          pBase.receiveShadow = true;
           portalGroup.add(pBase);
 
           const ringGeo = new THREE.TorusGeometry(0.55, 0.09, 8, 24);
@@ -708,6 +1351,7 @@ export default function ThreeWorldMap({
             : new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.7 });
           const portalRing = new THREE.Mesh(ringGeo, pRingMat);
           portalRing.position.set(0, 0.72, 0);
+          portalRing.castShadow = true;
           portalGroup.add(portalRing);
 
           const coreGeo = new THREE.SphereGeometry(0.22, 8, 8);
@@ -729,6 +1373,63 @@ export default function ThreeWorldMap({
           );
           portalLight.position.set(0, 0.75, 0);
           portalGroup.add(portalLight);
+
+          // FASA 2: Fake Bloom / Volumetric Halo pada Gelung & Teras Portal
+          const portalHaloColor = pActive ? 0xc084fc : 0x64748b;
+          const portalHaloScale = pActive ? 1.85 : 0.95;
+          const { sprite: portalHalo, texture: portalHaloTex } = createGlowHaloSprite(
+            portalHaloColor,
+            portalHaloScale,
+            pActive ? 0.92 : 0.35
+          );
+          disposableTextures.push(portalHaloTex);
+          portalHalo.position.set(0, 0.72, 0);
+          portalGroup.add(portalHalo);
+
+          if (pActive) {
+            animatedMeshesRef.current.push({
+              mesh: portalHalo,
+              baseScale: portalHaloScale,
+              speed: 2.8,
+              type: 'HALO_PULSE',
+            });
+          }
+
+          // FASA 3: 18 Partikel Ungu Berputar Mengelilingi Gelung Portal (Portal Sparks)
+          const sparkCount = 18;
+          const sparkPositions = new Float32Array(sparkCount * 3);
+          const sparkColors = new Float32Array(sparkCount * 3);
+          for (let s = 0; s < sparkCount; s++) {
+            const sAngle = (s / sparkCount) * Math.PI * 2;
+            sparkPositions[s * 3] = Math.cos(sAngle) * 0.58;
+            sparkPositions[s * 3 + 1] = 0.72 + Math.sin(sAngle) * 0.58;
+            sparkPositions[s * 3 + 2] = (Math.random() - 0.5) * 0.12;
+
+            sparkColors[s * 3] = 0.82;
+            sparkColors[s * 3 + 1] = 0.42;
+            sparkColors[s * 3 + 2] = 1.0;
+          }
+          const sparkGeo = new THREE.BufferGeometry();
+          sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPositions, 3));
+          sparkGeo.setAttribute('color', new THREE.BufferAttribute(sparkColors, 3));
+
+          const sparkMat = new THREE.PointsMaterial({
+            size: pActive ? 0.14 : 0.08,
+            vertexColors: true,
+            transparent: true,
+            opacity: pActive ? 0.95 : 0.4,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+          });
+          const portalSparks = new THREE.Points(sparkGeo, sparkMat);
+          portalGroup.add(portalSparks);
+
+          animatedMeshesRef.current.push({
+            mesh: portalSparks,
+            speed: pActive ? 3.2 : 0.6,
+            isActive: pActive,
+            type: 'PORTAL_SPARKS',
+          });
 
           // Label Terapung Status Portal
           const { sprite: pLabel, texture: pTex } = createFloatingLabelSprite(
@@ -858,6 +1559,7 @@ export default function ThreeWorldMap({
     const collar = new THREE.Mesh(collarGeo, goldMat);
     collar.rotation.x = Math.PI * 0.5;
     collar.position.set(0, 0.65, 0);
+    collar.castShadow = true;
     bodyPivot.add(collar);
 
     // D. Kepala Bulat Berwarna Kulit (#f1c27d)
@@ -877,11 +1579,13 @@ export default function ThreeWorldMap({
     const turbanWrap = new THREE.Mesh(turbanWrapGeo, pearlWhiteMat);
     turbanWrap.rotation.x = Math.PI * 0.48;
     turbanWrap.position.set(0, 0.88, 0);
+    turbanWrap.castShadow = true;
     bodyPivot.add(turbanWrap);
 
     const turbanCrownGeo = new THREE.SphereGeometry(0.15, 10, 8);
     const turbanCrown = new THREE.Mesh(turbanCrownGeo, pearlWhiteMat);
     turbanCrown.position.set(0, 0.93, 0);
+    turbanCrown.castShadow = true;
     bodyPivot.add(turbanCrown);
 
     // Pita Emas Kecil pada Serban
@@ -889,6 +1593,7 @@ export default function ThreeWorldMap({
     const turbanBand = new THREE.Mesh(turbanBandGeo, goldMat);
     turbanBand.rotation.x = Math.PI * 0.48;
     turbanBand.position.set(0, 0.85, 0);
+    turbanBand.castShadow = true;
     bodyPivot.add(turbanBand);
 
     // F. Tongkat Kayu dengan Permata Bercahaya
@@ -913,6 +1618,19 @@ export default function ThreeWorldMap({
     const staffLight = new THREE.PointLight(0x38bdf8, 1.6, 2.8, 2);
     staffLight.position.set(0.37, 0.92, 0.12);
     bodyPivot.add(staffLight);
+
+    // FASA 2: Fake Bloom / Volumetric Halo pada Permata Tongkat Pengembara
+    const { sprite: staffHalo, texture: staffHaloTex } = createGlowHaloSprite(0x38bdf8, 0.68, 0.88);
+    disposableTextures.push(staffHaloTex);
+    staffHalo.position.set(0.37, 0.92, 0.12);
+    bodyPivot.add(staffHalo);
+
+    animatedMeshesRef.current.push({
+      mesh: staffHalo,
+      baseScale: 0.68,
+      speed: 3.2,
+      type: 'HALO_PULSE',
+    });
 
     // G. Label Terapung "ANDA" di Atas Kepala Pengembara
     const { sprite: playerLabel, texture: playerTex } = createFloatingLabelSprite('ANDA', {
@@ -956,12 +1674,47 @@ export default function ThreeWorldMap({
           if (item.mesh.material) {
             item.mesh.material.opacity = 0.65 + Math.sin(elapsedTime * item.speed) * 0.25;
           }
+        } else if (item.type === 'WATER_WAVE') {
+          item.mesh.position.y = item.baseY + Math.sin(elapsedTime * item.freq + item.phase) * 0.032;
+        } else if (item.type === 'WATER_RIPPLE') {
+          const progress = (elapsedTime * item.speed + item.phase) % 1;
+          const scale = item.baseScale + progress * (item.maxScale - item.baseScale);
+          item.mesh.scale.set(scale, scale, 1);
+          if (item.mesh.material) {
+            item.mesh.material.opacity = (1 - progress) * 0.65;
+          }
+        } else if (item.type === 'FLOATING_DEBRIS') {
+          item.mesh.rotation.x = elapsedTime * item.speed * 0.5;
+          item.mesh.rotation.y = elapsedTime * item.speed;
+          item.mesh.position.y = item.baseY + Math.sin(elapsedTime * 1.5 + item.speed) * 0.15;
+        } else if (item.type === 'HALO_PULSE') {
+          const pulse = 1 + Math.sin(elapsedTime * item.speed) * 0.16;
+          item.mesh.scale.set(item.baseScale * pulse, item.baseScale * pulse, 1);
+        } else if (item.type === 'WIND_SWAY') {
+          item.mesh.rotation.z = item.baseRotZ + Math.sin(elapsedTime * item.speed + item.phase) * 0.05;
+          item.mesh.rotation.x = item.baseRotX + Math.cos(elapsedTime * (item.speed * 0.8) + item.phase) * 0.03;
+        } else if (item.type === 'PORTAL_SPARKS') {
+          item.mesh.rotation.z = elapsedTime * item.speed;
+          if (item.isActive) {
+            const scale = 1 + Math.sin(elapsedTime * 6) * 0.1;
+            item.mesh.scale.set(scale, scale, 1);
+          }
+        } else if (item.type === 'LIGHT_FLICKER') {
+          item.light.intensity = item.baseIntensity + Math.sin(elapsedTime * 11 + item.phase) * 0.22;
         }
       });
 
       // B. Apungan Zarah Kelip-kelip (Motes Float)
       if (firefliesMeshRef.current) {
         firefliesMeshRef.current.rotation.y = elapsedTime * 0.05;
+      }
+
+      // B2. FASA 2: Putaran Perlahan Bintang Angkasa & Kelipan Berirama (Twinkling Stars)
+      if (starsPointsRef.current) {
+        const { points, material } = starsPointsRef.current;
+        points.rotation.y = elapsedTime * 0.006;
+        material.opacity = 0.72 + Math.sin(elapsedTime * 2.4) * 0.22;
+        material.size = 0.15 + Math.sin(elapsedTime * 1.7) * 0.03;
       }
 
       // C. Pergerakan Watak Pengembara (Linear Interpolation & Parabolic Hop)
@@ -978,6 +1731,29 @@ export default function ThreeWorldMap({
         playerGroupRef.current.position.x = anim.currentX;
         playerGroupRef.current.position.z = anim.currentZ;
         playerGroupRef.current.position.y = 0.15 + jumpY;
+
+        // C2. FASA 3: Kemas kini Zarah Debu Langkah Kaki Pengembara (Footstep Dust)
+        const deltaDust = 0.016;
+        for (let i = footstepParticlesRef.current.length - 1; i >= 0; i--) {
+          const p = footstepParticlesRef.current[i];
+          p.life += deltaDust;
+          p.mesh.position.x += p.vx;
+          p.mesh.position.y += p.vy;
+          p.mesh.position.z += p.vz;
+          p.vy -= 0.0016;
+
+          const progress = p.life / p.maxLife;
+          if (progress >= 1) {
+            scene.remove(p.mesh);
+            p.geo.dispose();
+            p.mat.dispose();
+            footstepParticlesRef.current.splice(i, 1);
+          } else {
+            const s = Math.max(0.001, 1 - progress);
+            p.mesh.scale.set(s, s, s);
+            p.mat.opacity = (1 - progress) * 0.85;
+          }
+        }
 
         // D. KAMERA SINEMATIK MENGEKORI WATAK SECARA LEMBUT (camera.position.lerp)
         const isEncounter = isEncounterActiveRef.current;
@@ -1101,6 +1877,11 @@ export default function ThreeWorldMap({
       if (animFrameIdRef.current) {
         cancelAnimationFrame(animFrameIdRef.current);
       }
+      footstepParticlesRef.current.forEach((p) => {
+        p.geo.dispose();
+        p.mat.dispose();
+      });
+      footstepParticlesRef.current = [];
       disposableTextures.forEach((tex) => tex.dispose());
       renderer.dispose();
       while (container.firstChild) {
