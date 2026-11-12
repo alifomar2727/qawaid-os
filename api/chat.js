@@ -39,24 +39,38 @@ export default async function handler(req, res) {
   try {
     const qNorm = soalan.toLowerCase().trim();
 
+    // Fungsi normalisasi teks Arab & Melayu untuk padanan pintar
+    const stripDiacritics = (str = '') =>
+      str
+        .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '') // buang harakat/tashkeel
+        .replace(/[أإآء]/g, 'ا')
+        .replace(/ة/g, 'ه')
+        .replace(/ى/g, 'ي')
+        .toLowerCase()
+        .trim();
+
+    const qClean = stripDiacritics(qNorm);
+    const perkataan = qClean.split(/\s+/).filter((w) => w.length > 2);
+
     // 1. Carian Konteks Tempatan pantas daripada 52+ Nota Lengkap Kitab (<1ms)
     const konteksRelevan = [];
     const sumberPilihan = [];
 
     dataNotaLengkap.forEach((nota) => {
       let skor = 0;
-      const tajukAr = (nota.tajukArab || '').toLowerCase();
-      const tajukBm = (nota.tajukBm || nota.tajuk || '').toLowerCase();
+      const tajukAr = stripDiacritics(nota.tajukArab || nota.tajuk || '');
+      const carianAr = stripDiacritics(nota.teksArabCarian || '');
+      const tajukBm = (nota.tajukBm || '').toLowerCase();
       const huraian = (nota.huraian || '').toLowerCase();
+      const aplikasi = (nota.aplikasi || nota.tatbiqat || '').toLowerCase();
       const dalil = (nota.dalil || '').toLowerCase();
-      const tatbiqat = (nota.tatbiqat || '').toLowerCase();
 
-      // Padanan kata kunci
-      const perkataan = qNorm.split(/\s+/).filter((w) => w.length > 2);
+      // Padanan kata kunci pintar (Arab & Rumi)
       perkataan.forEach((w) => {
-        if (tajukAr.includes(w)) skor += 10;
+        if (tajukAr.includes(w)) skor += 14;
+        if (carianAr.includes(w)) skor += 12;
         if (tajukBm.includes(w)) skor += 8;
-        if (tatbiqat.includes(w)) skor += 4;
+        if (aplikasi.includes(w)) skor += 5;
         if (huraian.includes(w)) skor += 3;
         if (dalil.includes(w)) skor += 2;
       });
@@ -77,16 +91,17 @@ export default async function handler(req, res) {
       if (n.tajukBm) konteksTeks += `Maksud: ${n.tajukBm}\n`;
       if (n.huraian) konteksTeks += `Takrif & Huraian: ${n.huraian}\n`;
       if (n.dalil) konteksTeks += `Dalil Al-Quran & Sunnah: ${n.dalil}\n`;
-      if (n.tatbiqat) konteksTeks += `Tatbiqat Empat Mazhab: ${n.tatbiqat}\n`;
-      if (n.jilidHalaman) konteksTeks += `Rujukan Cetakan: ${n.jilidHalaman}\n`;
+      if (n.aplikasi || n.tatbiqat) konteksTeks += `Tatbiqat Empat Mazhab: ${n.aplikasi || n.tatbiqat}\n`;
+      const cetakan = n.jilidHalaman || `Jil. ${n.jilid || 1}, m/s ${n.halaman || ''}`;
+      konteksTeks += `Rujukan Cetakan: ${cetakan}\n`;
       if (n.urlShamela) {
         konteksTeks += `Pautan Sah Shamela: ${n.urlShamela}\n`;
         sumberPilihan.push({
-          kitab: 'القواعد الفقهية وتطبيقاتها في المذاهb الأربعة',
+          kitab: 'القواعد الفقهية وتطبيقاتها في المذاهب الأربعة',
           tajuk: n.tajukArab || n.tajukBm || 'Rujukan Kaedah',
-          jilidHalaman: n.jilidHalaman || 'Jil. 1',
+          jilidHalaman: cetakan,
           urlShamela: n.urlShamela,
-          teks: n.huraian || n.tatbiqat || n.tajukBm || n.tajukArab || '',
+          teks: n.aplikasi || n.huraian || n.tatbiqat || n.tajukBm || n.tajukArab || '',
           skor: 0.95,
         });
       }
