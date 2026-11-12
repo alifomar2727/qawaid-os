@@ -425,6 +425,52 @@ const SENARAI_WILAYAH = [
   },
 ];
 
+// Konfigurasi Tema Dynamic Biome (Tekstur Bumi & Tebing 3D Mengikut 5 Wilayah & Peta Rawak)
+const BIOME_THEMES = {
+  BAGHDAD: {
+    id: 'BAGHDAD',
+    className: 'biome-baghdad',
+    nama: 'Kota Baghdad',
+    gelaran: 'Mozek Zamrud & Garisan Emas',
+    warnaAksen: '#f59e0b',
+  },
+  DAMSYIK: {
+    id: 'DAMSYIK',
+    className: 'biome-damsyik',
+    nama: 'Kota Damsyik',
+    gelaran: 'Batu Marmar Zaitun & Aksen Perak',
+    warnaAksen: '#38bdf8',
+  },
+  HIJAZ: {
+    id: 'HIJAZ',
+    className: 'biome-hijaz',
+    nama: 'Laluan Hijaz & Sinai',
+    gelaran: 'Pasir Gurun Hangat & Batu Pasir',
+    warnaAksen: '#f59e0b',
+  },
+  KAHERAH: {
+    id: 'KAHERAH',
+    className: 'biome-kaherah',
+    nama: 'Bimaristan Kaherah',
+    gelaran: 'Batu Kapur Mesir & Lentera Hangat',
+    warnaAksen: '#fb923c',
+  },
+  ANDALUSIA: {
+    id: 'ANDALUSIA',
+    className: 'biome-andalusia',
+    nama: 'Pelabuhan Andalusia',
+    gelaran: 'Biru Firus Laut & Buih Bercahaya',
+    warnaAksen: '#38bdf8',
+  },
+  COSMIC: {
+    id: 'COSMIC',
+    className: 'biome-cosmic',
+    nama: 'Peta Kosmik Rawak',
+    gelaran: 'Kaca Kosmik Indigo & Ungu Neon',
+    warnaAksen: '#c084fc',
+  },
+};
+
 // Saiz Grid Peta 2D Open-World
 const GRID_COLS = 12;
 const GRID_ROWS = 8;
@@ -509,6 +555,7 @@ export default function KembaraQawaidGame() {
   const [mapSeed, setMapSeed] = useState(1);
   const [playerPos, setPlayerPos] = useState({ r: 1, c: 1 });
   const [facing, setFacing] = useState('RIGHT'); // 'LEFT' | 'RIGHT' | 'UP' | 'DOWN'
+  const [recentPath, setRecentPath] = useState([]); // FASA 3: Jejak Langkah (3 koordinat terakhir)
 
   // Statistik RPG Pemain
   const [reputation, setReputation] = useState(100);
@@ -542,6 +589,12 @@ export default function KembaraQawaidGame() {
 
   const currentWilayah = SENARAI_WILAYAH[wilayahIdx] || SENARAI_WILAYAH[0];
 
+  // Dynamic Biome: Peta Kosmik jika Peta Rawak (mapSeed > 1), atau Biome Tematik mengikut 5 Wilayah
+  const currentBiome = useMemo(() => {
+    if (mapSeed > 1) return BIOME_THEMES.COSMIC;
+    return BIOME_THEMES[currentWilayah.id] || BIOME_THEMES.BAGHDAD;
+  }, [mapSeed, currentWilayah.id]);
+
   const mapGrid = useMemo(
     () => generateOpenWorldMap(currentWilayah, mapSeed),
     [currentWilayah, mapSeed]
@@ -574,6 +627,12 @@ export default function KembaraQawaidGame() {
   // Mulakan dialog & susun 4 Skill Qawaid daripada dataNotaLengkap
   const openNpcEncounter = useCallback(
     (npc) => {
+      // FASA 3: Haptik getaran interaksi NPC [30ms, 50ms henti, 30ms]
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        try {
+          navigator.vibrate([30, 50, 30]);
+        } catch {}
+      }
       soundRef.current?.playNpcGreet();
       const targetNota = getNotaById(npc.notaId);
       const distractors = dataNotaLengkap
@@ -618,15 +677,40 @@ export default function KembaraQawaidGame() {
 
         soundRef.current?.playStep();
 
+        // FASA 3: Haptik Mobile melangkah (getaran pendek 12ms)
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          try {
+            navigator.vibrate(12);
+          } catch {}
+        }
+
+        // FASA 3: Jejak Langkah (Simpan 3 koordinat terakhir pemain)
+        setRecentPath((rPrev) => [
+          { r: prev.r, c: prev.c, id: Date.now() },
+          ...rPrev,
+        ].slice(0, 3));
+
         if (targetTile.type === 'OASIS') {
+          if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            try {
+              navigator.vibrate([30, 50, 30]);
+            } catch {}
+          }
           setReputation((rep) => Math.min(100, rep + 15));
           setHikmahMana((m) => Math.min(5, m + 1));
           triggerToast('⛲ Oasis Hikmah: +15 Reputasi & +1 Tenaga Tilik!', 'emerald');
         } else if (targetTile.type === 'PORTAL') {
+          if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            try {
+              navigator.vibrate([30, 40, 30]);
+            } catch {}
+          }
           const nextIdx = (wilayahIdx + 1) % SENARAI_WILAYAH.length;
           setTimeout(() => {
             setWilayahIdx(nextIdx);
+            setMapSeed(1);
             setPlayerPos({ r: 1, c: 1 });
+            setRecentPath([]);
             triggerToast(
               `🌀 Berpindah ke ${SENARAI_WILAYAH[nextIdx].nama}!`,
               'cyan'
@@ -896,7 +980,9 @@ export default function KembaraQawaidGame() {
                   type="button"
                   onClick={() => {
                     setWilayahIdx(idx);
+                    setMapSeed(1);
                     setPlayerPos({ r: 1, c: 1 });
+                    setRecentPath([]);
                   }}
                   className={isCurrent ? 'lg-btn-primary' : 'lg-btn-glass'}
                   style={{ fontSize: '0.72rem', padding: '5px 10px' }}
@@ -915,6 +1001,7 @@ export default function KembaraQawaidGame() {
             onClick={() => {
               setMapSeed((s) => s + 1);
               setPlayerPos({ r: 1, c: 1 });
+              setRecentPath([]);
               triggerToast('🗺️ Peta rawak baharu telah dijana!', 'cyan');
             }}
             className="lg-btn-glass"
@@ -1028,17 +1115,15 @@ export default function KembaraQawaidGame() {
 
           {/* Pentas 3D Isometric Diorama (HD-2D) */}
           <div className="diorama-viewport">
-            {/* Grid Peta 12 x 8 (Papan Diorama 3D Berketebalan & Kamera Dinamik) */}
+            {/* Grid Peta 12 x 8 (Papan Diorama 3D Berketebalan & Kamera Dinamik Berbiome) */}
             <div
-              className="diorama-board"
+              className={`diorama-board ${currentBiome.className}`}
               style={{
                 display: 'grid',
                 gridTemplateColumns: `repeat(${GRID_COLS}, minmax(0, 1fr))`,
                 gap: '4px',
-                background: 'rgba(15, 23, 42, 0.72)',
                 padding: '10px',
                 borderRadius: '16px',
-                border: '1px solid rgba(255, 255, 255, 0.14)',
                 userSelect: 'none',
                 transform: `rotateX(${52 + (playerPos.r - 4) * 1.2}deg) rotateZ(${(playerPos.c - 4) * -1.5}deg)`,
                 width: '100%',
@@ -1050,6 +1135,10 @@ export default function KembaraQawaidGame() {
                 const isPlayerHere = playerPos.r === rIdx && playerPos.c === cIdx;
                 const isNpcSolved =
                   tile.npc && solvedNpcIds.includes(tile.npc.npcId);
+                const spriteDelay = `${((rIdx * 7 + cIdx * 11) % 9) * 0.22}s`;
+                const isRecentTrail = recentPath.some(
+                  (p) => p.r === rIdx && p.c === cIdx && !isPlayerHere
+                );
 
                 let tileClass = 'diorama-tile diorama-tile--floor';
                 if (tile.type === 'WALL') {
@@ -1090,6 +1179,9 @@ export default function KembaraQawaidGame() {
                         : `Petak (${rIdx + 1}, ${cIdx + 1})`
                     }
                   >
+                    {/* FASA 3: Riak Cahaya Emas Jejak Langkah Pengembara */}
+                    {isRecentTrail && <div className="footstep-trail" />}
+
                     {/* Ikon Kandungan 3D Berdiri Tegak (HD-2D Billboard) */}
                     {isPlayerHere ? (
                       <>
@@ -1116,10 +1208,15 @@ export default function KembaraQawaidGame() {
                       </>
                     ) : tile.type === 'NPC' && tile.npc ? (
                       <>
+                        {/* FASA 2: Tiang Cahaya 3D (Sky-Beam) Misi Belum Selesai */}
+                        {!isNpcSolved && <div className="diorama-sky-beam" />}
                         {/* Bayang-bayang di bawah kaki NPC */}
                         <div className="sprite-3d-shadow" />
-                        {/* Watak NPC Berdiri Tegak */}
-                        <div className="sprite-3d">
+                        {/* Watak NPC Berdiri Tegak dengan Animasi Bernafas Halus */}
+                        <div
+                          className="sprite-3d sprite-3d--npc"
+                          style={{ animationDelay: spriteDelay }}
+                        >
                           <span style={{ fontSize: '1.2rem', display: 'inline-block' }}>{tile.npc.ikon}</span>
                           {/* Lencana Misi NPC Melantun Tinggi di Paksi-Z */}
                           <span className="npc-badge-3d">
@@ -1129,6 +1226,8 @@ export default function KembaraQawaidGame() {
                       </>
                     ) : tile.type === 'PORTAL' ? (
                       <>
+                        {/* FASA 2: Tiang Cahaya 3D Portal Kosmik */}
+                        <div className="diorama-sky-beam diorama-sky-beam--portal" />
                         <div className="sprite-3d-shadow" style={{ width: '24px', height: '9px' }} />
                         <div className="sprite-3d">
                           <span className="portal-sprite-3d">
@@ -1137,7 +1236,7 @@ export default function KembaraQawaidGame() {
                         </div>
                       </>
                     ) : tile.type === 'WALL' ? (
-                      <div className="sprite-3d decor-sprite-3d">
+                      <div className="sprite-3d decor-sprite-3d" style={{ animationDelay: spriteDelay }}>
                         <span style={{ fontSize: '1.1rem', opacity: 0.95 }}>⛰️</span>
                       </div>
                     ) : tile.type === 'WATER' ? (
@@ -1145,14 +1244,14 @@ export default function KembaraQawaidGame() {
                     ) : tile.type === 'OASIS' ? (
                       <>
                         <div className="sprite-3d-shadow" style={{ width: '18px', height: '7px' }} />
-                        <div className="sprite-3d decor-sprite-3d">
+                        <div className="sprite-3d decor-sprite-3d" style={{ animationDelay: spriteDelay }}>
                           <span style={{ fontSize: '1.05rem' }}>⛲</span>
                         </div>
                       </>
                     ) : tile.decor ? (
                       <>
                         <div className="sprite-3d-shadow" style={{ width: '18px', height: '7px' }} />
-                        <div className="sprite-3d decor-sprite-3d">
+                        <div className="sprite-3d decor-sprite-3d" style={{ animationDelay: spriteDelay }}>
                           <span style={{ fontSize: '1.05rem', opacity: 0.95 }}>{tile.decor}</span>
                         </div>
                       </>
@@ -1161,6 +1260,22 @@ export default function KembaraQawaidGame() {
                 );
               })
             )}
+
+            {/* FASA 3: Partikel Atmosfera 3D (Floating Biome Light Specks) */}
+            <div className="diorama-particles" aria-hidden="true">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <span
+                  key={`particle-${i}`}
+                  className="biome-particle"
+                  style={{
+                    left: `${((i * 19 + 7) % 88) + 6}%`,
+                    top: `${((i * 23 + 13) % 86) + 7}%`,
+                    animationDelay: `${(i * 0.38).toFixed(2)}s`,
+                    animationDuration: `${3.6 + (i % 4) * 0.7}s`,
+                  }}
+                />
+              ))}
+            </div>
             </div>
           </div>
 

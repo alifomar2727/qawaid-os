@@ -142,6 +142,11 @@ input[type="submit"],
 [role="button"],
 .lg-brand,
 .lg-brand *,
+.lg-brand-title,
+.lg-brand-sub,
+.lg-brand-icon,
+.neon-logo-wrap,
+.neon-scale-svg,
 .lg-nav-item,
 .lg-nav-item *,
 .lg-subnav-btn,
@@ -155,24 +160,53 @@ input[type="submit"],
 .flashcard,
 .flashcard-wrap,
 .interactive-item,
-.clickable {
+.clickable,
+nav,
+nav * {
   -webkit-tap-highlight-color: transparent !important;
   -webkit-touch-callout: none !important;
   user-select: none !important;
   -webkit-user-select: none !important;
   -moz-user-select: none !important;
   -ms-user-select: none !important;
+  outline: none !important;
+  -webkit-focus-ring-color: transparent !important;
 }
 
 /* Buang kotak border/outline bila elemen diklik atau ditap (kekalkan hanya untuk keyboard tab navigation) */
-button:focus:not(:focus-visible),
-a:focus:not(:focus-visible),
-[role="button"]:focus:not(:focus-visible),
+button:focus,
+button:active,
+a:focus,
+a:active,
+[role="button"]:focus,
+[role="button"]:active,
 .lg-brand:focus,
 .lg-brand:active,
 .lg-nav-item:focus,
 .lg-nav-item:active {
   outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Benarkan text selection HANYA pada input teks, carian dan textarea */
+input[type="text"],
+input[type="search"],
+input[type="password"],
+input[type="number"],
+textarea {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+/* Jika pengguna 'select' teks bacaan ilmiah/nota secara sengaja, gunakan rona zamrud halus (bukan biru terang browser) */
+::selection {
+  background: rgba(16, 185, 129, 0.35) !important;
+  color: #ffffff !important;
+}
+::-moz-selection {
+  background: rgba(16, 185, 129, 0.35) !important;
+  color: #ffffff !important;
 }
 
 .lg-app-root {
@@ -5438,19 +5472,113 @@ summary:focus-visible {
 .diorama-board {
   transform-style: preserve-3d;
   -webkit-transform-style: preserve-3d;
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
   will-change: transform;
   position: relative;
-  /* Ketebalan bongkah tanah 3D & bayang-bayang terapung berlapis di angkasa */
+  background: var(--biome-bg, rgba(15, 23, 42, 0.72));
+  border: 1px solid var(--biome-border, rgba(255, 255, 255, 0.14));
+  /* Ketebalan bongkah tanah 3D & bayang-bayang terapung dinamik mengikut tema Wilayah */
   box-shadow:
-    0 4px 0 #1e293b,
-    0 8px 0 #0f172a,
-    0 14px 0 #090d16,
+    0 4px 0 var(--biome-slab-1, #1e293b),
+    0 8px 0 var(--biome-slab-2, #0f172a),
+    0 14px 0 var(--biome-slab-3, #090d16),
     0 18px 2px rgba(0, 0, 0, 0.45),
     0 26px 42px rgba(0, 0, 0, 0.7),
-    0 40px 75px rgba(0, 0, 0, 0.52),
+    0 40px 75px var(--biome-glow, rgba(0, 0, 0, 0.52)),
     inset 0 1px 1px rgba(255, 255, 255, 0.25),
     inset 0 -2px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* ==========================================================================
+   DYNAMIC BIOMES (Tekstur Bumi & Tebing 3D Mengikut 5 Wilayah & Peta Rawak)
+   ========================================================================== */
+
+/* 1. Kota Baghdad: Mozek Zamrud Gelap (#062c22), Garisan Grid Emas (rgba(245, 158, 11, 0.25)), Tebing Batu Jed */
+.biome-baghdad {
+  --biome-bg: linear-gradient(135deg, #062c22 0%, #031c15 100%);
+  --biome-border: rgba(245, 158, 11, 0.32);
+  --biome-slab-1: #0f392b;
+  --biome-slab-2: #08281e;
+  --biome-slab-3: #021711;
+  --biome-glow: rgba(16, 185, 129, 0.35);
+  --biome-tile-floor: rgba(6, 44, 34, 0.82);
+  --biome-tile-border: rgba(245, 158, 11, 0.25);
+  --biome-voxel-wall: #031d15;
+}
+
+/* 2. Kota Damsyik & Lembah Syam: Batu Marmar Zaitun/Perak (#1e293b), Aksen Hijau Taman Syam */
+.biome-damsyik {
+  --biome-bg: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  --biome-border: rgba(56, 189, 248, 0.28);
+  --biome-slab-1: #334155;
+  --biome-slab-2: #1e293b;
+  --biome-slab-3: #0a0e17;
+  --biome-glow: rgba(56, 189, 248, 0.32);
+  --biome-tile-floor: rgba(30, 41, 59, 0.82);
+  --biome-tile-border: rgba(56, 189, 248, 0.22);
+  --biome-voxel-wall: #0f172a;
+}
+
+/* 3. Laluan Kafilah Hijaz & Sinai: Pasir Gurun Hangat (#3b2314), Garisan Jingga Keemasan, Tebing Batu Pasir */
+.biome-hijaz {
+  --biome-bg: linear-gradient(135deg, #3b2314 0%, #24140b 100%);
+  --biome-border: rgba(245, 158, 11, 0.36);
+  --biome-slab-1: #522f1b;
+  --biome-slab-2: #381e0f;
+  --biome-slab-3: #1a0c05;
+  --biome-glow: rgba(245, 158, 11, 0.35);
+  --biome-tile-floor: rgba(59, 35, 20, 0.85);
+  --biome-tile-border: rgba(245, 158, 11, 0.28);
+  --biome-voxel-wall: #211108;
+}
+
+/* 4. Bimaristan Qalawun, Kaherah: Batu Kapur Mesir Klasik (#27201c), Cahaya Lentera Hangat */
+.biome-kaherah {
+  --biome-bg: linear-gradient(135deg, #27201c 0%, #171210 100%);
+  --biome-border: rgba(251, 146, 60, 0.34);
+  --biome-slab-1: #3d3029;
+  --biome-slab-2: #2b211b;
+  --biome-slab-3: #140d0a;
+  --biome-glow: rgba(244, 63, 94, 0.3);
+  --biome-tile-floor: rgba(39, 32, 28, 0.85);
+  --biome-tile-border: rgba(251, 146, 60, 0.25);
+  --biome-voxel-wall: #1a120e;
+}
+
+/* 5. Pelabuhan Andalusia & Nusantara: Biru Firus Laut Dalam (#082f49), Aksen Buih Air Bercahaya */
+.biome-andalusia {
+  --biome-bg: linear-gradient(135deg, #082f49 0%, #031b2e 100%);
+  --biome-border: rgba(56, 189, 248, 0.38);
+  --biome-slab-1: #0c4a6e;
+  --biome-slab-2: #07344f;
+  --biome-slab-3: #021724;
+  --biome-glow: rgba(14, 165, 233, 0.38);
+  --biome-tile-floor: rgba(8, 47, 73, 0.85);
+  --biome-tile-border: rgba(56, 189, 248, 0.3);
+  --biome-voxel-wall: #031c2e;
+}
+
+/* 6. Peta Rawak: Tema Kaca Kosmik Gelap (Ungu / Indigo Neon) */
+.biome-cosmic {
+  --biome-bg: linear-gradient(135deg, #1e1136 0%, #0d061c 100%);
+  --biome-border: rgba(168, 85, 247, 0.42);
+  --biome-slab-1: #2e1852;
+  --biome-slab-2: #1c0c36;
+  --biome-slab-3: #0b0317;
+  --biome-glow: rgba(168, 85, 247, 0.45);
+  --biome-tile-floor: rgba(30, 17, 54, 0.88);
+  --biome-tile-border: rgba(168, 85, 247, 0.32);
+  --biome-voxel-wall: #120524;
+}
+
+/* Penyesuaian Dinamik Lantai Petak Mengikut Biome Aktif */
+.diorama-board .diorama-tile--floor {
+  background: var(--biome-tile-floor, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--biome-tile-border, rgba(255, 255, 255, 0.07));
+}
+
+.diorama-board .diorama-tile--floor::after {
+  background: var(--biome-voxel-wall, rgba(15, 23, 42, 0.65));
 }
 
 /* ==========================================================================
@@ -5748,6 +5876,201 @@ summary:focus-visible {
   display: inline-block;
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6));
 }
+
+/* ==========================================================================
+   FASA 2: LIVING WORLD CSS & TIANG CAHAYA MISI (3D Quest Beacons)
+   - Tiang cahaya menegak (Sky-Beams) menjulang dari lantai
+   - Animasi bernafas / terapung (Idle Breathing) pada setiap sprite
+   - Kilauan permukaan air (Shimmer Caustics) bergerak perlahan
+   ========================================================================== */
+
+/* 1. Tiang Cahaya Misi 3D (3D Quest Sky-Beams) */
+.diorama-sky-beam {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  width: 14px;
+  height: 64px;
+  margin-left: -7px;
+  pointer-events: none;
+  transform-origin: bottom center;
+  transform: translateZ(2px) rotateX(-52deg);
+  background: linear-gradient(
+    to top,
+    rgba(251, 191, 36, 0.45) 0%,
+    rgba(251, 191, 36, 0.18) 50%,
+    transparent 100%
+  );
+  border-radius: 999px 999px 0 0;
+  filter: blur(1.5px);
+  animation: skyBeamPulse 2.4s ease-in-out infinite alternate;
+  z-index: 1;
+}
+
+.diorama-sky-beam--portal {
+  width: 20px;
+  height: 80px;
+  margin-left: -10px;
+  background: linear-gradient(
+    to top,
+    rgba(168, 85, 247, 0.55) 0%,
+    rgba(192, 132, 252, 0.22) 55%,
+    transparent 100%
+  );
+  filter: blur(2px);
+  animation: portalBeamPulse 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes skyBeamPulse {
+  0% {
+    opacity: 0.5;
+    transform: translateZ(2px) rotateX(-52deg) scaleX(0.85);
+  }
+  100% {
+    opacity: 0.95;
+    transform: translateZ(2px) rotateX(-52deg) scaleX(1.2) scaleY(1.08);
+  }
+}
+
+@keyframes portalBeamPulse {
+  0% {
+    opacity: 0.55;
+    transform: translateZ(2px) rotateX(-52deg) scaleX(0.88);
+  }
+  100% {
+    opacity: 1;
+    transform: translateZ(2px) rotateX(-52deg) scaleX(1.25) scaleY(1.1);
+  }
+}
+
+/* 2. Animasi Bernafas / Terapung Halus (Idle Breathing) */
+.sprite-3d--npc {
+  animation: npcIdleBreathing 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes npcIdleBreathing {
+  0% {
+    transform: translateZ(26px) rotateX(-52deg) scale(1.25) translateY(0);
+  }
+  100% {
+    transform: translateZ(27.5px) rotateX(-52deg) scale(1.25) translateY(-2.5px);
+  }
+}
+
+.decor-sprite-3d {
+  animation: decorIdleSway 3.6s ease-in-out infinite alternate;
+}
+
+@keyframes decorIdleSway {
+  0% {
+    transform: translateZ(16px) rotateX(-52deg) scale(1.15) rotateZ(-1deg);
+  }
+  100% {
+    transform: translateZ(16px) rotateX(-52deg) scale(1.15) rotateZ(1deg);
+  }
+}
+
+/* 3. Kilauan Permukaan Air (Water Shimmer Caustics) */
+.diorama-tile--water::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    125deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 80%
+  );
+  background-size: 200% 200%;
+  animation: waterSurfaceShimmer 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes waterSurfaceShimmer {
+  0% {
+    background-position: -120% -120%;
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.75;
+  }
+  100% {
+    background-position: 220% 220%;
+    opacity: 0.25;
+  }
+}
+
+/* =========================================================================
+   FASA 3: LIVING WORLD & DYNAMIC BIOMES
+   - Jejak Langkah (Footstep Trail dengan @keyframes fadeTrail)
+   - Partikel Atmosfera 3D (Biome Floating Particles)
+   ========================================================================= */
+
+/* 1. Jejak Langkah Pengembara (Footstep Trail) */
+.footstep-trail {
+  position: absolute;
+  inset: 4px;
+  border-radius: 8px;
+  background: radial-gradient(circle at center, rgba(245, 158, 11, 0.45) 0%, rgba(245, 158, 11, 0.12) 60%, transparent 80%);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+  pointer-events: none;
+  animation: fadeTrail 1.8s ease-out forwards;
+  z-index: 2;
+  transform: translateZ(1px);
+}
+
+@keyframes fadeTrail {
+  0% {
+    opacity: 0.95;
+    transform: translateZ(1px) scale(0.85);
+  }
+  50% {
+    opacity: 0.55;
+    transform: translateZ(1px) scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    transform: translateZ(1px) scale(1.15);
+  }
+}
+
+/* 2. Partikel Atmosfera 3D (Floating Biome Light Specks) */
+.diorama-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform-style: preserve-3d;
+  z-index: 25;
+}
+
+.biome-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--biome-glow, rgba(245, 158, 11, 0.75));
+  box-shadow: 0 0 8px var(--biome-glow, rgba(245, 158, 11, 0.75));
+  pointer-events: none;
+  animation: floatBiomeParticle 4.8s ease-in-out infinite alternate;
+}
+
+@keyframes floatBiomeParticle {
+  0% {
+    transform: translate3d(0, 0, 10px);
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.85;
+    transform: translate3d(8px, -12px, 32px);
+  }
+  100% {
+    transform: translate3d(-8px, -24px, 54px);
+    opacity: 0.15;
+  }
+}
+
 
 
 

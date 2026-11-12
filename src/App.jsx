@@ -2864,6 +2864,10 @@ export default function App() {
             onPointerUp={handleLogoPointerUp}
             onPointerCancel={handleLogoPointerUp}
             onPointerLeave={handleLogoPointerUp}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              return false;
+            }}
             title="Qawaid OS (Klik ke Direktori / Tahan 1.5s untuk Admin)"
             style={{
               cursor: 'pointer',
@@ -2875,12 +2879,12 @@ export default function App() {
               touchAction: 'manipulation'
             }}
           >
-            <div className="lg-brand-icon">
+            <div className="lg-brand-icon" style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}>
               <NeonScaleLogo isWeighing={isLogoWeighing} />
             </div>
-            <div>
-              <h1 className="lg-brand-title">Qawaid OS</h1>
-              <p className="lg-brand-sub">{tetapanWeb?.subtajukApp || 'Sistem Ulang Kaji Qawaid Fiqhiyyah'}</p>
+            <div style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}>
+              <h1 className="lg-brand-title" style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}>Qawaid OS</h1>
+              <p className="lg-brand-sub" style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}>{tetapanWeb?.subtajukApp || 'Sistem Ulang Kaji Qawaid Fiqhiyyah'}</p>
             </div>
           </div>
 
