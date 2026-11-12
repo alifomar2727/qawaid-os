@@ -126,11 +126,13 @@ ${konteksTeks || 'Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-
 
     const promptPenuh = `${systemPrompt}\n\nSoalan Pengguna:\n${soalan}`;
 
-    // Senarai model aktif Google Gemini (disusun mengikut kestabilan & kelajuan)
+    // Senarai model aktif rasmi Google Gemini (mengikut cadangan API terkini Google)
     const modelsToTry = [
-      'gemini-2.5-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-3.8-flash',
+      'gemini-3.1-flash-lite',
+      'gemini-3.6-flash',
       'gemini-flash-latest',
-      'gemini-2.5-flash-lite',
     ];
 
     const logRalat = [];
