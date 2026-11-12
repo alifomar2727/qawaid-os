@@ -640,13 +640,13 @@ const SENARAI_WILAYAH = [
         ikon: '🎙️',
         jenis: 'MAKMAL',
         makmalType: 'TARANNUM',
-        notaId: 'KP-04',
+        notaId: 'KP-15',
         dialogMasalah:
-          '“Ahlan wa sahlan ke Makmal Tarannum FPQS! Kami sedang mengkaji aplikasi hukum bacaan dan maqasid kelonggaran suara ketika tadarus serta solat jemaah. Berikan panduan kaedah fiqh yang tepat bagi menyelesaikan senario penyelidikan makmal kami!”',
+          '“Ahlan! Suara yang merdu itu anugerah, tetapi hukum tetap hukum. Ada seorang qari sedang berlatih tarannum dengan suara yang sangat kuat di dalam masjid pada pukul 3 pagi, sehingga mengganggu orang awam dan jemaah yang sedang iktikaf dan solat sunat. Apakah kaedah fiqh yang paling tepat untuk menegur situasi ini?”',
         dialogBerjaya:
-          '“Masyhur dan merdu sekali jawapan anda! Kaedah fiqhiyyah yang anda kemukakan tepat menghuraikan prinsip kemudahan dan objektif ibadah di makmal ini.”',
+          '“Tepat sekali! Menghapuskan kemudaratan dan gangguan terhadap jemaah lain yang sedang beribadah adalah wajib, walau seindah mana pun alunan tarannum tersebut!”',
         dialogTolak:
-          '“Alunan nada kaedah anda belum tepat dengan intipati perbahasan di Makmal Tarannum. Cuba semak kembali rujukan kitab!”',
+          '“Hujah kaedah anda belum tepat untuk menegur situasi gangguan ibadah di masjid ini. Sila semak semula rujukan kitab!”',
       },
       {
         npcId: 'NPC-FPQS-2',
@@ -655,13 +655,13 @@ const SENARAI_WILAYAH = [
         ikon: '📚',
         jenis: 'MAKMAL',
         makmalType: 'HADIS',
-        notaId: 'KP-06',
+        notaId: 'KP-18',
         dialogMasalah:
-          '“Selamat datang ke Makmal Hadis & Server Digital Sunnah! Kami sedang menyaring takhrij hadis dan padanan hukum syarak menggunakan algoritma moden. Kaedah fiqh manakah yang menjadi tunjang pembuktian dan penolakan keraguan riwayat?”',
+          '“Zaman sekarang maklumat di hujung jari. Seseorang terjumpa satu hadis tentang fadhilat beramal yang sangat dahsyat di WhatsApp. Dia tidak pasti status hadis itu palsu atau tidak, tetapi dia mahu terus sebarkan dengan alasan \'untuk mengajak orang buat baik\' (Jalbul Masalih). Apakah kaedah fiqh yang sepatutnya menjadi penghalang tindakannya?”',
         dialogBerjaya:
-          '“Alhamdulillah, tepat sekali! Server digital kami telah mengesahkan ketepatan kaedah tersebut dengan sokongan dalil sunnah yang kukuh!”',
+          '“Muntaz! Tepat sekali. Mencegah kerosakan (mafsadah) menyebarkan hadis palsu dan berdusta atas nama Nabi SAW jauh lebih utama daripada mengejar manfaat (maslahah) mengajak orang beramal!”',
         dialogTolak:
-          '“Data algoritma hadis menunjukkan percanggahan. Kaedah yang anda pilih tidak serasi dengan matlamat penyelidikan hadis ini.”',
+          '“Jawapan ini belum tepat. Ingat prinsip pertembungan antara menolak kerosakan dan meraih kemaslahatan!”',
       },
       {
         npcId: 'NPC-FPQS-3',
@@ -670,13 +670,13 @@ const SENARAI_WILAYAH = [
         ikon: '⠃',
         jenis: 'MAKMAL',
         makmalType: 'BRAILLE',
-        notaId: 'KP-11',
+        notaId: 'KP-16',
         dialogMasalah:
-          '“Marhaban bikum ke Makmal Braille Quran FPQS! Fokus penyelidikan kami adalah mengangkat kesukaran komuniti berkeperluan khas (OKU penglihatan) dalam menyentuh mushaf braille dan melaksanakan ibadah. Kaedah syarak manakah yang menjadi asas rukhsah dan kemudahan ini?”',
+          '“Golongan OKU penglihatan juga mahu mendalami ilmu. Seorang pelajar buta di negara luar terpaksa menggunakan khidmat \'Anjing Pandu Arah\' (Guide Dog) untuk membantunya berjalan masuk ke perkarangan dewan kuliah kerana tiada sesiapa yang boleh menuntunnya, dan laluan di situ berbahaya. Apakah kaedah cabang yang membenarkan situasi ini?”',
         dialogBerjaya:
-          '“Subhanallah, sungguh bertepatan! Hakikat syariat diturunkan untuk membuka pintu kemudahan bagi sesiapa yang mengalami kesukaran.”',
+          '“Subhanallah, tepat sekali! Kaedah cabang «الضرورات تبيح المحظورات» membenarkan perkara yang asalnya dilarang kerana darurat menjaga keselamatan nyawa dan akses ilmu bagi golongan OKU penglihatan.”',
         dialogTolak:
-          '“Jawapan ini belum mencerminkan roh rukhsoh dan prinsip kemudahan bagi komuniti berkeperluan khas. Sila cuba lagi!”',
+          '“Pilihan kaedah anda belum menepati kaedah cabang yang membenarkan perkara yang asalnya dilarang demi menjaga keselamatan. Cuba lagi!”',
       },
       {
         npcId: 'NPC-FPQS-4',
@@ -685,13 +685,13 @@ const SENARAI_WILAYAH = [
         ikon: '🏛️',
         jenis: 'BOSS',
         makmalType: 'DEKAN',
-        notaId: 'KP-15',
+        notaId: 'KP-20',
         dialogMasalah:
-          '“Tahniah kerana berjaya melangkah ke Foyer Pejabat Dekan FPQS setelah menjelajah ketiga-tiga makmal kami! Sebagai ujian kepimpinan ilmu tertinggi, jawablah persoalan maqasid syariah dan tatbiqat empat mazhab ini dengan penuh keyakinan!”',
+          '“Untuk menyiapkan tesis yang sangat penting menjelang tarikh tutup (due date) esok, seorang pelajar telah menggodam dan memuat turun artikel-artikel jurnal Turath berbayar (langganan ratusan ringgit) secara haram menggunakan sistem AI dan bot. Dia mendakwa dia berada dalam keadaan \'terdesak\' untuk menyebarkan ilmu Islam dan mahu cepat bergraduasi demi keluarganya, lantas menghalalkan tindakan godaman tersebut. Mengapa alasan \'keterdesakan\' pelajar ini tertolak di sisi Qawaid Fiqhiyyah?”',
         dialogBerjaya:
-          '“Muntaz! Syabas wahai penuntut ilmu sejati. Anda telah membuktikan penguasaan hakiki dalam Qawaid Fiqhiyyah di Lembah Ilmu FPQS USIM!”',
+          '“Muntaz! Penguasaan anda terhadap kaedah «الحاجة تنزل منزلة الضرورة» sungguh mendalam! Hajah mestilah bersifat umum atau darurat muktabar yang tidak melanggar hak orang lain, bukannya keterdesakan individu yang membenarkan jenayah godaman harta intelek.”',
         dialogTolak:
-          '“Kefahaman anda hampir sempurna, namun jawapan tersebut belum menepati piawaian keilmuan Dekanat FPQS. Teliti semula hujah anda!”',
+          '“Kefahaman anda belum tepat tentang batas dan syarat pemakaian kaedah keterdesakan (Hajah & Darurat) dalam isu hak harta intelek ini. Sila teliti semula!”',
       },
       {
         npcId: 'NPC-FPQS-5',
@@ -1248,12 +1248,15 @@ export default function KembaraQawaidGame() {
       const distractorCount = isFPQS ? 2 : 3;
 
       const distractors = dataNotaLengkap
-        .filter(
-          (n) =>
-            n.id !== targetNota.id &&
-            Boolean(n.tajukArab) &&
-            (Boolean(n.matriksId) || Boolean(n.huraian))
-        )
+        .filter((n) => {
+          if (n.id === targetNota.id) return false;
+          // Elakkan varian pecahan yang terlalu serupa bagi soalan FPQS agar pilihan jawapan kontras & jelas
+          if (targetNota.id === 'KP-15' && n.id.startsWith('KP-15')) return false;
+          if (targetNota.id === 'KP-16' && n.id.startsWith('KP-16')) return false;
+          if (targetNota.id === 'KP-18' && n.id.startsWith('KP-18')) return false;
+          if (targetNota.id === 'KP-20' && (n.id === 'KP-16' || n.id.startsWith('KP-16'))) return false;
+          return Boolean(n.tajukArab) && (Boolean(n.matriksId) || Boolean(n.huraian));
+        })
         .sort(() => 0.5 - Math.random())
         .slice(0, distractorCount);
 
@@ -2962,11 +2965,8 @@ export default function KembaraQawaidGame() {
                           🧑‍💼
                         </div>
                         <div>
-                          <div style={{ fontSize: '0.94rem', fontWeight: 800, color: '#f8fafc' }}>
+                          <div style={{ fontSize: '0.98rem', fontWeight: 800, color: '#f8fafc' }}>
                             Ali Shahril
-                          </div>
-                          <div style={{ fontSize: '0.72rem', color: '#38bdf8' }}>
-                            Presiden Persatuan Mahasiswa Fakulti Pengajian Quran & Sunnah
                           </div>
                         </div>
                       </div>
@@ -3040,11 +3040,8 @@ export default function KembaraQawaidGame() {
                           🧑‍🎓
                         </div>
                         <div>
-                          <div style={{ fontSize: '0.94rem', fontWeight: 800, color: '#f8fafc' }}>
+                          <div style={{ fontSize: '0.98rem', fontWeight: 800, color: '#f8fafc' }}>
                             Ebadullah
-                          </div>
-                          <div style={{ fontSize: '0.72rem', color: '#34d399' }}>
-                            Exco Akademik & Kepimpinan PMFPQS
                           </div>
                         </div>
                       </div>
