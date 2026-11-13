@@ -4423,7 +4423,7 @@ summary:focus-visible {
   border-radius: var(--r-pill);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   .swipe-rules-grid {
     grid-template-columns: 1fr;
   }
@@ -4436,10 +4436,8 @@ summary:focus-visible {
   .swipe-card-issue-text {
     font-size: 1.08rem;
   }
-  .swipe-btn-main {
-    font-size: 0.82rem;
-  }
-  .swipe-btn-shortcut {
+  /* Mobile users swipe directly on the 3D card; keep buttons on PC only */
+  .swipe-action-controls {
     display: none;
   }
 }
