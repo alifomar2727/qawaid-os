@@ -2033,7 +2033,7 @@ summary:focus-visible {
   top: 18px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 20;
+  z-index: 35;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2272,6 +2272,12 @@ summary:focus-visible {
   opacity: 0.38;
   cursor: not-allowed;
   text-decoration: line-through;
+}
+
+/* 3D Arcade Stage */
+.sprint-3d-stage {
+  height: clamp(195px, 30vh, 265px);
+  margin-bottom: 12px;
 }
 
 /* Question Box */
@@ -2657,10 +2663,158 @@ summary:focus-visible {
 }
 
 @media (max-width: 760px) {
-  .sprint-mode-grid,
-  .sprint-options-grid {
+  .sprint-mode-grid {
     grid-template-columns: 1fr;
   }
+
+  /* Keep Sprint 3D stage + HUD pinned cleanly at top while keeping 2x2 options reachable without scrolling */
+  .sprint-arena {
+    overflow: visible !important;
+    padding: 10px 10px 64px !important;
+    border-radius: 18px !important;
+  }
+
+  .sprint-play-stage-dock {
+    position: sticky;
+    top: 4px;
+    z-index: 25;
+    background: rgba(7, 13, 28, 0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 14px;
+    padding: 8px;
+    margin: -2px -2px 10px;
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
+  }
+
+  .sprint-hud {
+    gap: 6px;
+    margin-bottom: 6px;
+    flex-wrap: nowrap;
+  }
+
+  .sprint-timer-box {
+    padding: 4px 8px 4px 5px;
+    gap: 6px;
+  }
+
+  .sprint-timer-svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .sprint-sec {
+    font-size: 0.88rem;
+  }
+
+  .sprint-sec-label {
+    font-size: 0.54rem;
+  }
+
+  .sprint-streak-pill {
+    padding: 4px 8px;
+    gap: 4px;
+    font-size: 0.68rem;
+    white-space: nowrap;
+  }
+
+  .sprint-mult-badge {
+    padding: 2px 6px;
+    font-size: 0.62rem;
+  }
+
+  .sprint-score-box {
+    padding: 4px 9px;
+  }
+
+  .sprint-score-label {
+    font-size: 0.52rem;
+  }
+
+  .sprint-score-val {
+    font-size: 0.96rem;
+  }
+
+  .sprint-progress-track {
+    height: 5px;
+    margin-bottom: 6px;
+  }
+
+  .sprint-3d-stage {
+    height: clamp(130px, 19vh, 162px) !important;
+    margin-bottom: 6px !important;
+    border-radius: 12px !important;
+  }
+
+  .sprint-powerups-bar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 0;
+  }
+
+  .sprint-power-btn {
+    padding: 6px 4px;
+    font-size: 0.67rem;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .sprint-question-box {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-radius: 14px;
+  }
+
+  .sprint-q-meta {
+    margin-bottom: 5px;
+    gap: 4px;
+  }
+
+  .sprint-q-badge {
+    font-size: 0.62rem;
+  }
+
+  .sprint-q-sub {
+    font-size: 0.66rem;
+  }
+
+  .sprint-q-text {
+    font-size: 0.86rem;
+    line-height: 1.42;
+  }
+
+  /* 2x2 grid keeps all 4 pillars visible alongside the 3D tunnel without scrolling */
+  .sprint-options-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .sprint-opt-btn {
+    padding: 9px 10px;
+    gap: 5px;
+    border-radius: 12px;
+    justify-content: flex-start;
+  }
+
+  .sprint-keycap {
+    width: 19px;
+    height: 19px;
+    font-size: 0.65rem;
+    border-radius: 5px;
+  }
+
+  .sprint-opt-bm {
+    font-size: 0.68rem;
+    line-height: 1.28;
+  }
+
+  .sprint-opt-ar {
+    font-size: 0.94rem;
+    line-height: 1.45;
+  }
+
   .sprint-stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

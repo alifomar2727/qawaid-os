@@ -64,11 +64,23 @@ export default function SprintGame() {
   // History of answered questions for post-game review
   const [history, setHistory] = useState([]);
 
+  const arenaRef = useRef(null);
   const sprint3DControlRef = useRef(null);
   const soundRef = useRef(null);
   if (!soundRef.current) {
     soundRef.current = createArcadeAudio();
   }
+
+  // On mobile, scroll active sprint arena neatly into view so HUD + 3D stage + answers stay aligned
+  useEffect(() => {
+    if (gameState === 'PLAYING' && typeof window !== 'undefined' && window.innerWidth <= 760) {
+      const id = window.setTimeout(() => {
+        arenaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 60);
+      return () => window.clearTimeout(id);
+    }
+    return undefined;
+  }, [gameState]);
 
   const spawnPopup = useCallback((text, tone = 'cyan') => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -691,6 +703,7 @@ export default function SprintGame() {
          ==================================================================== */}
       {activeGame === 'SPRINT' && gameState === 'PLAYING' && (
         <div
+          ref={arenaRef}
           className={`sprint-arena glass-card ${
             streak >= 5 ? 'is-frenzy' : ''
           } ${isFrozen ? 'is-frozen' : ''} ${
@@ -706,143 +719,144 @@ export default function SprintGame() {
             ))}
           </div>
 
-          {/* Top HUD: Circular Timer + Score + Combo Streak */}
-          <div className="sprint-hud">
-            {/* Timer Gauge */}
-            <div
-              className={`sprint-timer-box ${isUrgent ? 'is-urgent' : ''} ${
-                isFrozen ? 'is-frozen' : ''
-              }`}
-            >
-              <svg className="sprint-timer-svg" viewBox="0 0 48 48">
-                <circle
-                  className="sprint-timer-track"
-                  cx="24"
-                  cy="24"
-                  r="20"
-                />
-                <circle
-                  className="sprint-timer-ring"
-                  cx="24"
-                  cy="24"
-                  r="20"
-                  strokeDasharray="125.6"
-                  strokeDashoffset={125.6 - (125.6 * timePercent) / 100}
-                />
-              </svg>
-              <div className="sprint-timer-text">
-                <span className="sprint-sec">{secondsFormatted}s</span>
-                <span className="sprint-sec-label">
-                  {isFrozen ? '🧊 BEKU' : 'MASA'}
-                </span>
-              </div>
-            </div>
-
-            {/* Center Streak Meter */}
-            <div className={`sprint-streak-pill mult-${multiplier}`}>
-              <span className="sprint-streak-fire">
-                {streak >= 5 ? '🔥🔥' : streak >= 3 ? '🔥' : '⚡'}
-              </span>
-              <span>STREAK: {streak}</span>
-              <span className="sprint-mult-badge">{multiplier}x MATA</span>
-            </div>
-
-            {/* Live Score */}
-            <div className="sprint-score-box">
-              <span className="sprint-score-label">SKOR SEMASA</span>
-              <span className="sprint-score-val">{score.toLocaleString()}</span>
-            </div>
-          </div>
-
-          {/* Horizontal Liquid Time Progress Bar */}
-          <div className="sprint-progress-track">
-            <div
-              className={`sprint-progress-fill ${isUrgent ? 'is-urgent' : ''} ${
-                isFrozen ? 'is-frozen' : ''
-              }`}
-              style={{ width: `${timePercent}%` }}
-            />
-          </div>
-
-          {/* Power-Ups Bar */}
-          <div className="sprint-powerups-bar">
-            <button
-              type="button"
-              disabled={!powerups.freeze}
-              onClick={triggerFreeze}
-              className={`sprint-power-btn ${!powerups.freeze ? 'is-used' : ''}`}
-            >
-              <span>🧊 Beku Masa (+3s)</span>
-            </button>
-            <button
-              type="button"
-              disabled={!powerups.fifty}
-              onClick={triggerFifty}
-              className={`sprint-power-btn ${!powerups.fifty ? 'is-used' : ''}`}
-            >
-              <span>⚡ Tapis 50:50</span>
-            </button>
-            <button
-              type="button"
-              disabled={!powerups.skip}
-              onClick={triggerSkip}
-              className={`sprint-power-btn ${!powerups.skip ? 'is-used' : ''}`}
-            >
-              <span>⏭️ Langkau Soalan</span>
-            </button>
-          </div>
-
-          {/* 3D WebGL Warp Tunnel & Aimable Mizan Reactor Stage */}
-          <div
-            className="sprint-3d-stage"
-            style={{
-              position: 'relative',
-              width: '100%',
-              height: 'clamp(195px, 31vh, 270px)',
-              borderRadius: '18px',
-              overflow: 'hidden',
-              marginBottom: '14px',
-              border: isGoldenOverdrive
-                ? '1.5px solid rgba(251, 191, 36, 0.72)'
-                : isFrozen
-                ? '1.5px solid rgba(56, 189, 248, 0.65)'
-                : '1px solid rgba(16, 185, 129, 0.35)',
-              boxShadow: isGoldenOverdrive
-                ? '0 0 26px rgba(245, 158, 11, 0.25)'
-                : '0 8px 24px rgba(0, 0, 0, 0.38)',
-            }}
-          >
-            <ThreeArcadeSprint
-              engineControlRef={sprint3DControlRef}
-              isFrozen={isFrozen}
-              streak={streak}
-              isGoldenOverdrive={isGoldenOverdrive}
-              eliminatedIndices={eliminatedIndices}
-              questionKey={cardAnimKey}
-              onSelectPillar={handleSelectPillar}
-            />
-            {isGoldenOverdrive && (
+          {/* Sticky Mobile Dock: HUD + Progress + 3D Stage + Compact Powerups stay visible while answering */}
+          <div className="sprint-play-stage-dock">
+            {/* Top HUD: Circular Timer + Score + Combo Streak */}
+            <div className="sprint-hud">
+              {/* Timer Gauge */}
               <div
-                style={{
-                  position: 'absolute',
-                  top: '10px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  padding: '4px 12px',
-                  borderRadius: '999px',
-                  background: 'rgba(120, 53, 15, 0.88)',
-                  border: '1px solid #fbbf24',
-                  color: '#fef08a',
-                  fontSize: '0.72rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.06em',
-                  pointerEvents: 'none',
-                  whiteSpace: 'nowrap',
-                }}
+                className={`sprint-timer-box ${isUrgent ? 'is-urgent' : ''} ${
+                  isFrozen ? 'is-frozen' : ''
+                }`}
               >
-                👑 SOALAN CABANG OVERDRIVE • 3x SKOR &amp; +2.0s
+                <svg className="sprint-timer-svg" viewBox="0 0 48 48">
+                  <circle
+                    className="sprint-timer-track"
+                    cx="24"
+                    cy="24"
+                    r="20"
+                  />
+                  <circle
+                    className="sprint-timer-ring"
+                    cx="24"
+                    cy="24"
+                    r="20"
+                    strokeDasharray="125.6"
+                    strokeDashoffset={125.6 - (125.6 * timePercent) / 100}
+                  />
+                </svg>
+                <div className="sprint-timer-text">
+                  <span className="sprint-sec">{secondsFormatted}s</span>
+                  <span className="sprint-sec-label">
+                    {isFrozen ? '🧊 BEKU' : 'MASA'}
+                  </span>
+                </div>
               </div>
-            )}
+
+              {/* Center Streak Meter */}
+              <div className={`sprint-streak-pill mult-${multiplier}`}>
+                <span className="sprint-streak-fire">
+                  {streak >= 5 ? '🔥🔥' : streak >= 3 ? '🔥' : '⚡'}
+                </span>
+                <span>STREAK: {streak}</span>
+                <span className="sprint-mult-badge">{multiplier}x MATA</span>
+              </div>
+
+              {/* Live Score */}
+              <div className="sprint-score-box">
+                <span className="sprint-score-label">SKOR SEMASA</span>
+                <span className="sprint-score-val">{score.toLocaleString()}</span>
+              </div>
+            </div>
+
+            {/* Horizontal Liquid Time Progress Bar */}
+            <div className="sprint-progress-track">
+              <div
+                className={`sprint-progress-fill ${isUrgent ? 'is-urgent' : ''} ${
+                  isFrozen ? 'is-frozen' : ''
+                }`}
+                style={{ width: `${timePercent}%` }}
+              />
+            </div>
+
+            {/* 3D WebGL Warp Tunnel & Aimable Mizan Reactor Stage */}
+            <div
+              className="sprint-3d-stage"
+              style={{
+                position: 'relative',
+                width: '100%',
+                borderRadius: '18px',
+                overflow: 'hidden',
+                border: isGoldenOverdrive
+                  ? '1.5px solid rgba(251, 191, 36, 0.72)'
+                  : isFrozen
+                  ? '1.5px solid rgba(56, 189, 248, 0.65)'
+                  : '1px solid rgba(16, 185, 129, 0.35)',
+                boxShadow: isGoldenOverdrive
+                  ? '0 0 26px rgba(245, 158, 11, 0.25)'
+                  : '0 8px 24px rgba(0, 0, 0, 0.38)',
+              }}
+            >
+              <ThreeArcadeSprint
+                engineControlRef={sprint3DControlRef}
+                isFrozen={isFrozen}
+                streak={streak}
+                isGoldenOverdrive={isGoldenOverdrive}
+                eliminatedIndices={eliminatedIndices}
+                questionKey={cardAnimKey}
+                onSelectPillar={handleSelectPillar}
+              />
+              {isGoldenOverdrive && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '8px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    padding: '3px 10px',
+                    borderRadius: '999px',
+                    background: 'rgba(120, 53, 15, 0.88)',
+                    border: '1px solid #fbbf24',
+                    color: '#fef08a',
+                    fontSize: '0.68rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.05em',
+                    pointerEvents: 'none',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  👑 SOALAN CABANG OVERDRIVE • 3x SKOR &amp; +2.0s
+                </div>
+              )}
+            </div>
+
+            {/* Power-Ups Bar (Compact 1-row strip on mobile right under 3D stage) */}
+            <div className="sprint-powerups-bar">
+              <button
+                type="button"
+                disabled={!powerups.freeze}
+                onClick={triggerFreeze}
+                className={`sprint-power-btn ${!powerups.freeze ? 'is-used' : ''}`}
+              >
+                <span>🧊 Beku (+3s)</span>
+              </button>
+              <button
+                type="button"
+                disabled={!powerups.fifty}
+                onClick={triggerFifty}
+                className={`sprint-power-btn ${!powerups.fifty ? 'is-used' : ''}`}
+              >
+                <span>⚡ Tapis 50:50</span>
+              </button>
+              <button
+                type="button"
+                disabled={!powerups.skip}
+                onClick={triggerSkip}
+                className={`sprint-power-btn ${!powerups.skip ? 'is-used' : ''}`}
+              >
+                <span>⏭️ Langkau</span>
+              </button>
+            </div>
           </div>
 
           {/* Animated Question Card */}
