@@ -1038,6 +1038,15 @@ export default function KembaraQawaidGame() {
   const [facing, setFacing] = useState('RIGHT'); // 'LEFT' | 'RIGHT' | 'UP' | 'DOWN'
   const [recentPath, setRecentPath] = useState([]); // FASA 3: Jejak Langkah (3 koordinat terakhir)
   const [autoWalkTarget, setAutoWalkTarget] = useState(null); // 3D RPG Auto-Walk Target
+  const [resetSpawnNonce, setResetSpawnNonce] = useState(0);
+  const threeControlRef = useRef({
+    padFwd: 0,
+    padRight: 0,
+    padYaw: 0,
+    pulseTimer: 0,
+    pulseFwd: 0,
+    pulseRight: 0,
+  });
 
   // Statistik RPG Pemain
   const [reputation, setReputation] = useState(100);
@@ -1323,6 +1332,30 @@ export default function KembaraQawaidGame() {
     [bossNpc, isBossUnlocked, isBossSolved, earlierSolvedCount, currentWilayah.id, triggerToast, findNpcCoord]
   );
 
+  // Kawalan Gerak Bebas (Free-Roam 60 FPS Hold & Glide Pulse untuk Pad Sisi)
+  const handlePadHoldStart = useCallback((fwd, right, yaw = 0) => {
+    const ctrl = threeControlRef.current;
+    ctrl.padFwd = fwd;
+    ctrl.padRight = right;
+    ctrl.padYaw = yaw;
+    if (fwd !== 0 || right !== 0) {
+      ctrl.pulseFwd = fwd;
+      ctrl.pulseRight = right;
+      ctrl.pulseTimer = 0.24;
+    }
+    if (yaw !== 0) {
+      ctrl.pulseYaw = yaw;
+      ctrl.pulseYawTimer = 0.16;
+    }
+  }, []);
+
+  const handlePadHoldEnd = useCallback(() => {
+    const ctrl = threeControlRef.current;
+    ctrl.padFwd = 0;
+    ctrl.padRight = 0;
+    ctrl.padYaw = 0;
+  }, []);
+
   // Penyegerakan koordinat grid daripada enjin gerak bebas 3D (60fps decoupled)
   const handleThreePlayerMoveGrid = useCallback((r, c) => {
     setPlayerPos((prev) => (prev.r === r && prev.c === c ? prev : { r, c }));
@@ -1368,6 +1401,7 @@ export default function KembaraQawaidGame() {
       setWilayahIdx(nextIdx);
       setMapSeed(1);
       setPlayerPos({ r: 1, c: 1 });
+      setResetSpawnNonce((n) => n + 1);
       setRecentPath([]);
       triggerToast(`🌀 Berpindah ke ${SENARAI_WILAYAH[nextIdx].nama}!`, 'cyan');
     }, 120);
@@ -1812,6 +1846,7 @@ export default function KembaraQawaidGame() {
                     setWilayahIdx(idx);
                     setMapSeed(1);
                     setPlayerPos({ r: 1, c: 1 });
+                    setResetSpawnNonce((n) => n + 1);
                     setRecentPath([]);
                   }}
                   className={isCurrent ? 'lg-btn-primary' : 'lg-btn-glass'}
@@ -1831,6 +1866,7 @@ export default function KembaraQawaidGame() {
             onClick={() => {
               setMapSeed((s) => s + 1);
               setPlayerPos({ r: 1, c: 1 });
+              setResetSpawnNonce((n) => n + 1);
               setRecentPath([]);
               triggerToast('🗺️ Peta rawak baharu telah dijana!', 'cyan');
             }}
@@ -2035,6 +2071,8 @@ export default function KembaraQawaidGame() {
             isBossUnlocked={isBossUnlocked}
             isWilayahCompleted={isWilayahAllDone}
             autoWalkTarget={autoWalkTarget}
+            resetSpawnNonce={resetSpawnNonce}
+            controlRef={threeControlRef}
             onPlayerMoveGrid={handleThreePlayerMoveGrid}
             onInteractNpc={openNpcEncounter}
             onOasisVisit={handleThreeOasisVisit}
@@ -2053,7 +2091,7 @@ export default function KembaraQawaidGame() {
             gap: '10px',
           }}
         >
-          {/* Pad Navigasi D-Pad di Bahagian Paling Atas Panel Kanan */}
+          {/* Pad Navigasi Gerak Bebas 3D (Hold & Tap Smooth Free-Roam + Pusing Kamera) */}
           <div
             className="lg-inner-well"
             style={{
@@ -2074,10 +2112,10 @@ export default function KembaraQawaidGame() {
                   marginBottom: '4px',
                 }}
               >
-                🧭 Controller Pengembara
+                🧭 Controller Gerak Bebas 3D
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.45 }}>
-                Gunakan butang arah D-Pad ini atau kekunci <strong>WASD / Arrow</strong> untuk bergerak ke arah NPC.
+              <div style={{ fontSize: '0.71rem', color: 'var(--text-muted)', lineHeight: 1.45 }}>
+                Tahan <strong>▲▼◀▶</strong> atau guna <strong>Joy-Stick skrin</strong> &amp; <strong>WASD</strong> untuk berjalan lancar. Tekan <strong>↺ ↻</strong> untuk pusing kamera, atau klik <strong>Peta Atas</strong> di sudut kanan peta untuk panduan arah!
               </div>
               {nearbyNpc && (
                 <button
@@ -2097,23 +2135,54 @@ export default function KembaraQawaidGame() {
                 gridTemplateColumns: 'repeat(3, 40px)',
                 gap: '5px',
                 flexShrink: 0,
+                touchAction: 'none',
               }}
             >
-              <div />
               <button
                 type="button"
-                onClick={() => movePlayer(-1, 0)}
+                onPointerDown={() => handlePadHoldStart(0, 0, -1)}
+                onPointerUp={handlePadHoldEnd}
+                onPointerLeave={handlePadHoldEnd}
+                onPointerCancel={handlePadHoldEnd}
+                className="lg-btn-glass"
+                style={{ justifyContent: 'center', height: '36px', padding: 0, fontSize: '0.82rem' }}
+                title="Pusing kamera ke kiri"
+              >
+                ↺
+              </button>
+              <button
+                type="button"
+                onPointerDown={() => handlePadHoldStart(1, 0, 0)}
+                onPointerUp={handlePadHoldEnd}
+                onPointerLeave={handlePadHoldEnd}
+                onPointerCancel={handlePadHoldEnd}
                 className="lg-btn-glass"
                 style={{ justifyContent: 'center', height: '36px', padding: 0 }}
+                title="Jalan ke hadapan (Gerak Bebas)"
               >
                 ▲
               </button>
-              <div />
               <button
                 type="button"
-                onClick={() => movePlayer(0, -1)}
+                onPointerDown={() => handlePadHoldStart(0, 0, 1)}
+                onPointerUp={handlePadHoldEnd}
+                onPointerLeave={handlePadHoldEnd}
+                onPointerCancel={handlePadHoldEnd}
+                className="lg-btn-glass"
+                style={{ justifyContent: 'center', height: '36px', padding: 0, fontSize: '0.82rem' }}
+                title="Pusing kamera ke kanan"
+              >
+                ↻
+              </button>
+              <button
+                type="button"
+                onPointerDown={() => handlePadHoldStart(0, -1, 0)}
+                onPointerUp={handlePadHoldEnd}
+                onPointerLeave={handlePadHoldEnd}
+                onPointerCancel={handlePadHoldEnd}
                 className="lg-btn-glass"
                 style={{ justifyContent: 'center', height: '36px', padding: 0 }}
+                title="Gerak ke kiri"
               >
                 ◀
               </button>
@@ -2128,24 +2197,32 @@ export default function KembaraQawaidGame() {
                   padding: 0,
                   fontSize: '0.72rem',
                 }}
-                title="Berinteraksi dengan NPC bersebelahan"
+                title="Berinteraksi dengan NPC berdekatan"
               >
                 💬
               </button>
               <button
                 type="button"
-                onClick={() => movePlayer(0, 1)}
+                onPointerDown={() => handlePadHoldStart(0, 1, 0)}
+                onPointerUp={handlePadHoldEnd}
+                onPointerLeave={handlePadHoldEnd}
+                onPointerCancel={handlePadHoldEnd}
                 className="lg-btn-glass"
                 style={{ justifyContent: 'center', height: '36px', padding: 0 }}
+                title="Gerak ke kanan"
               >
                 ▶
               </button>
               <div />
               <button
                 type="button"
-                onClick={() => movePlayer(1, 0)}
+                onPointerDown={() => handlePadHoldStart(-1, 0, 0)}
+                onPointerUp={handlePadHoldEnd}
+                onPointerLeave={handlePadHoldEnd}
+                onPointerCancel={handlePadHoldEnd}
                 className="lg-btn-glass"
                 style={{ justifyContent: 'center', height: '36px', padding: 0 }}
+                title="Undur ke belakang"
               >
                 ▼
               </button>

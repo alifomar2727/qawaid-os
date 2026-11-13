@@ -404,6 +404,8 @@ export default function ThreeWorldMap({
   isBossUnlocked = true,
   isWilayahCompleted = false,
   autoWalkTarget = null, // { npcId, r, c, nonce }
+  resetSpawnNonce = 0,
+  controlRef = null,
   onPlayerMoveGrid,
   onInteractNpc,
   onOasisVisit,
@@ -412,8 +414,21 @@ export default function ThreeWorldMap({
   const containerRef = useRef(null);
   const joyBaseRef = useRef(null);
   const joyKnobRef = useRef(null);
+  const cornerJoyKnobRef = useRef(null);
+  const minimapCanvasRef = useRef(null);
   const wayfindingBadgeRef = useRef(null);
   const wayfindingArrowRef = useRef(null);
+  const fallbackControlRef = useRef({
+    padFwd: 0,
+    padRight: 0,
+    padYaw: 0,
+    pulseTimer: 0,
+    pulseFwd: 0,
+    pulseRight: 0,
+  });
+  const activeControlRef = controlRef || fallbackControlRef;
+
+  const [minimapExpanded, setMinimapExpanded] = useState(false);
 
   // Throttled minimal React HUD state for nearby interact button (only updates when nearest target crosses threshold!)
   const [nearbyInteractiveNpc, setNearbyInteractiveNpc] = useState(null);
@@ -477,11 +492,13 @@ export default function ThreeWorldMap({
     lastPortalTriggerTime: -10,
     nearbyNpcId: null,
     joyVec: { x: 0, y: 0 },
+    cornerJoyVec: { x: 0, y: 0 },
     rightTouchActive: false,
     mouseDragActive: false,
     npcMarkers: [], // { npc, x, z, isBoss, pillarMesh, pillarMat, labelApi, ringMesh }
     portalMarker: null,
     oasisPos: null,
+    pathSet: null,
     syncPlayerToGrid: null,
   });
 
@@ -545,25 +562,17 @@ export default function ThreeWorldMap({
     }
   }, [autoWalkTarget, mapGrid]);
 
-  // Sync discrete playerPos prop only when teleported cleanly (> 1.6 tiles away, e.g. D-pad click or map reset)
+  // Reset player spawn ONLY when explicitly requested (region switch / seed regenerate), NEVER on continuous grid sync
   useEffect(() => {
-    if (!playerPos) return;
+    if (!resetSpawnNonce) return;
     const eng = engineRef.current;
-    const { x, z } = getTileWorldCoords(playerPos.r, playerPos.c);
-    const dx = x - eng.playerPos.x;
-    const dz = z - eng.playerPos.z;
-    // Only snap if far away (map change / manual D-Pad jump > 3.2m) and not walking from self
-    const curGrid = worldToGridCoords(eng.playerPos.x, eng.playerPos.z);
-    if (curGrid.r !== playerPos.r || curGrid.c !== playerPos.c) {
-      if (Math.hypot(dx, dz) > TILE_SIZE * 0.85) {
-        eng.playerPos.x = x;
-        eng.playerPos.z = z;
-        eng.lastGridCell = { r: playerPos.r, c: playerPos.c };
-        eng.autoWalkWaypoints = [];
-        eng.autoWalkNpc = null;
-      }
-    }
-  }, [playerPos]);
+    const spawn = getTileWorldCoords(1, 1);
+    eng.playerPos.x = spawn.x;
+    eng.playerPos.z = spawn.z;
+    eng.lastGridCell = { r: 1, c: 1 };
+    eng.autoWalkWaypoints = [];
+    eng.autoWalkNpc = null;
+  }, [resetSpawnNonce]);
 
   // Update NPC light pillars, labels & portal glow in-place whenever mission progress changes
   useEffect(() => {
@@ -811,6 +820,7 @@ export default function ThreeWorldMap({
     }
 
     const pathSet = findPathTiles(mapGrid, 1, 1);
+    eng.pathSet = pathSet;
 
     // Build Playable World Tiles (1 unit = 4.0m)
     for (let rIdx = 0; rIdx < mapGrid.length; rIdx++) {
@@ -1432,6 +1442,7 @@ export default function ThreeWorldMap({
     const clock = new THREE.Clock();
     let rafId = null;
     let badgeTick = 0;
+    let minimapTick = 0;
     const WORLD_BOUND_X = (GRID_COLS * TILE_SIZE) * 0.5 - 0.75;
     const WORLD_BOUND_Z = (GRID_ROWS * TILE_SIZE) * 0.5 - 0.75;
 
@@ -1439,10 +1450,33 @@ export default function ThreeWorldMap({
       rafId = requestAnimationFrame(animate);
       const dt = Math.min(clock.getDelta(), 0.05);
       const elapsed = clock.elapsedTime;
+      const extCtrl = activeControlRef.current;
 
-      // 1. Gather Movement Vector (Joystick > Keyboard > AutoWalk)
-      let fwdWeight = -eng.joyVec.y;
-      let rightWeight = eng.joyVec.x;
+      // Apply optional smooth camera rotation from external controller (↺ / ↻ buttons hold + tap pulse)
+      if (!isEncounterActiveRef.current && extCtrl) {
+        let yawRate = extCtrl.padYaw || 0;
+        if (extCtrl.pulseYawTimer > 0) {
+          extCtrl.pulseYawTimer = Math.max(0, extCtrl.pulseYawTimer - dt);
+          yawRate += extCtrl.pulseYaw || 0;
+        }
+        if (Math.abs(yawRate) > 0.01) {
+          eng.camYaw -= THREE.MathUtils.clamp(yawRate, -1, 1) * dt * 2.2;
+        }
+      }
+
+      // 1. Gather Continuous Movement Vector (On-Canvas Joy + Corner Analog Stick + Sidebar Hold/Pulse + WASD > AutoWalk)
+      let fwdWeight = -eng.joyVec.y - eng.cornerJoyVec.y;
+      let rightWeight = eng.joyVec.x + eng.cornerJoyVec.x;
+
+      if (extCtrl) {
+        fwdWeight += extCtrl.padFwd || 0;
+        rightWeight += extCtrl.padRight || 0;
+        if (extCtrl.pulseTimer > 0) {
+          extCtrl.pulseTimer = Math.max(0, extCtrl.pulseTimer - dt);
+          fwdWeight += extCtrl.pulseFwd || 0;
+          rightWeight += extCtrl.pulseRight || 0;
+        }
+      }
 
       if (keysDown.has('w') || keysDown.has('arrowup')) fwdWeight += 1;
       if (keysDown.has('s') || keysDown.has('arrowdown')) fwdWeight -= 1;
@@ -1454,6 +1488,8 @@ export default function ThreeWorldMap({
 
       if (!isEncounterActiveRef.current) {
         if (inputMag > 0.08) {
+          eng.autoWalkWaypoints = [];
+          eng.autoWalkNpc = null;
           camForward.set(Math.sin(eng.camYaw), 0, Math.cos(eng.camYaw));
           camRight.set(-Math.cos(eng.camYaw), 0, Math.sin(eng.camYaw));
           moveVec
@@ -1474,9 +1510,11 @@ export default function ThreeWorldMap({
           while (diff < -Math.PI) diff += Math.PI * 2;
           eng.charYaw += diff * Math.min(1, dt * 12);
 
-          // Smart Camera Soft-Assist during one-handed joystick steering
-          if (!eng.rightTouchActive && !eng.mouseDragActive && Math.abs(eng.joyVec.x) > 0.14 && eng.joyVec.y < 0.45) {
-            eng.camYaw -= eng.joyVec.x * dt * 1.05;
+          // Smart Camera Soft-Assist during analog stick steering
+          const activeJoyX = eng.joyVec.x || eng.cornerJoyVec.x;
+          const activeJoyY = eng.joyVec.y || eng.cornerJoyVec.y;
+          if (!eng.rightTouchActive && !eng.mouseDragActive && Math.abs(activeJoyX) > 0.14 && activeJoyY < 0.45) {
+            eng.camYaw -= activeJoyX * dt * 1.05;
           }
         } else if (eng.autoWalkWaypoints.length > 0) {
           const wp = eng.autoWalkWaypoints[0];
@@ -1747,7 +1785,7 @@ export default function ThreeWorldMap({
 
         if (targetMarker) {
           wayfindingBadgeRef.current.style.display = 'flex';
-          wayfindingBadgeRef.current.lastChild.textContent = `📍 ${targetMarker.label} • ${Math.round(targetMarker.dist)}m`;
+          wayfindingBadgeRef.current.lastChild.textContent = `${targetMarker.label} • ${Math.round(targetMarker.dist)}m`;
           // Relative bearing angle on screen
           projVec.set(targetMarker.x, 1.5, targetMarker.z).project(camera);
           const angleRad = Math.atan2(projVec.x, projVec.y);
@@ -1756,6 +1794,140 @@ export default function ThreeWorldMap({
           }
         } else {
           wayfindingBadgeRef.current.style.display = 'none';
+        }
+      }
+
+      // 7. Live Top-Down Minimap ("Peta Dari Atas" ~20 Hz direct canvas draw, 0 React re-renders)
+      minimapTick += dt;
+      if (minimapTick >= 0.05 && minimapCanvasRef.current && mapGrid?.length) {
+        minimapTick = 0;
+        const mm = minimapCanvasRef.current;
+        const ctx = mm.getContext('2d');
+        if (ctx) {
+          const w = mm.width;
+          const h = mm.height;
+          const cellW = w / GRID_COLS;
+          const cellH = h / GRID_ROWS;
+          const solvedSet = new Set(solvedRef.current || []);
+
+          ctx.clearRect(0, 0, w, h);
+          ctx.fillStyle = '#071121';
+          ctx.fillRect(0, 0, w, h);
+
+          // Tiles (Grass, Walkways, Walls, Water, Oasis, Portal)
+          for (let r = 0; r < GRID_ROWS; r++) {
+            for (let c = 0; c < GRID_COLS; c++) {
+              const t = mapGrid[r]?.[c];
+              if (!t) continue;
+              const isWalkway = pathSet.has(`${r},${c}`) || t.type === 'NPC' || t.type === 'OASIS' || t.type === 'PORTAL';
+              if (t.type === 'WALL') {
+                ctx.fillStyle = '#1e293b';
+              } else if (t.type === 'WATER') {
+                ctx.fillStyle = '#0284c7';
+              } else if (isWalkway) {
+                ctx.fillStyle = isFPQS ? '#cbd5e1' : '#64748b';
+              } else {
+                ctx.fillStyle = isFPQS ? '#166534' : '#0f2f25';
+              }
+              ctx.fillRect(c * cellW + 0.6, r * cellH + 0.6, cellW - 1.2, cellH - 1.2);
+
+              if (t.type === 'OASIS') {
+                ctx.fillStyle = isFPQS ? '#22c55e' : '#38bdf8';
+                ctx.beginPath();
+                ctx.arc((c + 0.5) * cellW, (r + 0.5) * cellH, Math.min(cellW, cellH) * 0.34, 0, Math.PI * 2);
+                ctx.fill();
+              } else if (t.type === 'PORTAL') {
+                const canPass = isFPQS
+                  ? solvedSet.has(bossNpcIdRef.current || 'NPC-FPQS-4')
+                  : isWilayahCompletedRef.current;
+                ctx.strokeStyle = canPass ? '#c084fc' : '#94a3b8';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc((c + 0.5) * cellW, (r + 0.5) * cellH, Math.min(cellW, cellH) * 0.34, 0, Math.PI * 2);
+                ctx.stroke();
+              }
+            }
+          }
+
+          // NPC Checkpoints & Short Labels
+          for (let i = 0; i < eng.npcMarkers.length; i++) {
+            const m = eng.npcMarkers[i];
+            const isSolved = solvedSet.has(m.npc.npcId);
+            const isLocked = m.isBoss && !isBossUnlockedRef.current && !isSolved;
+            const nx = ((m.x + GRID_COLS * TILE_SIZE * 0.5) / (GRID_COLS * TILE_SIZE)) * w;
+            const ny = ((m.z - 0.92 + GRID_ROWS * TILE_SIZE * 0.5) / (GRID_ROWS * TILE_SIZE)) * h;
+
+            ctx.fillStyle = isSolved ? '#10b981' : isLocked ? '#ef4444' : m.isBoss ? '#fbbf24' : '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(nx, ny, m.isBoss ? Math.min(cellW, cellH) * 0.36 : Math.min(cellW, cellH) * 0.28, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+
+            if (w >= 200) {
+              const shortLbl = m.npc.makmalType === 'BILIK_NADI'
+                ? 'Nadi'
+                : m.npc.makmalType === 'DEKAN'
+                ? 'Dekan'
+                : (m.npc.makmalType || m.npc.nama?.split(' ')[0] || '').slice(0, 8);
+              ctx.font = 'bold 9px Inter, system-ui, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText(shortLbl, nx, ny - 6);
+            }
+          }
+
+          // Auto-Walk Path Line
+          if (eng.autoWalkWaypoints.length > 0) {
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
+            ctx.lineWidth = 1.6;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            const px0 = ((eng.playerPos.x + GRID_COLS * TILE_SIZE * 0.5) / (GRID_COLS * TILE_SIZE)) * w;
+            const py0 = ((eng.playerPos.z + GRID_ROWS * TILE_SIZE * 0.5) / (GRID_ROWS * TILE_SIZE)) * h;
+            ctx.moveTo(px0, py0);
+            for (const wp of eng.autoWalkWaypoints) {
+              const wx = ((wp.x + GRID_COLS * TILE_SIZE * 0.5) / (GRID_COLS * TILE_SIZE)) * w;
+              const wy = ((wp.z + GRID_ROWS * TILE_SIZE * 0.5) / (GRID_ROWS * TILE_SIZE)) * h;
+              ctx.lineTo(wx, wy);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+
+          // Player World Pos, Camera View Cone & Facing Arrow
+          const px = ((eng.playerPos.x + GRID_COLS * TILE_SIZE * 0.5) / (GRID_COLS * TILE_SIZE)) * w;
+          const py = ((eng.playerPos.z + GRID_ROWS * TILE_SIZE * 0.5) / (GRID_ROWS * TILE_SIZE)) * h;
+
+          // Camera View Frustum Cone (camYaw direction: (+sin, +cos) on minimap!)
+          const camDx = Math.sin(eng.camYaw);
+          const camDy = Math.cos(eng.camYaw);
+          const camAngle = Math.atan2(camDy, camDx);
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.28)';
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.arc(px, py, 20, camAngle - 0.45, camAngle + 0.45);
+          ctx.closePath();
+          ctx.fill();
+
+          // Player Directional Arrow (charYaw direction)
+          const pAngle = Math.atan2(Math.cos(eng.charYaw), Math.sin(eng.charYaw));
+          ctx.save();
+          ctx.translate(px, py);
+          ctx.rotate(pAngle);
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(6.5, 0);
+          ctx.lineTo(-4.5, -4.5);
+          ctx.lineTo(-2.5, 0);
+          ctx.lineTo(-4.5, 4.5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
         }
       }
 
@@ -1785,6 +1957,80 @@ export default function ThreeWorldMap({
     };
   }, [mapGrid, wilayahIdx, mapSeed, palette, isFPQS]);
 
+  // Click/Tap anywhere on Top-Down Minimap to Auto-Walk smoothly to that spot
+  const handleMinimapClick = (e) => {
+    if (!mapGrid?.length || isEncounterActiveRef.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const u = THREE.MathUtils.clamp((e.clientX - rect.left) / rect.width, 0, 0.999);
+    const v = THREE.MathUtils.clamp((e.clientY - rect.top) / rect.height, 0, 0.999);
+    const targetC = Math.floor(u * GRID_COLS);
+    const targetR = Math.floor(v * GRID_ROWS);
+    const eng = engineRef.current;
+    const curr = worldToGridCoords(eng.playerPos.x, eng.playerPos.z);
+    const tile = mapGrid[targetR]?.[targetC];
+    const tilePath = findGridPath(mapGrid, curr.r, curr.c, targetR, targetC, true);
+    if (tilePath.length > 0) {
+      eng.autoWalkWaypoints = tilePath.slice(1).map((step, idx, arr) => {
+        const wc = getTileWorldCoords(step.r, step.c);
+        if (idx === arr.length - 1 && tile?.type === 'NPC') {
+          return { x: wc.x, z: Math.min((GRID_ROWS / 2) * TILE_SIZE - 1.0, wc.z + 2.05) };
+        }
+        return wc;
+      });
+      eng.autoWalkNpc = tile?.npc || null;
+    }
+  };
+
+  // Pointer-captured visible 360° Analog Thumbstick (bottom-left) for both mouse & touch!
+  const cornerStickStateRef = useRef({ active: false, pointerId: null, cx: 0, cy: 0 });
+  const handleCornerStickDown = (e) => {
+    if (isEncounterActiveRef.current) return;
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    const rect = e.currentTarget.getBoundingClientRect();
+    cornerStickStateRef.current = {
+      active: true,
+      pointerId: e.pointerId,
+      cx: rect.left + rect.width * 0.5,
+      cy: rect.top + rect.height * 0.5,
+    };
+    engineRef.current.autoWalkWaypoints = [];
+    engineRef.current.autoWalkNpc = null;
+    updateCornerStick(e.clientX, e.clientY);
+  };
+  const updateCornerStick = (clientX, clientY) => {
+    const st = cornerStickStateRef.current;
+    let dx = clientX - st.cx;
+    let dy = clientY - st.cy;
+    const maxR = 30;
+    const dist = Math.hypot(dx, dy);
+    if (dist > maxR) {
+      dx = (dx / dist) * maxR;
+      dy = (dy / dist) * maxR;
+    }
+    engineRef.current.cornerJoyVec = { x: dx / maxR, y: dy / maxR };
+    if (cornerJoyKnobRef.current) {
+      cornerJoyKnobRef.current.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+    }
+  };
+  const handleCornerStickMove = (e) => {
+    const st = cornerStickStateRef.current;
+    if (!st.active || st.pointerId !== e.pointerId) return;
+    e.stopPropagation();
+    updateCornerStick(e.clientX, e.clientY);
+  };
+  const handleCornerStickUp = (e) => {
+    const st = cornerStickStateRef.current;
+    if (!st.active || st.pointerId !== e.pointerId) return;
+    e.stopPropagation();
+    cornerStickStateRef.current.active = false;
+    cornerStickStateRef.current.pointerId = null;
+    engineRef.current.cornerJoyVec = { x: 0, y: 0 };
+    if (cornerJoyKnobRef.current) {
+      cornerJoyKnobRef.current.style.transform = 'translate3d(0px, 0px, 0)';
+    }
+  };
+
   return (
     <div
       style={{
@@ -1811,40 +2057,164 @@ export default function ThreeWorldMap({
         }}
       />
 
-      {/* Eye-Level Edge-of-Screen Wayfinding Distance Badge */}
+      {/* Top-Left Wayfinding Distance Pill */}
       <div
         ref={wayfindingBadgeRef}
         style={{
           position: 'absolute',
-          top: '12px',
-          left: '50%',
-          transform: 'translateX(-50%)',
+          top: '10px',
+          left: '10px',
           display: 'none',
           alignItems: 'center',
-          gap: '7px',
-          padding: '5px 12px',
+          gap: '6px',
+          padding: '5px 10px',
           borderRadius: '999px',
-          background: 'rgba(10, 18, 36, 0.78)',
+          background: 'rgba(10, 18, 36, 0.80)',
           backdropFilter: 'blur(8px)',
           border: '1px solid rgba(56, 189, 248, 0.45)',
           color: '#f8fafc',
-          fontSize: '0.74rem',
+          fontSize: '0.72rem',
           fontWeight: 700,
           pointerEvents: 'none',
           whiteSpace: 'nowrap',
+          maxWidth: '52%',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
           boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
         }}
       >
         <span
           ref={wayfindingArrowRef}
-          style={{ display: 'inline-block', color: '#38bdf8', fontWeight: 900 }}
+          style={{ display: 'inline-block', color: '#38bdf8', fontWeight: 900, flexShrink: 0 }}
         >
           ▲
         </span>
-        <span>📍</span>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>📍</span>
       </div>
 
-      {/* Floating Touch Virtual Joystick (Left Half, DOM-driven 0 React re-renders) */}
+      {/* Top-Right Live Top-Down Minimap ("Peta Dari Atas — Panduan Arah") */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          borderRadius: '12px',
+          background: 'rgba(8, 15, 30, 0.86)',
+          backdropFilter: 'blur(8px)',
+          border: '1.5px solid rgba(56, 189, 248, 0.48)',
+          padding: '4px',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
+          zIndex: 8,
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '6px',
+            marginBottom: '3px',
+            padding: '0 2px',
+          }}
+        >
+          <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#bae6fd', letterSpacing: '0.02em' }}>
+            🗺️ Peta Atas
+          </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMinimapExpanded((v) => !v);
+            }}
+            style={{
+              border: 'none',
+              background: 'rgba(56, 189, 248, 0.2)',
+              color: '#38bdf8',
+              borderRadius: '5px',
+              padding: '1px 5px',
+              fontSize: '0.62rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+            }}
+            title={minimapExpanded ? 'Kecilkan Peta Atas' : 'Besarkan Peta Atas'}
+          >
+            {minimapExpanded ? '⤡ Kecil' : '⤢ Besar'}
+          </button>
+        </div>
+        <canvas
+          ref={minimapCanvasRef}
+          width={minimapExpanded ? 240 : 138}
+          height={minimapExpanded ? 160 : 92}
+          onClick={handleMinimapClick}
+          style={{
+            display: 'block',
+            width: minimapExpanded ? '240px' : '138px',
+            height: minimapExpanded ? '160px' : '92px',
+            borderRadius: '8px',
+            cursor: 'crosshair',
+          }}
+          title="Klik mana-mana lokasi pada peta atas untuk jalan automatik"
+        />
+        {minimapExpanded && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontSize: '0.58rem',
+              color: '#cbd5e1',
+              marginTop: '3px',
+              padding: '0 2px',
+            }}
+          >
+            <span>▷ Anda</span>
+            <span style={{ color: '#38bdf8' }}>● Misi</span>
+            <span style={{ color: '#22c55e' }}>☕ Tenaga</span>
+            <span style={{ color: '#c084fc' }}>◯ Portal</span>
+          </div>
+        )}
+      </div>
+
+      {/* Always-Ready Bottom-Left 360° Analog Thumbstick (Works on BOTH Mouse & Touch!) */}
+      <div
+        onPointerDown={handleCornerStickDown}
+        onPointerMove={handleCornerStickMove}
+        onPointerUp={handleCornerStickUp}
+        onPointerCancel={handleCornerStickUp}
+        style={{
+          position: 'absolute',
+          bottom: '12px',
+          left: '12px',
+          width: '86px',
+          height: '86px',
+          borderRadius: '50%',
+          background: 'rgba(15, 23, 42, 0.55)',
+          border: '2px solid rgba(56, 189, 248, 0.45)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'grab',
+          touchAction: 'none',
+          zIndex: 8,
+          boxShadow: '0 6px 18px rgba(0, 0, 0, 0.35)',
+        }}
+        title="Seret ke mana-mana arah untuk gerak bebas 360°"
+      >
+        <div
+          ref={cornerJoyKnobRef}
+          style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+            border: '2px solid rgba(255, 255, 255, 0.8)',
+            boxShadow: '0 0 14px rgba(56, 189, 248, 0.65)',
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+
+      {/* Dynamic Floating Touch Virtual Joystick (Spawns under left thumb anywhere on left screen half) */}
       <div
         ref={joyBaseRef}
         style={{
@@ -1913,12 +2283,12 @@ export default function ThreeWorldMap({
           borderRadius: '8px',
           background: 'rgba(10, 18, 36, 0.65)',
           color: '#cbd5e1',
-          fontSize: '0.66rem',
+          fontSize: '0.64rem',
           fontWeight: 600,
           pointerEvents: 'none',
         }}
       >
-        🕹️ Kiri: Gerak • Kanan/Seret: Kamera • WASD
+        🕹️ Joy-Stick / WASD • Seret Kanan: Kamera
       </div>
     </div>
   );
