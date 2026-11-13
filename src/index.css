@@ -4747,31 +4747,46 @@ summary:focus-visible {
   }
 }
 
-/* 1b. Efek Neon Sisi Kad untuk Telefon / Skrin Sentuh (Mengikut Fokus Tatalan & Sentuhan) */
+@keyframes kadNeonBreathe {
+  0%,
+  100% {
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.96;
+  }
+}
+
+/* 1b. Efek Neon Sisi Kad Automatik untuk Telefon / Skrin Sentuh (Nyala & Malap Perlahan) */
 @media (hover: none), (pointer: coarse), (max-width: 768px) {
   .kad-kaedah {
     border-width: 1px;
     border-style: solid;
-    border-color: color-mix(in srgb, var(--theme-color, #10b981) 36%, rgba(255, 255, 255, 0.18));
-    box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.38),
-      0 0 10px color-mix(in srgb, var(--theme-color, #10b981) 18%, transparent),
-      inset 0 1px 0 rgba(255, 255, 255, 0.22);
-    transition:
-      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 0.36s ease,
-      border-color 0.36s ease;
+    border-color: color-mix(in srgb, var(--theme-color, #10b981) 24%, rgba(255, 255, 255, 0.14));
   }
 
-  .kad-kaedah.is-mobile-active,
-  .kad-kaedah:active {
-    transform: translateY(-2px) scale(1.006);
-    border-color: var(--theme-color, rgba(52, 211, 153, 0.88)) !important;
+  .kad-kaedah::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+    border: 1.5px solid var(--theme-color, rgba(52, 211, 153, 0.88));
     box-shadow:
-      0 14px 32px rgba(0, 0, 0, 0.48),
-      0 0 22px var(--theme-color, rgba(16, 185, 129, 0.48)),
-      inset 0 0 16px color-mix(in srgb, var(--theme-color, #10b981) 16%, transparent),
-      inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+      0 0 18px var(--theme-color, rgba(16, 185, 129, 0.52)),
+      inset 0 0 14px color-mix(in srgb, var(--theme-color, #10b981) 22%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    will-change: opacity;
+    animation: kadNeonBreathe 4.8s ease-in-out infinite;
+  }
+
+  .kad-kaedah:nth-child(3n + 2)::after {
+    animation-delay: -1.6s;
+  }
+
+  .kad-kaedah:nth-child(3n + 3)::after {
+    animation-delay: -3.2s;
   }
 }
 
