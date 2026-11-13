@@ -4,107 +4,8 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { dataKuiz50 } from './dataKuiz';
-
-// Web Audio API Synthesizer untuk kesan bunyi pantas
-function createSwipeSoundEngine() {
-  let ctx = null;
-  const getCtx = () => {
-    if (typeof window === 'undefined') return null;
-    if (!ctx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (AudioCtx) ctx = new AudioCtx();
-    }
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
-    return ctx;
-  };
-
-  return {
-    playSwipe() {
-      const audio = getCtx();
-      if (!audio) return;
-      const osc = audio.createOscillator();
-      const gain = audio.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(320, audio.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(140, audio.currentTime + 0.08);
-      gain.gain.setValueAtTime(0.06, audio.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.08);
-      osc.connect(gain);
-      gain.connect(audio.destination);
-      osc.start();
-      osc.stop(audio.currentTime + 0.08);
-    },
-    playCorrect(combo = 1) {
-      const audio = getCtx();
-      if (!audio) return;
-      const baseFreq = Math.min(520 + combo * 40, 1050);
-      [baseFreq, baseFreq * 1.25].forEach((f, idx) => {
-        const osc = audio.createOscillator();
-        const gain = audio.createGain();
-        osc.type = 'triangle';
-        const start = audio.currentTime + idx * 0.045;
-        osc.frequency.setValueAtTime(f, start);
-        gain.gain.setValueAtTime(0.1, start);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.16);
-        osc.connect(gain);
-        gain.connect(audio.destination);
-        osc.start(start);
-        osc.stop(start + 0.16);
-      });
-    },
-    playWrong() {
-      const audio = getCtx();
-      if (!audio) return;
-      const osc = audio.createOscillator();
-      const gain = audio.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(210, audio.currentTime);
-      osc.frequency.linearRampToValueAtTime(120, audio.currentTime + 0.2);
-      gain.gain.setValueAtTime(0.08, audio.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.2);
-      osc.connect(gain);
-      gain.connect(audio.destination);
-      osc.start();
-      osc.stop(audio.currentTime + 0.2);
-    },
-    playComboMilestone() {
-      const audio = getCtx();
-      if (!audio) return;
-      [587.33, 739.99, 880, 1174.66].forEach((f, idx) => {
-        const osc = audio.createOscillator();
-        const gain = audio.createGain();
-        osc.type = 'sine';
-        const start = audio.currentTime + idx * 0.05;
-        osc.frequency.setValueAtTime(f, start);
-        gain.gain.setValueAtTime(0.09, start);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.18);
-        osc.connect(gain);
-        gain.connect(audio.destination);
-        osc.start(start);
-        osc.stop(start + 0.18);
-      });
-    },
-    playFinish() {
-      const audio = getCtx();
-      if (!audio) return;
-      [523.25, 659.25, 783.99, 1046.5].forEach((f, idx) => {
-        const osc = audio.createOscillator();
-        const gain = audio.createGain();
-        osc.type = 'triangle';
-        const start = audio.currentTime + idx * 0.08;
-        osc.frequency.setValueAtTime(f, start);
-        gain.gain.setValueAtTime(0.12, start);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.3);
-        osc.connect(gain);
-        gain.connect(audio.destination);
-        osc.start(start);
-        osc.stop(start + 0.3);
-      });
-    },
-  };
-}
+import ThreeArcadeSwipe from './ThreeArcadeSwipe';
+import { createArcadeAudio } from './arcadeAudio';
 
 // Koleksi Isu Semasa & Padanan Kaedah Fiqh Pantas
 const SWIPE_POOL = [
@@ -462,11 +363,12 @@ export default function QawaidSwipeGame({ onBackToHub }) {
   const [flashFeedback, setFlashFeedback] = useState(null); // 'CORRECT' | 'WRONG' | null
 
   const dragStartRef = useRef({ x: 0, y: 0 });
+  const swipe3DControlRef = useRef(null);
   const soundRef = useRef(null);
   const timerRef = useRef(null);
 
   if (!soundRef.current) {
-    soundRef.current = createSwipeSoundEngine();
+    soundRef.current = createArcadeAudio();
   }
 
   // Floating Popup Spawner
@@ -496,7 +398,7 @@ export default function QawaidSwipeGame({ onBackToHub }) {
     setFlashFeedback(null);
     setGameState('PLAYING');
 
-    if (soundEnabled) soundRef.current?.playComboMilestone();
+    if (soundEnabled) soundRef.current?.playGoldenOverdrive?.();
   }, [soundEnabled]);
 
   // Timer 60 Saat
@@ -550,8 +452,10 @@ export default function QawaidSwipeGame({ onBackToHub }) {
       const playerChoseRelevant = direction === 'RIGHT';
       const isCorrect = playerChoseRelevant === currentCard.isRelevant;
 
-      // Animasikan kad melayang keluar
+      // Trigger animasi 3D parabolic fling (betul) atau 1.5s 180-deg flip (salah)
       setFlyDirection(direction);
+      swipe3DControlRef.current?.triggerDecision?.(direction, isCorrect);
+      soundRef.current?.vibrateTap?.();
       if (soundEnabled) soundRef.current?.playSwipe();
 
       // Rekod sejarah
@@ -564,55 +468,57 @@ export default function QawaidSwipeGame({ onBackToHub }) {
         },
       ]);
 
-      setTimeout(() => {
-        if (isCorrect) {
-          const newCombo = combo + 1;
-          const multiplier = Math.min(newCombo, 5);
-          const pointsEarned = 100 * multiplier;
+      if (isCorrect) {
+        const newCombo = combo + 1;
+        const multiplier = Math.min(newCombo, 5);
+        const pointsEarned = 100 * multiplier;
 
-          setCombo(newCombo);
-          setMaxCombo((m) => Math.max(m, newCombo));
-          setScore((s) => s + pointsEarned);
-          setCorrectCount((c) => c + 1);
-          setFlashFeedback('CORRECT');
+        setCombo(newCombo);
+        setMaxCombo((m) => Math.max(m, newCombo));
+        setScore((s) => s + pointsEarned);
+        setCorrectCount((c) => c + 1);
+        setFlashFeedback('CORRECT');
 
-          if (soundEnabled) {
-            if (newCombo % 5 === 0) {
-              soundRef.current?.playComboMilestone();
-            } else {
-              soundRef.current?.playCorrect(newCombo);
-            }
-          }
-
-          if (newCombo >= 2) {
-            spawnPopup(`🔥 COMBO x${multiplier}! +${pointsEarned}`, 'gold');
+        soundRef.current?.vibrateSuccess?.();
+        if (soundEnabled) {
+          if (newCombo % 5 === 0) {
+            soundRef.current?.playGoldenOverdrive?.();
           } else {
-            spawnPopup(`+${pointsEarned}`, 'emerald');
+            soundRef.current?.playCorrect(newCombo);
           }
-        } else {
-          // Salah jawapan: Reset combo
-          setCombo(0);
-          setWrongCount((w) => w + 1);
-          setFlashFeedback('WRONG');
-          if (soundEnabled) soundRef.current?.playWrong();
-          spawnPopup('❌ Kurang Tepat! (Combo Reset)', 'crimson');
         }
 
-        setTimeout(() => {
-          setFlashFeedback(null);
-        }, 320);
+        if (newCombo >= 2) {
+          spawnPopup(`🔥 COMBO x${multiplier}! +${pointsEarned}`, 'gold');
+        } else {
+          spawnPopup(`+${pointsEarned}`, 'emerald');
+        }
+      } else {
+        // Salah jawapan: Reset combo & pusing kad 3D 180° selama 1.5s
+        setCombo(0);
+        setWrongCount((w) => w + 1);
+        setFlashFeedback('WRONG');
+        soundRef.current?.vibrateError?.();
+        if (soundEnabled) soundRef.current?.playWrong();
+        spawnPopup('❌ Semak Kaedah Sebenar di Belakang Kad!', 'crimson');
+      }
 
-        // Maju ke kad seterusnya
+      setTimeout(() => {
+        setFlashFeedback(null);
+      }, isCorrect ? 320 : 1200);
+
+      // Tahan kad selama 1.52s jika salah supaya pemain sempat baca belakang kad 3D
+      const advanceDelay = isCorrect ? 310 : 1520;
+      setTimeout(() => {
         setFlyDirection(null);
         setDragOffset({ x: 0, y: 0 });
         setCurrentIndex((i) => {
           if (i + 1 >= deck.length) {
-            // Jika dek habis, jana tambahan dek
             setDeck((old) => [...old, ...generateSwipeDeck()]);
           }
           return i + 1;
         });
-      }, 200);
+      }, advanceDelay);
     },
     [gameState, currentCard, flyDirection, combo, soundEnabled, deck.length, spawnPopup]
   );
@@ -848,8 +754,15 @@ export default function QawaidSwipeGame({ onBackToHub }) {
             </div>
           </div>
 
-          {/* Target Kaedah Fiqh Capsule (Di Atas Skrin) */}
-          <div className="swipe-target-capsule glass-card">
+          {/* Target Kaedah Fiqh Capsule (Di Atas Skrin — Berdenyut Apabila Kaedah Sasaran Bertukar) */}
+          <div
+            key={currentCard.targetKaedahAr}
+            className="swipe-target-capsule glass-card sprint-slide-in"
+            style={{
+              boxShadow: '0 0 24px rgba(251, 191, 36, 0.22)',
+              borderColor: 'rgba(251, 191, 36, 0.45)',
+            }}
+          >
             <div className="swipe-target-badge">
               <span>KAEDAH FIQH SASARAN (TENTUKAN KESESUAIAN)</span>
             </div>
@@ -865,80 +778,27 @@ export default function QawaidSwipeGame({ onBackToHub }) {
             </div>
           </div>
 
-          {/* Swipe Deck Area (Satu Kad Besar di Tengah) */}
-          <div className="swipe-deck-wrap">
-            {/* Background Card Preview (Next Card for depth) */}
-            {nextCard && (
-              <div className="swipe-card-shadow glass-card">
-                <div className="swipe-card-category">{nextCard.kategoriIsu}</div>
-                <p className="swipe-card-preview-text">{nextCard.isu}</p>
-              </div>
-            )}
-
-            {/* Active Card with Drag / Fly Physics */}
-            <div
-              className={`swipe-card-active glass-card ${
-                flyDirection === 'LEFT'
-                  ? 'is-flying-left'
-                  : flyDirection === 'RIGHT'
-                  ? 'is-flying-right'
-                  : ''
-              } ${isDragging ? 'is-dragging' : ''}`}
-              style={{
-                transform: flyDirection
-                  ? undefined
-                  : `translate3d(${dragOffset.x}px, ${dragOffset.y * 0.25}px, 0) rotate(${rotation}deg)`,
-                cursor: isDragging ? 'grabbing' : 'grab',
-              }}
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerUp}
-            >
-              {/* Stamp Indicator: SESUAI (Kanan) */}
-              <div
-                className="swipe-stamp is-right"
-                style={{
-                  opacity:
-                    flyDirection === 'RIGHT' ? 1 : stampRightOpacity,
-                }}
-              >
-                <span>SESUAI ✅</span>
-              </div>
-
-              {/* Stamp Indicator: TIDAK RELEVAN (Kiri) */}
-              <div
-                className="swipe-stamp is-left"
-                style={{
-                  opacity:
-                    flyDirection === 'LEFT' ? 1 : stampLeftOpacity,
-                }}
-              >
-                <span>TIDAK RELEVAN ❌</span>
-              </div>
-
-              {/* Top metadata of card */}
-              <div className="swipe-card-header">
-                <span className="swipe-card-category">
-                  {currentCard.kategoriIsu}
-                </span>
-                <span className="swipe-drag-hint">
-                  {isDragging ? 'Lepaskan untuk pilih' : 'Tolak ⬅️ atau ➡️'}
-                </span>
-              </div>
-
-              {/* Contemporary Issue Text (Pusat Kad) */}
-              <div className="swipe-card-body">
-                <p className="swipe-card-issue-text">&ldquo;{currentCard.isu}&rdquo;</p>
-              </div>
-
-              {/* Bottom Card Footer */}
-              <div className="swipe-card-footer">
-                <div className="swipe-question-ask">
-                  Adakah isu ini berkaitan dengan kaedah di atas?
-                </div>
-              </div>
-            </div>
+          {/* 3D WebGL Sanctuary, Mizan Scale, Portals & Draggable Relic Card */}
+          <div
+            className="swipe-3d-stage"
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: 'clamp(280px, 44vh, 390px)',
+              borderRadius: '20px',
+              overflow: 'hidden',
+              marginBottom: '12px',
+              border: '1px solid rgba(251, 191, 36, 0.28)',
+              boxShadow: '0 12px 32px rgba(0, 0, 0, 0.45)',
+            }}
+          >
+            <ThreeArcadeSwipe
+              card={currentCard}
+              cardKey={currentIndex}
+              swipeControlRef={swipe3DControlRef}
+              isLocked={Boolean(flyDirection)}
+              onSwipeGesture={handleDecision}
+            />
           </div>
 
           {/* Quick Decision Action Buttons & Keyboard Hints */}

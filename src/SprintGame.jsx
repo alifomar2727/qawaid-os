@@ -6,106 +6,8 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { dataKuiz50 } from './dataKuiz';
 import KembaraQawaidGame from './KembaraQawaidGame';
 import QawaidSwipeGame from './QawaidSwipeGame';
-
-// Web Audio API Synthesizer untuk kesan bunyi kaca/iOS (tanpa fail MP3 luaran)
-function createSoundEngine() {
-  let ctx = null;
-  const getCtx = () => {
-    if (typeof window === 'undefined') return null;
-    if (!ctx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (AudioCtx) ctx = new AudioCtx();
-    }
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
-    return ctx;
-  };
-
-  return {
-    playTick(freq = 520, duration = 0.07) {
-      const audio = getCtx();
-      if (!audio) return;
-      const osc = audio.createOscillator();
-      const gain = audio.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, audio.currentTime);
-      gain.gain.setValueAtTime(0.08, audio.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audio.destination);
-      osc.start();
-      osc.stop(audio.currentTime + duration);
-    },
-    playCorrect(streak = 1) {
-      const audio = getCtx();
-      if (!audio) return;
-      const baseFreq = Math.min(523.25 + streak * 45, 987.77);
-      [baseFreq, baseFreq * 1.25].forEach((f, idx) => {
-        const osc = audio.createOscillator();
-        const gain = audio.createGain();
-        osc.type = 'triangle';
-        const start = audio.currentTime + idx * 0.055;
-        osc.frequency.setValueAtTime(f, start);
-        gain.gain.setValueAtTime(0.11, start);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.18);
-        osc.connect(gain);
-        gain.connect(audio.destination);
-        osc.start(start);
-        osc.stop(start + 0.18);
-      });
-    },
-    playWrong() {
-      const audio = getCtx();
-      if (!audio) return;
-      const osc = audio.createOscillator();
-      const gain = audio.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(190, audio.currentTime);
-      osc.frequency.linearRampToValueAtTime(135, audio.currentTime + 0.22);
-      gain.gain.setValueAtTime(0.09, audio.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.24);
-      osc.connect(gain);
-      gain.connect(audio.destination);
-      osc.start();
-      osc.stop(audio.currentTime + 0.24);
-    },
-    playPowerup() {
-      const audio = getCtx();
-      if (!audio) return;
-      [440, 554.37, 659.25, 880].forEach((f, idx) => {
-        const osc = audio.createOscillator();
-        const gain = audio.createGain();
-        osc.type = 'sine';
-        const start = audio.currentTime + idx * 0.04;
-        osc.frequency.setValueAtTime(f, start);
-        gain.gain.setValueAtTime(0.08, start);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.14);
-        osc.connect(gain);
-        gain.connect(audio.destination);
-        osc.start(start);
-        osc.stop(start + 0.14);
-      });
-    },
-    playFinish() {
-      const audio = getCtx();
-      if (!audio) return;
-      [523.25, 659.25, 783.99, 1046.5].forEach((f, idx) => {
-        const osc = audio.createOscillator();
-        const gain = audio.createGain();
-        osc.type = 'triangle';
-        const start = audio.currentTime + idx * 0.08;
-        osc.frequency.setValueAtTime(f, start);
-        gain.gain.setValueAtTime(0.12, start);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.28);
-        osc.connect(gain);
-        gain.connect(audio.destination);
-        osc.start(start);
-        osc.stop(start + 0.28);
-      });
-    },
-  };
-}
+import ThreeArcadeSprint from './ThreeArcadeSprint';
+import { createArcadeAudio } from './arcadeAudio';
 
 export default function SprintGame() {
   // Active Game in Hub: 'SPRINT' (1st) | 'SWIPE' | 'KEMBARA'
@@ -162,9 +64,10 @@ export default function SprintGame() {
   // History of answered questions for post-game review
   const [history, setHistory] = useState([]);
 
+  const sprint3DControlRef = useRef(null);
   const soundRef = useRef(null);
   if (!soundRef.current) {
-    soundRef.current = createSoundEngine();
+    soundRef.current = createArcadeAudio();
   }
 
   const spawnPopup = useCallback((text, tone = 'cyan') => {
@@ -269,12 +172,23 @@ export default function SprintGame() {
 
   const currentQuestion = deck[deckIndex % Math.max(deck.length, 1)] || dataKuiz50[0];
 
+  const isGoldenOverdrive = streak > 0 && streak % 5 === 0;
+
+  const eliminatedIndices = useMemo(() => {
+    const res = [];
+    options.forEach((o, i) => {
+      if (hiddenOptionIds.includes(o.id)) res.push(i);
+    });
+    return res;
+  }, [options, hiddenOptionIds]);
+
   const multiplier = useMemo(() => {
+    if (isGoldenOverdrive) return 3;
     if (streak >= 8) return 4;
     if (streak >= 5) return 3;
     if (streak >= 3) return 2;
     return 1;
-  }, [streak]);
+  }, [streak, isGoldenOverdrive]);
 
   // Advance to next question in deck
   const advanceQuestion = useCallback(
@@ -297,14 +211,20 @@ export default function SprintGame() {
       if (gameState !== 'PLAYING' || selectedOptId) return;
       setSelectedOptId(opt.id);
 
+      const optIdx = options.findIndex((o) => o.id === opt.id);
       const isCorrect = opt.id === currentQuestion.id;
+
+      if (soundEnabled) soundRef.current?.playBeamFire?.();
+      soundRef.current?.vibrateTap?.();
+      sprint3DControlRef.current?.fireBeamShot?.(optIdx >= 0 ? optIdx : 0, isCorrect);
 
       if (isCorrect) {
         const nextStreak = streak + 1;
-        const nextMult =
+        const baseMult =
           nextStreak >= 8 ? 4 : nextStreak >= 5 ? 3 : nextStreak >= 3 ? 2 : 1;
+        const effectiveMult = isGoldenOverdrive ? Math.max(baseMult, 3) : baseMult;
         const speedBonus = Math.round((timeLeftMs / 60000) * 35);
-        const gained = 100 * nextMult + speedBonus;
+        const gained = 100 * effectiveMult + speedBonus;
 
         setScore((s) => s + gained);
         setStreak(nextStreak);
@@ -312,11 +232,24 @@ export default function SprintGame() {
         setCorrectCount((c) => c + 1);
         setFeedbackState('CORRECT');
 
-        if (soundEnabled) soundRef.current?.playCorrect(nextStreak);
-        spawnPopup(`+${gained} (${nextMult}x)`, 'emerald');
+        soundRef.current?.vibrateSuccess?.();
+        if (soundEnabled) {
+          if (isGoldenOverdrive || nextStreak % 5 === 0) {
+            soundRef.current?.playGoldenOverdrive?.();
+          } else {
+            soundRef.current?.playCorrect(nextStreak);
+          }
+        }
+        spawnPopup(`+${gained} (${effectiveMult}x)`, isGoldenOverdrive ? 'gold' : 'emerald');
 
-        // Every 3 consecutive correct answers gives +2 seconds time bonus!
-        if (nextStreak % 3 === 0) {
+        // 5x Streak Golden Overdrive ("Soalan Cabang") rewards +2.0s & 3x!
+        if (isGoldenOverdrive) {
+          setTimeLeftMs((t) => Math.min(60000, t + 2000));
+          spawnPopup('👑 OVERDRIVE 3x! +2.0s Masa!', 'gold');
+        } else if (nextStreak % 5 === 0) {
+          setTimeLeftMs((t) => Math.min(60000, t + 2000));
+          spawnPopup('⚡ 5x STREAK! SOALAN CABANG +2.0s!', 'gold');
+        } else if (nextStreak % 3 === 0) {
           setTimeLeftMs((t) => Math.min(60000, t + 2000));
           spawnPopup('🔥 COMBO! +2.0s Masa!', 'gold');
         }
@@ -332,13 +265,14 @@ export default function SprintGame() {
 
         setTimeout(() => {
           advanceQuestion(deckIndex + 1);
-        }, 260);
+        }, 320);
       } else {
         setStreak(0);
         setWrongCount((w) => w + 1);
         setFeedbackState('WRONG');
         setTimeLeftMs((t) => Math.max(0, t - 1000));
 
+        soundRef.current?.vibrateError?.();
         if (soundEnabled) soundRef.current?.playWrong();
         spawnPopup('Kurang Tepat (-1.0s)', 'crimson');
 
@@ -359,8 +293,10 @@ export default function SprintGame() {
     [
       gameState,
       selectedOptId,
+      options,
       currentQuestion,
       streak,
+      isGoldenOverdrive,
       timeLeftMs,
       soundEnabled,
       spawnPopup,
@@ -369,28 +305,45 @@ export default function SprintGame() {
     ]
   );
 
-  // Power-Up 1: Freeze Timer for 4s + add 3s
+  const handleSelectPillar = useCallback(
+    (pillarIdx) => {
+      const opt = options[pillarIdx];
+      if (!opt || hiddenOptionIds.includes(opt.id)) return;
+      handleSelectOption(opt);
+    },
+    [options, hiddenOptionIds, handleSelectOption]
+  );
+
+  // Power-Up 1: Freeze Timer for 4s + add 3s (turns 3D tunnel icy cyan)
   const triggerFreeze = () => {
     if (gameState !== 'PLAYING' || !powerups.freeze) return;
     setPowerups((p) => ({ ...p, freeze: false }));
     setIsFrozen(true);
     setTimeLeftMs((t) => Math.min(60000, t + 3000));
-    if (soundEnabled) soundRef.current?.playPowerup();
+    soundRef.current?.vibrateTap?.();
+    if (soundEnabled) soundRef.current?.playPowerFreeze?.();
     spawnPopup('🧊 Masa Dibeku +3.0s!', 'cyan');
     setTimeout(() => {
       setIsFrozen(false);
-    }, 4000);
+    }, 3500);
   };
 
-  // Power-Up 2: 50:50 Eliminate 2 Wrong Options
+  // Power-Up 2: 50:50 Eliminate 2 Wrong Options with 3D cyan lightning bolts
   const triggerFifty = () => {
     if (gameState !== 'PLAYING' || !powerups.fifty || hiddenOptionIds.length > 0) return;
-    const wrongOpts = options.filter((o) => o.id !== currentQuestion.id);
-    const toHide = wrongOpts.slice(0, 2).map((o) => o.id);
+    const wrongPairs = options
+      .map((o, idx) => ({ o, idx }))
+      .filter(({ o }) => o.id !== currentQuestion.id)
+      .slice(0, 2);
+    const toHide = wrongPairs.map(({ o }) => o.id);
+    const wrongIndices = wrongPairs.map(({ idx }) => idx);
+
+    sprint3DControlRef.current?.fireFiftyBolts?.(wrongIndices);
     setHiddenOptionIds(toHide);
     setPowerups((p) => ({ ...p, fifty: false }));
-    if (soundEnabled) soundRef.current?.playPowerup();
-    spawnPopup('⚡ 50:50 Diaktifkan!', 'gold');
+    soundRef.current?.vibrateTap?.();
+    if (soundEnabled) soundRef.current?.playPowerLightning?.();
+    spawnPopup('⚡ Kilat 50:50 Diaktifkan!', 'gold');
   };
 
   // Power-Up 3: Skip Question Without Losing Streak
@@ -680,16 +633,16 @@ export default function SprintGame() {
           {/* Peraturan Ringkas & Power-ups */}
           <div className="sprint-rules-strip">
             <div className="sprint-rule-pill">
-              <span>🎯</span>
-              <span>3 Betul Berturut = <strong>+2.0s Bonus Masa</strong></span>
+              <span>👑</span>
+              <span>Setiap 5 Streak = <strong>Overdrive Emas 3x &amp; +2.0s</strong></span>
             </div>
             <div className="sprint-rule-pill">
               <span>🧊</span>
-              <span>3 Kuasa Bantuan: <strong>Beku Masa, 50:50 &amp; Langkau</strong></span>
+              <span>3 Kuasa 3D: <strong>Beku Ais, Kilat 50:50 &amp; Langkau</strong></span>
             </div>
             <div className="sprint-rule-pill sprint-rule-keyboard">
               <span>⌨️</span>
-              <span>Sokongan Kekunci Pantas <strong>[1] [2] [3] [4]</strong></span>
+              <span>Ketik Pilar 3D, Butang, atau Kekunci <strong>[1]–[4]</strong></span>
             </div>
           </div>
 
@@ -704,17 +657,32 @@ export default function SprintGame() {
       )}
 
       {/* ====================================================================
-          STATE 2: 3.. 2.. 1.. COUNTDOWN OVERLAY
+          STATE 2: 3.. 2.. 1.. COUNTDOWN OVERLAY (dengan Previu Terowong 3D)
          ==================================================================== */}
       {activeGame === 'SPRINT' && gameState === 'COUNTDOWN' && (
-        <div className="sprint-countdown-panel glass-card">
-          <p className="sprint-countdown-label">BERSEDIA UNTUK PECUTAN ILMU...</p>
-          <div key={countdownNum} className="sprint-countdown-num">
-            {countdownNum}
+        <div
+          className="sprint-countdown-panel glass-card"
+          style={{ position: 'relative', overflow: 'hidden', minHeight: '280px' }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              opacity: 0.55,
+              pointerEvents: 'none',
+            }}
+          >
+            <ThreeArcadeSprint isPaused />
           </div>
-          <p className="sprint-countdown-hint">
-            Gunakan klik tetikus, sentuhan skrin, atau kekunci 1 – 4
-          </p>
+          <div style={{ position: 'relative', zIndex: 2 }}>
+            <p className="sprint-countdown-label">BERSEDIA UNTUK PECUTAN ILMU...</p>
+            <div key={countdownNum} className="sprint-countdown-num">
+              {countdownNum}
+            </div>
+            <p className="sprint-countdown-hint">
+              Ketik terus Pilar Kristal 3D, butang 1–4, atau kekunci papan kekunci
+            </p>
+          </div>
         </div>
       )}
 
@@ -824,10 +792,76 @@ export default function SprintGame() {
             </button>
           </div>
 
+          {/* 3D WebGL Warp Tunnel & Aimable Mizan Reactor Stage */}
+          <div
+            className="sprint-3d-stage"
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: 'clamp(195px, 31vh, 270px)',
+              borderRadius: '18px',
+              overflow: 'hidden',
+              marginBottom: '14px',
+              border: isGoldenOverdrive
+                ? '1.5px solid rgba(251, 191, 36, 0.72)'
+                : isFrozen
+                ? '1.5px solid rgba(56, 189, 248, 0.65)'
+                : '1px solid rgba(16, 185, 129, 0.35)',
+              boxShadow: isGoldenOverdrive
+                ? '0 0 26px rgba(245, 158, 11, 0.25)'
+                : '0 8px 24px rgba(0, 0, 0, 0.38)',
+            }}
+          >
+            <ThreeArcadeSprint
+              engineControlRef={sprint3DControlRef}
+              isFrozen={isFrozen}
+              streak={streak}
+              isGoldenOverdrive={isGoldenOverdrive}
+              eliminatedIndices={eliminatedIndices}
+              questionKey={cardAnimKey}
+              onSelectPillar={handleSelectPillar}
+            />
+            {isGoldenOverdrive && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  padding: '4px 12px',
+                  borderRadius: '999px',
+                  background: 'rgba(120, 53, 15, 0.88)',
+                  border: '1px solid #fbbf24',
+                  color: '#fef08a',
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.06em',
+                  pointerEvents: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                👑 SOALAN CABANG OVERDRIVE • 3x SKOR &amp; +2.0s
+              </div>
+            )}
+          </div>
+
           {/* Animated Question Card */}
-          <div key={cardAnimKey} className="sprint-question-box sprint-slide-in">
+          <div
+            key={cardAnimKey}
+            className="sprint-question-box sprint-slide-in"
+            style={
+              isGoldenOverdrive
+                ? {
+                    borderColor: 'rgba(251, 191, 36, 0.6)',
+                    background: 'linear-gradient(135deg, rgba(66, 32, 6, 0.55), rgba(15, 23, 42, 0.75))',
+                  }
+                : undefined
+            }
+          >
             <div className="sprint-q-meta">
-              <span className="sprint-q-badge">{promptData.badge}</span>
+              <span className="sprint-q-badge">
+                {isGoldenOverdrive ? `👑 SOALAN CABANG (${promptData.badge})` : promptData.badge}
+              </span>
               <span className="sprint-q-sub" dir="auto">
                 {promptData.subHint}
               </span>
