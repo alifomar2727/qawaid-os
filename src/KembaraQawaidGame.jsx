@@ -1037,6 +1037,7 @@ export default function KembaraQawaidGame() {
   const [playerPos, setPlayerPos] = useState({ r: 1, c: 1 });
   const [facing, setFacing] = useState('RIGHT'); // 'LEFT' | 'RIGHT' | 'UP' | 'DOWN'
   const [recentPath, setRecentPath] = useState([]); // FASA 3: Jejak Langkah (3 koordinat terakhir)
+  const [autoWalkTarget, setAutoWalkTarget] = useState(null); // 3D RPG Auto-Walk Target
 
   // Statistik RPG Pemain
   const [reputation, setReputation] = useState(100);
@@ -1297,7 +1298,7 @@ export default function KembaraQawaidGame() {
     [mapGrid]
   );
 
-  // FASA 1 & FASA 4: Auto-move watak terus ke Menara NPC & buka interaksi
+  // FASA 1 & FASA 4: Auto-walk watak 3D terus ke NPC & buka interaksi bila tiba
   const handleAutoMoveToNpc = useCallback(
     (npc) => {
       if (bossNpc && npc.npcId === bossNpc.npcId && !isBossUnlocked && !isBossSolved) {
@@ -1312,18 +1313,65 @@ export default function KembaraQawaidGame() {
       }
       const coord = findNpcCoord(npc.npcId);
       if (coord) {
-        setPlayerPos(coord);
         soundRef.current?.playStep();
+        setAutoWalkTarget({ npcId: npc.npcId, r: coord.r, c: coord.c, nonce: Date.now() });
         if (mapContainerRef.current) {
           mapContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-        setTimeout(() => {
-          openNpcEncounter(npc);
-        }, 120);
       }
     },
-    [bossNpc, isBossUnlocked, isBossSolved, earlierSolvedCount, currentWilayah.id, triggerToast, findNpcCoord, openNpcEncounter]
+    [bossNpc, isBossUnlocked, isBossSolved, earlierSolvedCount, currentWilayah.id, triggerToast, findNpcCoord]
   );
+
+  // Penyegerakan koordinat grid daripada enjin gerak bebas 3D (60fps decoupled)
+  const handleThreePlayerMoveGrid = useCallback((r, c) => {
+    setPlayerPos((prev) => (prev.r === r && prev.c === c ? prev : { r, c }));
+  }, []);
+
+  const handleThreeOasisVisit = useCallback(() => {
+    soundRef.current?.playOasis();
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try {
+        navigator.vibrate([30, 50, 30]);
+      } catch {}
+    }
+    setReputation((rep) => Math.min(100, rep + 15));
+    setHikmahMana((m) => Math.min(5, m + 1));
+    triggerToast(
+      currentWilayah.id === 'FPQS'
+        ? '☕ Kafe Didi: +15 Reputasi & +1 Tenaga Tilik!'
+        : '⛲ Oasis Hikmah: +15 Reputasi & +1 Tenaga Tilik!',
+      'emerald'
+    );
+  }, [currentWilayah.id, triggerToast]);
+
+  const handleThreePortalVisit = useCallback(() => {
+    const canPassPortal = currentWilayah.id === 'FPQS' ? isBossSolved : isWilayahAllDone;
+    if (!canPassPortal) {
+      soundRef.current?.playCastReject();
+      triggerToast(
+        currentWilayah.id === 'FPQS'
+          ? `⚡ Gerbang Portal masih tertutup! Selesaikan cabaran Pejabat Dekan (${bossNpc?.nama}) untuk merebut Mohor Sanad FPQS & membuka portal.`
+          : `⚡ Gerbang Portal masih tertutup! Kalahkan kes sukar Qadhi Utama (${bossNpc?.nama}) untuk merebut Mohor Sanad & membuka portal.`,
+        'crimson'
+      );
+      return;
+    }
+    soundRef.current?.playPortal();
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try {
+        navigator.vibrate([30, 40, 30]);
+      } catch {}
+    }
+    const nextIdx = (wilayahIdx + 1) % SENARAI_WILAYAH.length;
+    setTimeout(() => {
+      setWilayahIdx(nextIdx);
+      setMapSeed(1);
+      setPlayerPos({ r: 1, c: 1 });
+      setRecentPath([]);
+      triggerToast(`🌀 Berpindah ke ${SENARAI_WILAYAH[nextIdx].nama}!`, 'cyan');
+    }, 120);
+  }, [currentWilayah.id, isBossSolved, isWilayahAllDone, bossNpc, wilayahIdx, triggerToast]);
 
   // Pergerakan 1 langkah pada Peta 2D
   const movePlayer = useCallback(
@@ -1480,31 +1528,7 @@ export default function KembaraQawaidGame() {
     return null;
   }, [playerPos, mapGrid]);
 
-  // Kawalan Papan Kekunci (WASD / Arrow Keys untuk gerak, Space / Enter untuk sapa NPC berdekatan)
-  useEffect(() => {
-    const onKeyDown = (e) => {
-      if (activeNpc || showSkillBook) return;
-      const key = e.key.toLowerCase();
-      if (key === 'w' || key === 'arrowup') {
-        e.preventDefault();
-        movePlayer(-1, 0);
-      } else if (key === 's' || key === 'arrowdown') {
-        e.preventDefault();
-        movePlayer(1, 0);
-      } else if (key === 'a' || key === 'arrowleft') {
-        e.preventDefault();
-        movePlayer(0, -1);
-      } else if (key === 'd' || key === 'arrowright') {
-        e.preventDefault();
-        movePlayer(0, 1);
-      } else if ((key === ' ' || key === 'enter') && nearbyNpc) {
-        e.preventDefault();
-        openNpcEncounter(nearbyNpc);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [activeNpc, showSkillBook, movePlayer, nearbyNpc, openNpcEncounter]);
+  // Nota: Kawalan WASD / Arrow / Space ditangani terus oleh enjin kamera orang-ketiga ThreeWorldMap.jsx
 
   // Lancarkan Skill / Magis Kaedah (dataNotaLengkap) untuk menyelesaikan konflik NPC
   const handleCastSkill = (selectedNota) => {
@@ -1996,7 +2020,7 @@ export default function KembaraQawaidGame() {
             )}
           </div>
 
-          {/* Enjin Pulau 3D WebGL Sebenar (Three.js Low-Poly Diorama Island) */}
+          {/* Enjin Dunia 3D Third-Person RPG (Three.js 60 FPS Mobile Engine) */}
           <ThreeWorldMap
             mapGrid={mapGrid}
             playerPos={playerPos}
@@ -2006,9 +2030,15 @@ export default function KembaraQawaidGame() {
             solvedNpcIds={solvedNpcIds}
             onTileClick={handleThreeTileClick}
             isEncounterActive={Boolean(activeNpc)}
+            activeNpcId={activeNpc?.npcId || null}
             bossNpcId={bossNpc?.npcId}
             isBossUnlocked={isBossUnlocked}
             isWilayahCompleted={isWilayahAllDone}
+            autoWalkTarget={autoWalkTarget}
+            onPlayerMoveGrid={handleThreePlayerMoveGrid}
+            onInteractNpc={openNpcEncounter}
+            onOasisVisit={handleThreeOasisVisit}
+            onPortalVisit={handleThreePortalVisit}
           />
         </div>
 
