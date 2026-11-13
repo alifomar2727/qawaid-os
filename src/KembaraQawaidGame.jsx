@@ -702,7 +702,7 @@ const SENARAI_WILAYAH = [
         makmalType: 'BILIK_NADI',
         notaId: 'KP-05',
         dialogMasalah:
-          '“Assalamualaikum! Singgah Bilik Nadi rupanya. Dah ready nak hadap Dekan kejap lagi? Relaks je, baca soalan tu betul-betul. Ingat balik apa yang kita bincang masa study group haritu.”',
+          '“Assalamualaikum! Sebelum jumpa Dekan, kosongkan fikiran dulu. Nak kuasai Qawaid ni bukan setakat hafal kaedah, tapi kena tajam baca realiti situasi. Tarik nafas, fokus, dan buktikan pelajar FPQS memang mantap!”',
         dialogBerjaya:
           '“Terima kasih singgah di Bilik Nadi PMFPQS! Semoga ukhuwah dan semangat persatuan ini memulihkan tenaga anda!”',
         dialogTolak:
@@ -1792,9 +1792,9 @@ export default function KembaraQawaidGame() {
                 color: sanadSeals.length > 0 ? '#fbbf24' : 'var(--text-muted)',
                 background: sanadSeals.length > 0 ? 'rgba(245, 158, 11, 0.12)' : 'rgba(255, 255, 255, 0.03)',
               }}
-              title="Buka galeri koleksi Mohor Sanad 5 Wilayah Tamadun Islam"
+              title="Buka galeri koleksi Mohor Sanad 6 Wilayah Kembara Qawaid"
             >
-              <span>🏅 Mohor Sanad ({sanadSeals.length}/5)</span>
+              <span>🏅 Mohor Sanad ({sanadSeals.length}/6)</span>
             </button>
 
             {/* FASA 3: Suis Butang Audio HUD */}
@@ -2056,7 +2056,7 @@ export default function KembaraQawaidGame() {
             )}
           </div>
 
-          {/* Enjin Dunia 3D Third-Person RPG (Three.js 60 FPS Mobile Engine) */}
+          {/* Enjin Dunia 3D Open-World RPG (Three.js 60 FPS GTA-Inspired Mobile Engine) */}
           <ThreeWorldMap
             mapGrid={mapGrid}
             playerPos={playerPos}
@@ -2064,6 +2064,9 @@ export default function KembaraQawaidGame() {
             wilayahIdx={wilayahIdx}
             mapSeed={mapSeed}
             solvedNpcIds={solvedNpcIds}
+            reputation={reputation}
+            xp={xp}
+            isAudioMuted={isAudioMuted}
             onTileClick={handleThreeTileClick}
             isEncounterActive={Boolean(activeNpc)}
             activeNpcId={activeNpc?.npcId || null}
@@ -3096,7 +3099,7 @@ export default function KembaraQawaidGame() {
                             fontStyle: 'italic',
                           }}
                         >
-                          &ldquo;Assalamualaikum! Singgah Bilik Nadi rupanya. Dah ready nak hadap Dekan kejap lagi? Relaks je, baca soalan tu betul-betul. Ingat balik apa yang kita bincang masa study group haritu.&rdquo;
+                          &ldquo;Assalamualaikum! Sebelum jumpa Dekan, kosongkan fikiran dulu. Nak kuasai Qawaid ni bukan setakat hafal kaedah, tapi kena tajam baca realiti situasi. Tarik nafas, fokus, dan buktikan pelajar FPQS memang mantap!&rdquo;
                         </p>
                       </div>
 
@@ -3171,7 +3174,7 @@ export default function KembaraQawaidGame() {
                             fontStyle: 'italic',
                           }}
                         >
-                          &ldquo;Haa alang-alang dah sampai sini, nak payung hint sikit. Dr. Helmy kat Makmal Hadis tu suka test kefahaman tau. Jangan tertukar kaedah Niat dengan kaedah Darurat. All the best, geng!&rdquo;
+                          &ldquo;Nah, hint percuma untuk kau: Dr. Helmy kat Makmal Hadis suka uji beza Niat dengan Darurat, dan Dekan pula suka uji bab menolak mudarat. Jangan tersilap pilih kaedah, all the best!&rdquo;
                         </p>
                       </div>
 

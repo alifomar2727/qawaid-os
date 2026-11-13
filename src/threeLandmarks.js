@@ -641,3 +641,145 @@ export function buildLandmarkBuilding(ctx, animatedItems, cameraWallMeshes, { is
 
   return { bldg, bossAuraRingMat };
 }
+
+/**
+ * Builds Region-Matched Streetlamps (Brass Caravan Lantern for Maps 1-5, Sleek Campus LED Pole for Map 6).
+ * Registers lamp emissive materials and additive halo sprites in `nightLights` for Senja <-> Malam cycle.
+ */
+export function buildStreetLamp(ctx, { isFPQS, nightLights }) {
+  const { getGeo, getMat, rigPool, createGlowHaloSprite, trackTex, trackMat } = ctx;
+  const grp = new THREE.Group();
+
+  if (isFPQS) {
+    const poleMat = getMat('lampSteel', () =>
+      new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.78, roughness: 0.25 })
+    );
+    const ledMat = getMat('campusLedMat', () =>
+      new THREE.MeshStandardMaterial({
+        color: 0xfef9c3,
+        emissive: 0xfef08a,
+        emissiveIntensity: 1.1,
+        roughness: 0.15,
+      })
+    );
+
+    const base = new THREE.Mesh(getGeo('lampBaseF', () => new THREE.CylinderGeometry(0.16, 0.20, 0.22, 8)), poleMat);
+    base.position.y = 0.11;
+    grp.add(base);
+
+    const pole = new THREE.Mesh(getGeo('lampPoleF', () => new THREE.CylinderGeometry(0.055, 0.08, 3.2, 8)), poleMat);
+    pole.position.y = 1.7;
+    grp.add(pole);
+
+    const arm = new THREE.Mesh(getGeo('lampArmF', () => new THREE.BoxGeometry(0.62, 0.07, 0.09)), poleMat);
+    arm.position.set(0.26, 3.28, 0);
+    grp.add(arm);
+
+    const head = new THREE.Mesh(getGeo('lampHeadF', () => new THREE.BoxGeometry(0.38, 0.08, 0.22)), ledMat);
+    head.position.set(0.46, 3.22, 0);
+    grp.add(head);
+
+    const { sprite: halo, texture: hTex, material: hMat } = createGlowHaloSprite(0xfef08a, 2.2, 0.42);
+    trackTex(hTex);
+    trackMat(hMat);
+    halo.position.set(0.46, 3.12, 0);
+    grp.add(halo);
+
+    grp.add(rigPool.createBlobShadow(0.7));
+    if (nightLights) nightLights.push({ mat: ledMat, halo, dayOpacity: 0.25, nightOpacity: 0.88, dayEmissive: 0.85, nightEmissive: 2.3 });
+  } else {
+    const bronzeMat = getMat('lampBronze', () =>
+      new THREE.MeshStandardMaterial({ color: 0x451a03, metalness: 0.65, roughness: 0.35 })
+    );
+    const goldMat = getMat('goldTrim', () =>
+      new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xb45309, emissiveIntensity: 0.35, metalness: 0.65, roughness: 0.28 })
+    );
+    const amberMat = getMat('caravanLampGlass', () =>
+      new THREE.MeshStandardMaterial({
+        color: 0xfde047,
+        emissive: 0xf59e0b,
+        emissiveIntensity: 1.3,
+        roughness: 0.2,
+      })
+    );
+
+    const plinth = new THREE.Mesh(getGeo('lampPlinthC', () => new THREE.CylinderGeometry(0.18, 0.24, 0.26, 6)), bronzeMat);
+    plinth.position.y = 0.13;
+    grp.add(plinth);
+
+    const post = new THREE.Mesh(getGeo('lampPoleC', () => new THREE.CylinderGeometry(0.055, 0.085, 2.75, 6)), bronzeMat);
+    post.position.y = 1.55;
+    grp.add(post);
+
+    const cap = new THREE.Mesh(getGeo('lampCapC', () => new THREE.ConeGeometry(0.24, 0.26, 6)), goldMat);
+    cap.position.y = 3.22;
+    grp.add(cap);
+
+    const globe = new THREE.Mesh(getGeo('lampGlobeC', () => new THREE.OctahedronGeometry(0.19, 0)), amberMat);
+    globe.position.y = 2.98;
+    grp.add(globe);
+
+    const { sprite: halo, texture: hTex, material: hMat } = createGlowHaloSprite(0xfbbf24, 2.4, 0.48);
+    trackTex(hTex);
+    trackMat(hMat);
+    halo.position.y = 2.98;
+    grp.add(halo);
+
+    grp.add(rigPool.createBlobShadow(0.75));
+    if (nightLights) nightLights.push({ mat: amberMat, halo, dayOpacity: 0.32, nightOpacity: 0.92, dayEmissive: 1.0, nightEmissive: 2.5 });
+  }
+
+  return grp;
+}
+
+/**
+ * Builds Drivable Classical Market Arch ("Gerbang Jalan Kafilah") over avenues on Maps 1–5.
+ */
+export function buildBoulevardArch(ctx, nightLights) {
+  const { getGeo, getMat, createGlowHaloSprite, trackTex, trackMat } = ctx;
+  const grp = new THREE.Group();
+
+  const sandstoneMat = getMat('archStone', () =>
+    new THREE.MeshStandardMaterial({ color: 0xfef3c7, roughness: 0.55 })
+  );
+  const goldMat = getMat('goldTrim', () =>
+    new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xb45309, emissiveIntensity: 0.35, metalness: 0.65, roughness: 0.28 })
+  );
+  const amberMat = getMat('caravanLampGlass', () =>
+    new THREE.MeshStandardMaterial({ color: 0xfde047, emissive: 0xf59e0b, emissiveIntensity: 1.3, roughness: 0.2 })
+  );
+
+  // Twin side columns far enough apart (x = ±1.78) so buggy/chariot drives cleanly through!
+  const colGeo = getGeo('archCol', () => new THREE.CylinderGeometry(0.18, 0.22, 3.0, 8));
+  [-1.78, 1.78].forEach((cx) => {
+    const col = new THREE.Mesh(colGeo, sandstoneMat);
+    col.position.set(cx, 1.5, 0);
+    grp.add(col);
+  });
+
+  const lintel = new THREE.Mesh(getGeo('archLintel', () => new THREE.BoxGeometry(4.0, 0.36, 0.44)), goldMat);
+  lintel.position.set(0, 3.18, 0);
+  grp.add(lintel);
+
+  const crest = new THREE.Mesh(
+    getGeo('archCrest', () => new THREE.TorusGeometry(1.15, 0.11, 8, 18, Math.PI)),
+    sandstoneMat
+  );
+  crest.position.set(0, 3.35, 0);
+  grp.add(crest);
+
+  // Hanging Center Lantern
+  const lantern = new THREE.Mesh(getGeo('archLantern', () => new THREE.OctahedronGeometry(0.18, 0)), amberMat);
+  lantern.position.set(0, 2.75, 0);
+  grp.add(lantern);
+
+  const { sprite: halo, texture: hTex, material: hMat } = createGlowHaloSprite(0xf59e0b, 1.9, 0.45);
+  trackTex(hTex);
+  trackMat(hMat);
+  halo.position.set(0, 2.75, 0);
+  grp.add(halo);
+
+  if (nightLights) nightLights.push({ mat: amberMat, halo, dayOpacity: 0.3, nightOpacity: 0.9, dayEmissive: 1.0, nightEmissive: 2.5 });
+  return grp;
+}
+
