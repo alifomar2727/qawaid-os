@@ -2567,6 +2567,40 @@ export default function App() {
     updateNavIndicator(true);
   }, [viewMode, bookmarks.length, updateNavIndicator]);
 
+  // Mobile/touch neon edge glow: light up cards as they enter the center reading band
+  useEffect(() => {
+    if (
+      typeof window === 'undefined' ||
+      typeof IntersectionObserver === 'undefined' ||
+      (viewMode !== 'EXPLORER' && viewMode !== 'NOTES')
+    ) {
+      return undefined;
+    }
+
+    const isTouchOrMobile = window.matchMedia?.(
+      '(hover: none), (pointer: coarse), (max-width: 768px)'
+    )?.matches;
+    if (!isTouchOrMobile) return undefined;
+
+    const cards = Array.from(document.querySelectorAll('.kad-kaedah'));
+    if (cards.length === 0) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          entry.target.classList.toggle('is-mobile-active', entry.isIntersecting);
+        });
+      },
+      {
+        rootMargin: '-24% 0px -24% 0px',
+        threshold: 0.25,
+      }
+    );
+
+    cards.forEach((card) => observer.observe(card));
+    return () => observer.disconnect();
+  }, [viewMode, filteredData.length, bookmarks.length]);
+
   // Measure & position sliding glass capsule indicator in Filter Bar
   const updateFilterIndicator = useCallback(() => {
     if (!filterContainerRef.current) return;
@@ -2953,7 +2987,11 @@ export default function App() {
   ];
 
   return (
-    <div className="lg-app-root" onPointerMove={handleGlassPointerMove}>
+    <div
+      className="lg-app-root"
+      onPointerMove={handleGlassPointerMove}
+      onPointerDown={handleGlassPointerMove}
+    >
       {/* ====================================================================
           FIXED WALLPAPER LAYER (z-index: -1)
           Deep emerald/indigo/midnight base + 5 blurred orbs + Girih SVG tile
