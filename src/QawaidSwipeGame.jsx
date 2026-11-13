@@ -784,11 +784,11 @@ export default function QawaidSwipeGame({ onBackToHub }) {
             style={{
               position: 'relative',
               width: '100%',
-              height: 'clamp(280px, 44vh, 390px)',
+              height: 'clamp(320px, 48vh, 435px)',
               borderRadius: '20px',
               overflow: 'hidden',
               marginBottom: '12px',
-              border: '1px solid rgba(251, 191, 36, 0.28)',
+              border: '1px solid rgba(251, 191, 36, 0.35)',
               boxShadow: '0 12px 32px rgba(0, 0, 0, 0.45)',
             }}
           >

@@ -17,27 +17,41 @@ function createRadialGlowTexture(innerRgba, midRgba) {
   return tex;
 }
 
-function wrapTextLines(ctx, text, maxWidth, maxLines = 6) {
-  const words = String(text || '').split(/\s+/);
+function wrapTextLines(ctx, text, maxWidth, maxLines = 8) {
+  const words = String(text || '').trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return ['Memuatkan senario...'];
   const lines = [];
   let line = '';
+  let truncated = false;
+
   for (let i = 0; i < words.length; i += 1) {
-    const testLine = line ? `${line} ${words[i]}` : words[i];
+    const word = words[i];
+    const testLine = line ? `${line} ${word}` : word;
     if (ctx.measureText(testLine).width > maxWidth && line) {
       lines.push(line);
-      line = words[i];
-      if (lines.length >= maxLines - 1) break;
+      if (lines.length >= maxLines) {
+        truncated = true;
+        line = '';
+        break;
+      }
+      line = word;
     } else {
       line = testLine;
     }
   }
+
   if (line && lines.length < maxLines) {
-    if (words.length > 0 && lines.length === maxLines - 1 && ctx.measureText(line).width > maxWidth) {
-      lines.push(`${line.slice(0, 32)}...`);
-    } else {
-      lines.push(line);
-    }
+    lines.push(line);
   }
+
+  if (truncated && lines.length > 0) {
+    let last = lines[lines.length - 1];
+    while (last.length > 3 && ctx.measureText(`${last}...`).width > maxWidth) {
+      last = last.slice(0, -1).trimEnd();
+    }
+    lines[lines.length - 1] = `${last}...`;
+  }
+
   return lines;
 }
 
@@ -57,63 +71,101 @@ function drawRoundedRect(ctx, x, y, w, h, r) {
 
 function createFrontCardTexture(card) {
   const canvas = document.createElement('canvas');
-  canvas.width = 768;
-  canvas.height = 960;
+  canvas.width = 1024;
+  canvas.height = 1184;
   const ctx = canvas.getContext('2d');
 
-  // Deep obsidian-emerald gradient background
-  const bg = ctx.createLinearGradient(0, 0, 0, 960);
-  bg.addColorStop(0, '#091f1b');
-  bg.addColorStop(0.55, '#071718');
-  bg.addColorStop(1, '#040d11');
+  // Crisp luminous teal-slate background for effortless text contrast
+  const bg = ctx.createLinearGradient(0, 0, 0, 1184);
+  bg.addColorStop(0, '#13383b');
+  bg.addColorStop(0.5, '#0d272c');
+  bg.addColorStop(1, '#08191e');
   ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, 768, 960);
+  ctx.fillRect(0, 0, 1024, 1184);
 
-  // Subtle geometric ornamental border
-  ctx.strokeStyle = 'rgba(251, 191, 36, 0.55)';
+  // Soft central spotlight backdrop behind scenario text
+  const centerGlow = ctx.createRadialGradient(512, 600, 40, 512, 600, 480);
+  centerGlow.addColorStop(0, 'rgba(30, 86, 92, 0.42)');
+  centerGlow.addColorStop(1, 'rgba(8, 25, 30, 0)');
+  ctx.fillStyle = centerGlow;
+  ctx.fillRect(40, 180, 944, 860);
+
+  // Ornamental gold & emerald double frame
+  ctx.strokeStyle = 'rgba(251, 191, 36, 0.85)';
   ctx.lineWidth = 10;
-  drawRoundedRect(ctx, 26, 26, 716, 908, 34);
+  drawRoundedRect(ctx, 28, 28, 968, 1128, 40);
   ctx.stroke();
 
-  ctx.strokeStyle = 'rgba(16, 185, 129, 0.35)';
-  ctx.lineWidth = 3;
-  drawRoundedRect(ctx, 44, 44, 680, 872, 24);
+  ctx.strokeStyle = 'rgba(52, 211, 153, 0.45)';
+  ctx.lineWidth = 4;
+  drawRoundedRect(ctx, 50, 50, 924, 1084, 28);
   ctx.stroke();
 
   // Header badge pill
   const tagText = (card?.kategoriIsu || card?.tag || 'KES REALITI KONTEMPORARI').toUpperCase();
-  ctx.fillStyle = 'rgba(245, 158, 11, 0.16)';
-  drawRoundedRect(ctx, 84, 78, 600, 62, 31);
+  ctx.fillStyle = 'rgba(245, 158, 11, 0.22)';
+  drawRoundedRect(ctx, 112, 86, 800, 74, 37);
   ctx.fill();
-  ctx.strokeStyle = 'rgba(251, 191, 36, 0.45)';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(251, 191, 36, 0.72)';
+  ctx.lineWidth = 3;
   ctx.stroke();
 
-  ctx.font = '700 24px system-ui, -apple-system, sans-serif';
+  ctx.font = '800 30px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#fde68a';
-  ctx.fillText(tagText.slice(0, 38), 384, 109);
+  ctx.fillStyle = '#fef08a';
+  ctx.fillText(tagText.slice(0, 38), 512, 123);
 
   // Top label
-  ctx.font = '700 23px system-ui, -apple-system, sans-serif';
-  ctx.fillStyle = '#34d399';
-  ctx.fillText('SENARIO / ISU REALITI:', 384, 210);
+  ctx.font = '800 28px system-ui, -apple-system, sans-serif';
+  ctx.fillStyle = '#6ee7b7';
+  ctx.fillText('SENARIO / ISU REALITI:', 512, 226);
 
-  // Main scenario text
-  ctx.font = '700 38px system-ui, -apple-system, sans-serif';
-  ctx.fillStyle = '#f8fafc';
-  const lines = wrapTextLines(ctx, card?.isu || card?.senario || 'Memuatkan senario...', 620, 8);
-  const lineHeight = 56;
-  const startY = Math.max(300, 480 - (lines.length * lineHeight) / 2);
+  // Adaptive font sizing so long or short scenarios fill the card cleanly & sharply
+  const scenarioText = card?.isu || card?.senario || 'Memuatkan senario...';
+  const maxTextWidth = 856;
+  let fontSize = 54;
+  let lineHeight = 76;
+  ctx.font = `700 ${fontSize}px system-ui, -apple-system, sans-serif`;
+  let lines = wrapTextLines(ctx, scenarioText, maxTextWidth, 10);
+
+  if (lines.length > 5) {
+    fontSize = 48;
+    lineHeight = 68;
+    ctx.font = `700 ${fontSize}px system-ui, -apple-system, sans-serif`;
+    lines = wrapTextLines(ctx, scenarioText, maxTextWidth, 10);
+  }
+  if (lines.length > 7) {
+    fontSize = 42;
+    lineHeight = 60;
+    ctx.font = `700 ${fontSize}px system-ui, -apple-system, sans-serif`;
+    lines = wrapTextLines(ctx, scenarioText, maxTextWidth, 9);
+  }
+
+  ctx.save();
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetY = 3;
+  const totalHeight = lines.length * lineHeight;
+  const startY = Math.max(305, 610 - totalHeight / 2 + lineHeight * 0.42);
   lines.forEach((ln, idx) => {
-    ctx.fillText(ln, 384, startY + idx * lineHeight);
+    ctx.fillText(ln, 512, startY + idx * lineHeight);
   });
+  ctx.restore();
 
-  // Footer hint
-  ctx.fillStyle = 'rgba(148, 163, 184, 0.78)';
-  ctx.font = '600 24px system-ui, -apple-system, sans-serif';
-  ctx.fillText('← TOLAK (TIDAK RELEVAN)   |   SESUAI (TEPAT) →', 384, 855);
+  // Divider accent above footer
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(150, 1030);
+  ctx.lineTo(874, 1030);
+  ctx.stroke();
+
+  // Clear footer hint
+  ctx.fillStyle = '#cbd5e1';
+  ctx.font = '700 28px system-ui, -apple-system, sans-serif';
+  ctx.fillText('← TOLAK (TIDAK RELEVAN)   |   SESUAI (TEPAT) →', 512, 1084);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -288,9 +340,9 @@ export default function ThreeArcadeSwipe({
     scene.background = new THREE.Color(0x040b12);
     scene.fog = new THREE.FogExp2(0x040b12, 0.045);
 
-    const camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 60);
-    camera.position.set(0, 0.65, 6.8);
-    camera.lookAt(0, 0.15, 0);
+    const camera = new THREE.PerspectiveCamera(46, width / height, 0.1, 60);
+    camera.position.set(0, 0.55, 5.75);
+    camera.lookAt(0, 0.14, 0);
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -418,8 +470,8 @@ export default function ThreeArcadeSwipe({
     // ====================================================
     const buildPortal = (xPos, ringHex, glowTex, labelText, labelHex) => {
       const pGroup = new THREE.Group();
-      pGroup.position.set(xPos, 0.18, -0.85);
-      pGroup.rotation.y = xPos < 0 ? 0.45 : -0.45;
+      pGroup.position.set(xPos, 0.18, -1.25);
+      pGroup.rotation.y = xPos < 0 ? 0.48 : -0.48;
 
       const ringMat = trackMat(
         new THREE.MeshStandardMaterial({
@@ -466,14 +518,14 @@ export default function ThreeArcadeSwipe({
       return { group: pGroup, torus, halo, baseScale: 1 };
     };
 
-    const leftPortal = buildPortal(-3.05, 0xef4444, crimsonGlowTex, 'TOLAK ✕', '#fca5a5');
-    const rightPortal = buildPortal(3.05, 0x10b981, emeraldGlowTex, 'SESUAI ✓', '#6ee7b7');
+    const leftPortal = buildPortal(-3.55, 0xef4444, crimsonGlowTex, 'TOLAK ✕', '#fca5a5');
+    const rightPortal = buildPortal(3.55, 0x10b981, emeraldGlowTex, 'SESUAI ✓', '#6ee7b7');
 
     // ====================================================
     // 4. THICK BEVELED 3D RELIC CARD + FRONT/BACK CANVAS TEXTURES + STAMP DECALS
     // ====================================================
     const cardGroup = new THREE.Group();
-    cardGroup.position.set(0, 0.15, 1.35);
+    cardGroup.position.set(0, 0.14, 1.72);
     scene.add(cardGroup);
 
     const cardEdgeMat = trackMat(
@@ -492,20 +544,26 @@ export default function ThreeArcadeSwipe({
     const cardFrontMat = trackMat(
       new THREE.MeshStandardMaterial({
         map: activeFrontTex,
-        roughness: 0.35,
-        metalness: 0.15,
+        emissiveMap: activeFrontTex,
+        emissive: new THREE.Color(0xffffff),
+        emissiveIntensity: 0.85,
+        roughness: 0.4,
+        metalness: 0.08,
       })
     );
     const cardBackMat = trackMat(
       new THREE.MeshStandardMaterial({
         map: activeBackTex,
-        roughness: 0.28,
-        metalness: 0.45,
+        emissiveMap: activeBackTex,
+        emissive: new THREE.Color(0xffffff),
+        emissiveIntensity: 0.78,
+        roughness: 0.34,
+        metalness: 0.22,
       })
     );
 
     // BoxGeometry material order: +x, -x, +y, -y, +z (front), -z (back)
-    const cardGeo = trackGeo(new THREE.BoxGeometry(2.35, 2.95, 0.12));
+    const cardGeo = trackGeo(new THREE.BoxGeometry(2.74, 3.16, 0.12));
     const cardMesh = new THREE.Mesh(cardGeo, [
       cardEdgeMat,
       cardEdgeMat,
@@ -704,8 +762,10 @@ export default function ThreeArcadeSwipe({
         activeFrontTex = createFrontCardTexture(propsRef.current.card);
         activeBackTex = createBackCardTexture(propsRef.current.card);
         cardFrontMat.map = activeFrontTex;
+        cardFrontMat.emissiveMap = activeFrontTex;
         cardFrontMat.needsUpdate = true;
         cardBackMat.map = activeBackTex;
+        cardBackMat.emissiveMap = activeBackTex;
         cardBackMat.needsUpdate = true;
         oldFront?.dispose();
         oldBack?.dispose();
@@ -715,7 +775,7 @@ export default function ThreeArcadeSwipe({
         animState.dragNormX = 0;
         animState.timer = 0;
         cardGroup.visible = true;
-        cardGroup.position.set(0, 0.15, 1.35);
+        cardGroup.position.set(0, 0.14, 1.72);
         cardGroup.rotation.set(0, 0, 0);
         cardGroup.scale.set(0.84, 0.84, 0.84);
       }
@@ -736,8 +796,8 @@ export default function ThreeArcadeSwipe({
         const targetRotZ = -animState.dragNormX * 0.26;
         const targetRotY = animState.dragNormX * 0.34;
         cardGroup.position.x = THREE.MathUtils.lerp(cardGroup.position.x, targetX, dt * 15);
-        cardGroup.position.y = THREE.MathUtils.lerp(cardGroup.position.y, 0.15 + Math.sin(elapsed * 2.4) * 0.045, dt * 12);
-        cardGroup.position.z = THREE.MathUtils.lerp(cardGroup.position.z, 1.35, dt * 12);
+        cardGroup.position.y = THREE.MathUtils.lerp(cardGroup.position.y, 0.14 + Math.sin(elapsed * 2.4) * 0.035, dt * 12);
+        cardGroup.position.z = THREE.MathUtils.lerp(cardGroup.position.z, 1.72, dt * 12);
         cardGroup.rotation.z = THREE.MathUtils.lerp(cardGroup.rotation.z, targetRotZ, dt * 15);
         cardGroup.rotation.y = THREE.MathUtils.lerp(cardGroup.rotation.y, targetRotY, dt * 15);
         cardGroup.rotation.x = THREE.MathUtils.lerp(cardGroup.rotation.x, 0, dt * 12);
@@ -757,10 +817,10 @@ export default function ThreeArcadeSwipe({
         animState.timer += dt;
         const dur = 0.28;
         const t = Math.min(animState.timer / dur, 1);
-        const targetPortalX = animState.flingDir * 3.05;
+        const targetPortalX = animState.flingDir * 3.55;
         cardGroup.position.x = THREE.MathUtils.lerp(cardGroup.position.x, targetPortalX, t * 0.6 + 0.15);
-        cardGroup.position.y = 0.15 + Math.sin(t * Math.PI) * 0.72;
-        cardGroup.position.z = THREE.MathUtils.lerp(1.35, -0.85, t);
+        cardGroup.position.y = 0.14 + Math.sin(t * Math.PI) * 0.72;
+        cardGroup.position.z = THREE.MathUtils.lerp(1.72, -1.25, t);
         cardGroup.rotation.z += -animState.flingDir * dt * 5.2;
         cardGroup.rotation.y += animState.flingDir * dt * 4.5;
         const s = Math.max(0.05, 1 - t * 0.85);
@@ -768,7 +828,7 @@ export default function ThreeArcadeSwipe({
 
         if (t >= 1 && cardGroup.visible) {
           cardGroup.visible = false;
-          const burstPos = new THREE.Vector3(targetPortalX, 0.2, -0.8);
+          const burstPos = new THREE.Vector3(targetPortalX, 0.2, -1.2);
           spawnPortalBurst(burstPos, animState.flingDir > 0 ? 0x10b981 : 0xef4444, 24);
         }
 
