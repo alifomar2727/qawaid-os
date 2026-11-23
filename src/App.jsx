@@ -621,7 +621,10 @@ function renderFormattedAiText(text = '') {
 function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, onKemaskiniTetapan }) {
   const [tajuk, setTajuk] = useState('');
   const [nota, setNota] = useState('');
-  const [fileData, setFileData] = useState(null); // { name, size, type, base64 }
+  const [filesData, setFilesData] = useState([]); // Array sehingga 4 fail: { name, size, type, base64, textContent }
+  const [questionCount, setQuestionCount] = useState(20);
+  const [bilingual, setBilingual] = useState(true);
+  const [progressText, setProgressText] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null); // { type: 'success' | 'error', text: '' }
@@ -743,101 +746,124 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
     URL.revokeObjectURL(url);
   };
 
-  // Fungsi proses fail yang dimuat naik (PDF atau Teks)
-  const processSelectedFile = (file) => {
-    if (!file) return;
+  // Fungsi proses sehingga 4 fail slaid (PDF atau Teks) serentak
+  const processSelectedFiles = async (fileListInput) => {
+    const incoming = Array.from(fileListInput || []).filter(Boolean);
+    if (incoming.length === 0) return;
 
-    // Had saiz fail: Vercel menghadkan saiz permintaan kepada 4.5 MB, dan Base64
-    // membesarkan fail ~33%, jadi PDF maksimum yang selamat ialah ~3.3 MB.
-    const isTextFile = file.type.startsWith('text/') || /\.(txt|md)$/i.test(file.name);
-    const maxBytes = isTextFile ? 15 * 1024 * 1024 : 3.3 * 1024 * 1024;
-    if (file.size > maxBytes) {
+    const remainingSlots = 4 - filesData.length;
+    if (remainingSlots <= 0) {
       setStatus({
         type: 'error',
-        text: `Saiz fail (${(file.size / (1024 * 1024)).toFixed(1)} MB) melebihi had ${isTextFile ? '15' : '3.3'} MB. Sila mampatkan PDF dahulu (contoh: ilovepdf.com/compress_pdf) atau salin teks slaid ke dalam kotak teks.`,
+        text: 'Had maksimum ialah 4 fail slaid sekaligus. Sila buang salah satu fail jika mahu tukar.',
       });
       return;
     }
 
-    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-    const isText = file.type.startsWith('text/') || file.name.toLowerCase().endsWith('.txt') || file.name.toLowerCase().endsWith('.md');
+    const filesToRead = incoming.slice(0, remainingSlots);
+    const ignoredOverflow = incoming.length > remainingSlots;
+    const loadedFiles = [];
+    const errorMsgs = [];
 
-    // Auto-cadang tajuk kuiz jika ruangan tajuk masih kosong
-    if (!tajuk.trim()) {
-      const cleanName = file.name
-        .replace(/\.[^/.]+$/, '')
-        .replace(/[-_]+/g, ' ')
-        .trim();
-      if (cleanName) {
-        setTajuk(cleanName);
+    for (const file of filesToRead) {
+      const isDuplicate = filesData.some((f) => f.name === file.name && f.size === file.size);
+      if (isDuplicate) continue;
+
+      const isTextFile =
+        file.type.startsWith('text/') || /\.(txt|md)$/i.test(file.name);
+      const maxBytes = isTextFile ? 15 * 1024 * 1024 : 3.3 * 1024 * 1024;
+
+      if (file.size > maxBytes) {
+        errorMsgs.push(
+          `"${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB) melebihi had ${isTextFile ? '15' : '3.3'} MB`
+        );
+        continue;
       }
+
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
+      const readPromise = new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onerror = () => resolve(null);
+        if (isTextFile) {
+          reader.onload = (ev) => {
+            resolve({
+              name: file.name,
+              size: file.size,
+              type: 'text/plain',
+              base64: null,
+              textContent: String(ev.target?.result || ''),
+            });
+          };
+          reader.readAsText(file);
+        } else {
+          reader.onload = (ev) => {
+            const dataUrl = ev.target?.result || '';
+            const base64Str =
+              typeof dataUrl === 'string' && dataUrl.includes(',') ? dataUrl.split(',')[1] : '';
+            resolve({
+              name: file.name,
+              size: file.size,
+              type: isPdf ? 'application/pdf' : file.type || 'application/octet-stream',
+              base64: base64Str,
+              textContent: null,
+            });
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      const parsedFile = await readPromise;
+      if (parsedFile) loadedFiles.push(parsedFile);
     }
 
-    if (isText) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result || '';
-        setNota(content);
-        setFileData({
-          name: file.name,
-          size: file.size,
-          type: 'text/plain',
-          base64: null,
-        });
-        setStatus({
-          type: 'success',
-          text: `✓ Fail teks "${file.name}" berjaya dibaca dan dimasukkan ke ruangan teks nota.`,
-        });
-      };
-      reader.readAsText(file);
-    } else if (isPdf) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target?.result || '';
-        const base64Str = typeof dataUrl === 'string' && dataUrl.includes(',') ? dataUrl.split(',')[1] : '';
-        setFileData({
-          name: file.name,
-          size: file.size,
-          type: 'application/pdf',
-          base64: base64Str,
-        });
-        setStatus({
-          type: 'success',
-          text: `✓ Fail slaid PDF "${file.name}" (${(file.size / (1024 * 1024)).toFixed(2)} MB) berjaya dimuat naik & sedia diproses terus oleh AI!`,
-        });
-      };
-      reader.readAsDataURL(file);
-    } else {
-      // Format dokumen lain
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target?.result || '';
-        const base64Str = typeof dataUrl === 'string' && dataUrl.includes(',') ? dataUrl.split(',')[1] : '';
-        setFileData({
-          name: file.name,
-          size: file.size,
-          type: file.type || 'application/octet-stream',
-          base64: base64Str,
-        });
-        setStatus({
-          type: 'success',
-          text: `✓ Fail "${file.name}" sedia untuk dihantar ke AI.`,
-        });
-      };
-      reader.readAsDataURL(file);
+    if (loadedFiles.length > 0) {
+      const updatedList = [...filesData, ...loadedFiles].slice(0, 4);
+      setFilesData(updatedList);
+
+      // Auto-cadang tajuk kuiz jika ruangan tajuk masih kosong
+      if (!tajuk.trim()) {
+        if (updatedList.length === 1) {
+          const cleanName = updatedList[0].name
+            .replace(/\.[^/.]+$/, '')
+            .replace(/[-_]+/g, ' ')
+            .trim();
+          if (cleanName) setTajuk(cleanName);
+        } else {
+          setTajuk(`Ulang Kaji Midterm (${updatedList.length} Slaid Kuliah)`);
+        }
+      }
+
+      setStatus({
+        type: errorMsgs.length > 0 ? 'error' : 'success',
+        text:
+          errorMsgs.length > 0
+            ? `✓ ${loadedFiles.length} fail ditambah, namun: ${errorMsgs.join('; ')}.`
+            : ignoredOverflow
+            ? `✓ ${loadedFiles.length} fail ditambah (had maksimum 4 fail sekaligus dicapai).`
+            : `✓ ${updatedList.length}/4 fail slaid sedia diproses (${bilingual ? 'Dwi-Bahasa Arab & Melayu' : 'Bahasa Melayu'})!`,
+      });
+    } else if (errorMsgs.length > 0) {
+      setStatus({
+        type: 'error',
+        text: `Gagal muat naik: ${errorMsgs.join('; ')}. Sila mampatkan PDF atau tampal teks slaid.`,
+      });
     }
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) processSelectedFile(file);
+    if (e.target.files?.length) {
+      processSelectedFiles(e.target.files);
+      e.target.value = '';
+    }
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) processSelectedFile(file);
+    if (e.dataTransfer.files?.length) {
+      processSelectedFiles(e.dataTransfer.files);
+    }
   };
 
   const handleDragOver = (e) => {
@@ -849,8 +875,8 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
     setIsDragging(false);
   };
 
-  const handleRemoveFile = () => {
-    setFileData(null);
+  const handleRemoveFile = (idxToRemove) => {
+    setFilesData((prev) => prev.filter((_, idx) => idx !== idxToRemove));
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -868,37 +894,27 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
       return;
     }
 
-    if (!nota.trim() && !fileData) {
+    if (!nota.trim() && filesData.length === 0) {
       setStatus({
         type: 'error',
-        text: 'Sila muat naik fail slaid (PDF) ATAU masukkan teks slaid/nota kuliah.',
+        text: 'Sila muat naik sekurang-kurangnya 1 fail slaid (maks 4 fail) ATAU masukkan teks nota kuliah.',
       });
       return;
     }
 
     setLoading(true);
     setStatus(null);
+    setProgressText('');
 
-    try {
+    const callJanaEndpoint = async (payloadBody) => {
       const response = await fetch('/api/jana-kuiz-mingguan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tajuk: tajuk.trim(),
-          nota: nota.trim(),
-          fileData: fileData
-            ? {
-                name: fileData.name,
-                type: fileData.type,
-                size: fileData.size,
-                base64: fileData.base64,
-              }
-            : null,
-        }),
+        body: JSON.stringify(payloadBody),
       });
 
       if (response.status === 413) {
-        throw new Error('Fail PDF terlalu besar untuk pelayan (had 4.5 MB). Sila mampatkan PDF atau tampal teks slaid');
+        throw new Error('Fail PDF terlalu besar untuk pelayan (had 4.5 MB). Sila mampatkan PDF atau muat naik saiz lebih kecil');
       }
 
       const rawText = await response.text();
@@ -917,20 +933,118 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
         throw new Error(result.error || result.message || 'Gagal menjana kuiz dari AI');
       }
 
+      return result;
+    };
+
+    try {
+      const totalPayloadChars = filesData.reduce(
+        (sum, f) => sum + (f.base64 ? f.base64.length : 0) + (f.textContent ? f.textContent.length : 0),
+        0
+      );
+
+      let finalQuizData = null;
+
+      // Jika <= 1 fail atau jumlah gabungan <= ~2.5 MB, hantar sekali gus dalam 1 panggilan
+      if (filesData.length <= 1 || totalPayloadChars <= 3400000) {
+        setProgressText(
+          filesData.length > 1
+            ? `Sedang membaca ${filesData.length} slaid serentak & menjana ${questionCount} soalan ${bilingual ? 'Dwi-Bahasa (Arab & Melayu)' : 'Melayu'}...`
+            : `Sedang menjana ${questionCount} soalan ${bilingual ? 'Dwi-Bahasa (Arab & Melayu)' : 'Melayu'}...`
+        );
+
+        const result = await callJanaEndpoint({
+          tajuk: tajuk.trim(),
+          nota: nota.trim(),
+          filesData: filesData.map((f) => ({
+            name: f.name,
+            type: f.type,
+            size: f.size,
+            base64: f.base64,
+            textContent: f.textContent,
+          })),
+          questionCount,
+          bilingual,
+        });
+        finalQuizData = result.data;
+      } else {
+        // Jika 2-4 fail PDF agak besar (>2.5 MB gabungan), proses satu demi satu & gabungkan soalan untuk elak had 4.5 MB Vercel!
+        const perFileBase = Math.max(5, Math.floor(questionCount / filesData.length));
+        let remainder = Math.max(0, questionCount - perFileBase * filesData.length);
+        const combinedQuestions = [];
+        let lastModel = '';
+
+        for (let i = 0; i < filesData.length; i += 1) {
+          const f = filesData[i];
+          const countForThis = perFileBase + (remainder > 0 ? 1 : 0);
+          if (remainder > 0) remainder -= 1;
+
+          setProgressText(
+            `Memproses Slaid ${i + 1}/${filesData.length}: "${f.name}" (${countForThis} soalan ${bilingual ? 'Arab + Melayu' : 'Melayu'})...`
+          );
+
+          const sliceResult = await callJanaEndpoint({
+            tajuk: `${tajuk.trim()} (${f.name})`,
+            nota: nota.trim(),
+            filesData: [
+              {
+                name: f.name,
+                type: f.type,
+                size: f.size,
+                base64: f.base64,
+                textContent: f.textContent,
+              },
+            ],
+            questionCount: countForThis,
+            bilingual,
+            skipSave: true,
+          });
+
+          if (sliceResult?.data?.model_penjana) {
+            lastModel = sliceResult.data.model_penjana;
+          }
+          const qs = sliceResult?.data?.soalan_objektif || [];
+          combinedQuestions.push(...qs);
+        }
+
+        finalQuizData = {
+          tajuk_mingguan: tajuk.trim(),
+          tarikh_kemaskini: new Date().toLocaleDateString('ms-MY', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          }),
+          dwi_bahasa: bilingual,
+          soalan_objektif: combinedQuestions.map((q, idx) => ({
+            ...q,
+            id: idx + 1,
+          })),
+          model_penjana: lastModel || 'gemini-batch',
+        };
+
+        // Simpan gabungan lengkap ke Firebase & /tmp
+        try {
+          await fetch('/api/kuiz-mingguan', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(finalQuizData),
+          });
+        } catch {}
+      }
+
       setStatus({
         type: 'success',
-        text: `🎉 Berjaya! Kuiz "${tajuk}" dengan ${result.data?.soalan_objektif?.length || 20} soalan telah dijana dan dikemas kini.`,
+        text: `🎉 Berjaya! Kuiz "${tajuk}" dengan ${finalQuizData?.soalan_objektif?.length || questionCount} soalan (${bilingual ? 'Dwi-Bahasa Arab & Melayu' : 'Melayu'}) telah dijana dan dikemas kini.`,
       });
 
       // Kemas kini state kuiz di frontend & simpan ke storan peranti (localStorage)
-      if (result.data) {
+      if (finalQuizData) {
         try {
-          localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(result.data));
+          localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(finalQuizData));
         } catch (e) {
           console.warn('Gagal menyimpan ke localStorage:', e);
         }
         if (onKemaskiniKuiz) {
-          onKemaskiniKuiz(result.data);
+          onKemaskiniKuiz(finalQuizData);
         }
       }
     } catch (err) {
@@ -941,6 +1055,7 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
       });
     } finally {
       setLoading(false);
+      setProgressText('');
     }
   };
 
@@ -1129,9 +1244,9 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
             />
           </div>
 
-          {/* RUANGAN MUAT NAIK FAIL SLAID (PDF / TEKS) */}
+          {/* RUANGAN MUAT NAIK FAIL SLAID SEHINGGA 4 FAIL (PDF / TEKS) */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '6px' }}>
               <label
                 style={{
                   fontSize: '0.82rem',
@@ -1139,16 +1254,17 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
                   color: 'var(--text-strong)',
                 }}
               >
-                📎 Muat Naik Slaid Kuliah (PDF / Dokumen):
+                📎 Muat Naik Slaid Kuliah (Sehingga 4 Fail PDF / Teks):
               </label>
-              <span style={{ fontSize: '0.72rem', color: 'var(--accent-glow, #34d399)' }}>
-                ✨ Disyorkan untuk pensyarah
+              <span style={{ fontSize: '0.72rem', color: 'var(--accent-glow, #34d399)', fontWeight: 700 }}>
+                {filesData.length}/4 fail dilampirkan
               </span>
             </div>
 
-            {/* Input fail tersembunyi */}
+            {/* Input fail tersembunyi (multiple) */}
             <input
               type="file"
+              multiple
               ref={fileInputRef}
               onChange={handleFileChange}
               accept=".pdf,.txt,.md,application/pdf,text/plain"
@@ -1156,8 +1272,85 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
               style={{ display: 'none' }}
             />
 
-            {!fileData ? (
-              /* Kotak Seret & Lepas (Dropzone) */
+            {/* Senarai Fail Yang Telah Dipilih (1 hingga 4) */}
+            {filesData.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: filesData.length < 4 ? '10px' : '0' }}>
+                {filesData.map((f, idx) => (
+                  <div
+                    key={`${f.name}-${f.size}-${idx}`}
+                    className="lg-inner-well"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '10px 14px',
+                      borderRadius: 'var(--r-md)',
+                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(6, 182, 212, 0.08))',
+                      border: '1px solid rgba(16, 185, 129, 0.4)',
+                      gap: '10px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                      <div
+                        style={{
+                          padding: '5px 8px',
+                          borderRadius: '7px',
+                          background: f.type.includes('pdf')
+                            ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                            : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                          color: '#ffffff',
+                          fontWeight: 800,
+                          fontSize: '0.70rem',
+                          letterSpacing: '0.04em',
+                          flexShrink: 0,
+                        }}
+                      >
+                        #{idx + 1} {f.type.includes('pdf') ? 'PDF' : 'DOC'}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontSize: '0.84rem',
+                            fontWeight: 700,
+                            color: '#ffffff',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {f.name}
+                        </div>
+                        <div style={{ fontSize: '0.70rem', color: '#6ee7b7', marginTop: '2px' }}>
+                          {(f.size / (1024 * 1024)).toFixed(2)} MB • Sedia dianalisis oleh Gemini AI
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFile(idx)}
+                      disabled={loading}
+                      className="lg-btn-glass"
+                      style={{
+                        padding: '5px 10px',
+                        fontSize: '0.72rem',
+                        color: '#f87171',
+                        border: '1px solid rgba(239, 68, 68, 0.4)',
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        borderRadius: 'var(--r-pill)',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        flexShrink: 0,
+                      }}
+                    >
+                      ✕ Buang
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Kotak Seret & Lepas / Tambah Slaid (dipaparkan selagi < 4 fail) */}
+            {filesData.length < 4 && (
               <div
                 onClick={() => !loading && fileInputRef.current?.click()}
                 onDragOver={handleDragOver}
@@ -1168,7 +1361,7 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
                     ? '2px dashed #10b981'
                     : '2px dashed rgba(255, 255, 255, 0.22)',
                   borderRadius: 'var(--r-md)',
-                  padding: '22px 16px',
+                  padding: filesData.length > 0 ? '14px 16px' : '22px 16px',
                   textAlign: 'center',
                   background: isDragging
                     ? 'rgba(16, 185, 129, 0.12)'
@@ -1178,13 +1371,13 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: '8px',
+                  gap: '6px',
                 }}
               >
                 <div
                   style={{
-                    width: '42px',
-                    height: '42px',
+                    width: filesData.length > 0 ? '34px' : '42px',
+                    height: filesData.length > 0 ? '34px' : '42px',
                     borderRadius: '50%',
                     background: 'rgba(16, 185, 129, 0.15)',
                     display: 'flex',
@@ -1193,88 +1386,121 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
                     color: '#34d399',
                   }}
                 >
-                  <LucideIcon name="upload" size={20} />
+                  <LucideIcon name="upload" size={filesData.length > 0 ? 16 : 20} />
                 </div>
                 <div>
-                  <strong style={{ fontSize: '0.88rem', color: '#ffffff', display: 'block' }}>
-                    Klik untuk pilih fail slaid PDF atau seret ke sini
+                  <strong style={{ fontSize: '0.86rem', color: '#ffffff', display: 'block' }}>
+                    {filesData.length > 0
+                      ? `+ Tambah Fail Slaid Seterusnya (${4 - filesData.length} slot berbaki)`
+                      : 'Klik untuk pilih sehingga 4 fail slaid PDF atau seret ke sini'}
                   </strong>
-                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                    Menyokong fail PDF slaid kuliah (.pdf, maks 3.3 MB), TXT, atau Markdown
+                  <span style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>
+                    Menyokong sehingga 4 fail PDF slaid kuliah serentak (maks 3.3 MB/fail), TXT, atau Markdown
                   </span>
                 </div>
               </div>
-            ) : (
-              /* Kad Paparan Fail yang Dipilih */
-              <div
-                className="lg-inner-well"
+            )}
+          </div>
+
+          {/* TETAPAN BAHASA & BILANGAN SOALAN */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '10px',
+            }}
+          >
+            <div>
+              <label
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 16px',
-                  borderRadius: 'var(--r-md)',
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(6, 182, 212, 0.08))',
-                  border: '1px solid rgba(16, 185, 129, 0.4)',
-                  gap: '12px',
+                  display: 'block',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  color: 'var(--text-strong)',
+                  marginBottom: '6px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-                  <div
-                    style={{
-                      padding: '6px 10px',
-                      borderRadius: '8px',
-                      background: fileData.type.includes('pdf')
-                        ? 'linear-gradient(135deg, #ef4444, #dc2626)'
-                        : 'linear-gradient(135deg, #3b82f6, #2563eb)',
-                      color: '#ffffff',
-                      fontWeight: 800,
-                      fontSize: '0.72rem',
-                      letterSpacing: '0.05em',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {fileData.type.includes('pdf') ? 'PDF' : 'DOC'}
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: '0.88rem',
-                        fontWeight: 700,
-                        color: '#ffffff',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {fileData.name}
-                    </div>
-                    <div style={{ fontSize: '0.72rem', color: '#6ee7b7', marginTop: '2px' }}>
-                      {(fileData.size / (1024 * 1024)).toFixed(2)} MB • Slaid sedia dianalisis terus oleh Gemini AI
-                    </div>
-                  </div>
-                </div>
-
+                🌐 Format Bahasa Soalan &amp; Jawapan:
+              </label>
+              <div style={{ display: 'flex', gap: '6px' }}>
                 <button
                   type="button"
-                  onClick={handleRemoveFile}
                   disabled={loading}
+                  onClick={() => setBilingual(true)}
                   className="lg-btn-glass"
                   style={{
-                    padding: '6px 12px',
-                    fontSize: '0.75rem',
-                    color: '#f87171',
-                    border: '1px solid rgba(239, 68, 68, 0.4)',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    borderRadius: 'var(--r-pill)',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    flexShrink: 0,
+                    flex: 1,
+                    justifyContent: 'center',
+                    padding: '9px 10px',
+                    fontSize: '0.76rem',
+                    fontWeight: 700,
+                    borderRadius: 'var(--r-sm)',
+                    borderColor: bilingual ? '#10b981' : 'rgba(255, 255, 255, 0.16)',
+                    background: bilingual ? 'rgba(16, 185, 129, 0.22)' : 'rgba(6, 12, 28, 0.6)',
+                    color: bilingual ? '#6ee7b7' : 'var(--text-muted)',
                   }}
                 >
-                  ✕ Buang Fail
+                  Dwi-Bahasa (Arab + BM)
+                </button>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => setBilingual(false)}
+                  className="lg-btn-glass"
+                  style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    padding: '9px 10px',
+                    fontSize: '0.76rem',
+                    fontWeight: 700,
+                    borderRadius: 'var(--r-sm)',
+                    borderColor: !bilingual ? '#38bdf8' : 'rgba(255, 255, 255, 0.16)',
+                    background: !bilingual ? 'rgba(56, 189, 248, 0.2)' : 'rgba(6, 12, 28, 0.6)',
+                    color: !bilingual ? '#bae6fd' : 'var(--text-muted)',
+                  }}
+                >
+                  Melayu Sahaja
                 </button>
               </div>
-            )}
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  color: 'var(--text-strong)',
+                  marginBottom: '6px',
+                }}
+              >
+                📊 Bilangan Soalan:
+              </label>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {[20, 30, 40].map((cnt) => (
+                  <button
+                    key={cnt}
+                    type="button"
+                    disabled={loading}
+                    onClick={() => setQuestionCount(cnt)}
+                    className="lg-btn-glass"
+                    style={{
+                      flex: 1,
+                      justifyContent: 'center',
+                      padding: '9px 8px',
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                      borderRadius: 'var(--r-sm)',
+                      borderColor: questionCount === cnt ? '#fbbf24' : 'rgba(255, 255, 255, 0.16)',
+                      background: questionCount === cnt ? 'rgba(245, 158, 11, 0.22)' : 'rgba(6, 12, 28, 0.6)',
+                      color: questionCount === cnt ? '#fef08a' : 'var(--text-muted)',
+                    }}
+                  >
+                    {cnt} Soalan
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Ruangan Teks Slaid / Nota Kuliah (Pilihan jika guna PDF) */}
@@ -1287,20 +1513,20 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
                   color: 'var(--text-strong)',
                 }}
               >
-                📄 Teks Slaid / Nota Kuliah:
+                📄 Teks Slaid / Arahan Tambahan:
               </label>
               <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                {fileData ? '(Pilihan: Boleh isi nota tambahan atau biarkan kosong)' : '(Wajib jika tiada fail PDF)'}
+                {filesData.length > 0 ? '(Pilihan: Boleh isi fokus peperiksaan atau biarkan kosong)' : '(Wajib jika tiada fail slaid)'}
               </span>
             </div>
             <textarea
-              rows={fileData ? 4 : 7}
+              rows={filesData.length > 0 ? 3 : 6}
               value={nota}
               onChange={(e) => setNota(e.target.value)}
               placeholder={
-                fileData
-                  ? 'Fail PDF sudah dipilih di atas! Anda boleh biarkan ruangan ini kosong, atau taip arahan khas (contoh: "Fokuskan soalan kepada pembahagian masyaqqah")...'
-                  : 'Tampal (paste) teks slaid PowerPoint, nota kuliah, atau huraian bab fiqh di sini. AI akan menganalisis teks ini untuk mencipta 20 soalan objektif...'
+                filesData.length > 0
+                  ? `${filesData.length} fail slaid telah dilampirkan di atas! Taip arahan tambahan jika mahu (contoh: "Fokuskan soalan midterm pada bab masyaqqah & darar") atau biarkan kosong...`
+                  : 'Tampal (paste) teks slaid PowerPoint, nota kuliah, atau huraian bab fiqh di sini. AI akan menganalisis teks ini untuk mencipta soalan objektif...'
               }
               disabled={loading}
               style={{
@@ -1357,10 +1583,8 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
               <LucideIcon name="sparkles" size={17} />
               <span>
                 {loading
-                  ? fileData?.type?.includes('pdf')
-                    ? 'Sedang Membaca Slaid PDF & Menjana 20 Soalan...'
-                    : 'Sedang Menjana Kuiz Pintar dengan AI...'
-                  : 'Jana Kuiz & Kemas Kini Laman Web'}
+                  ? progressText || `Sedang Menjana ${questionCount} Soalan ${bilingual ? 'Dwi-Bahasa' : ''}...`
+                  : `Jana ${questionCount} Soalan (${bilingual ? 'Arab + Melayu' : 'Melayu'}) & Kemas Kini`}
               </span>
             </button>
           </div>
@@ -3501,7 +3725,7 @@ export default function App() {
                             letterSpacing: '0.04em',
                           }}
                         >
-                          TOPIKAL MINGGUAN
+                          ULANG KAJI MID-TERM
                         </span>
                       </div>
 
@@ -3514,7 +3738,7 @@ export default function App() {
                           lineHeight: 1.4,
                         }}
                       >
-                        🗓️ Cabaran Topikal Mingguan (Berdasarkan Slides)
+                        🗓️ Ulang Kaji Mid-Term (Berdasarkan Slides)
                       </h3>
 
                       <p
@@ -3554,7 +3778,7 @@ export default function App() {
                         cursor: 'pointer',
                       }}
                     >
-                      <span>Mula Cabaran Mingguan</span>
+                      <span>Mula Ulang Kaji Mid-Term</span>
                       <LucideIcon name="arrow-right" size={16} />
                     </button>
                   </div>
@@ -3671,7 +3895,7 @@ export default function App() {
                       <span>Mod Kuiz</span>
                     </button>
                     <span className="lg-node-chip" style={{ borderColor: '#10b981', color: '#6ee7b7' }}>
-                      🗓️ TOPIKAL MINGGUAN
+                      🗓️ ULANG KAJI MID-TERM
                     </span>
                     <span className="lg-node-chip">
                       SOALAN {weeklyQuizIndex + 1} / {kuizMingguan.soalan_objektif.length}
@@ -3689,6 +3913,25 @@ export default function App() {
                 </div>
 
                 <div className="lg-inner-well" style={{ marginBottom: '20px' }}>
+                  {currentWeeklyItem.soalan_ar && (
+                    <p
+                      dir="rtl"
+                      lang="ar"
+                      style={{
+                        margin: currentWeeklyItem.soalan ? '0 0 12px' : 0,
+                        paddingBottom: currentWeeklyItem.soalan ? '12px' : 0,
+                        borderBottom: currentWeeklyItem.soalan ? '1px solid rgba(255, 255, 255, 0.12)' : 'none',
+                        fontFamily: "'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif",
+                        fontSize: '1.22rem',
+                        fontWeight: 700,
+                        lineHeight: 1.9,
+                        textAlign: 'right',
+                        color: '#fef08a',
+                      }}
+                    >
+                      {currentWeeklyItem.soalan_ar}
+                    </p>
+                  )}
                   <p
                     style={{
                       margin: 0,
@@ -3711,6 +3954,7 @@ export default function App() {
                   }}
                 >
                   {currentWeeklyItem.pilihan?.map((pilihan, pIdx) => {
+                    const pilihanAr = currentWeeklyItem.pilihan_ar?.[pIdx];
                     const isCorrect = pilihan === currentWeeklyItem.jawapan_betul;
                     const isPicked = weeklySelectedAnswer === pilihan;
                     let borderCol = undefined;
@@ -3760,22 +4004,42 @@ export default function App() {
                         >
                           {abcd}
                         </span>
-                        <span
-                          style={{
-                            fontSize: '0.88rem',
-                            fontWeight: 600,
-                            color: 'var(--text-strong)',
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          {pilihan}
-                        </span>
+                        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {pilihanAr && (
+                            <span
+                              dir="rtl"
+                              lang="ar"
+                              style={{
+                                display: 'block',
+                                width: '100%',
+                                textAlign: 'right',
+                                fontFamily: "'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif",
+                                fontSize: '1.12rem',
+                                fontWeight: 700,
+                                lineHeight: 1.75,
+                                color: '#ffffff',
+                              }}
+                            >
+                              {pilihanAr}
+                            </span>
+                          )}
+                          <span
+                            style={{
+                              fontSize: pilihanAr ? '0.84rem' : '0.88rem',
+                              fontWeight: pilihanAr ? 500 : 600,
+                              color: pilihanAr ? 'rgba(226, 232, 240, 0.9)' : 'var(--text-strong)',
+                              lineHeight: 1.5,
+                            }}
+                          >
+                            {pilihan}
+                          </span>
+                        </div>
                       </button>
                     );
                   })}
                 </div>
 
-                {weeklySelectedAnswer && currentWeeklyItem.huraian && (
+                {weeklySelectedAnswer && (currentWeeklyItem.huraian || currentWeeklyItem.huraian_ar) && (
                   <div
                     className="lg-inner-well"
                     style={{
@@ -3796,16 +4060,34 @@ export default function App() {
                     >
                       💡 Huraian Jawapan &amp; Pengukuhan Konsep:
                     </div>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: '0.86rem',
-                        lineHeight: 1.6,
-                        color: 'var(--text-strong)',
-                      }}
-                    >
-                      {currentWeeklyItem.huraian}
-                    </p>
+                    {currentWeeklyItem.huraian_ar && (
+                      <p
+                        dir="rtl"
+                        lang="ar"
+                        style={{
+                          margin: currentWeeklyItem.huraian ? '0 0 8px' : 0,
+                          fontFamily: "'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif",
+                          fontSize: '1.05rem',
+                          lineHeight: 1.8,
+                          textAlign: 'right',
+                          color: '#d1fae5',
+                        }}
+                      >
+                        {currentWeeklyItem.huraian_ar}
+                      </p>
+                    )}
+                    {currentWeeklyItem.huraian && (
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: '0.86rem',
+                          lineHeight: 1.6,
+                          color: 'var(--text-strong)',
+                        }}
+                      >
+                        {currentWeeklyItem.huraian}
+                      </p>
+                    )}
                   </div>
                 )}
 
