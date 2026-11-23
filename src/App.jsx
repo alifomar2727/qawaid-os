@@ -5113,7 +5113,15 @@ export default function App() {
                   )}
                 </SmoothMorphContainer>
 
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '12px',
+                    marginTop: '18px',
+                    paddingTop: '16px',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                  }}
+                >
                   <button
                     type="button"
                     onClick={prevWeeklyQuestion}
@@ -5312,7 +5320,15 @@ export default function App() {
                   )}
                 </SmoothMorphContainer>
 
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '12px',
+                    marginTop: '18px',
+                    paddingTop: '16px',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                  }}
+                >
                   <button
                     type="button"
                     onClick={prevQuestion}
