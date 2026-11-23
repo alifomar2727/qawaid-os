@@ -1228,6 +1228,14 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
         throw new Error('Senarai soalan dalam JSON kosong.');
       }
 
+      const currentBundleVer = Number(kuizMingguanLalai?.bundle_version || 0);
+      const minUpdatedAt = Math.max(Date.now(), Number(kuizMingguanLalai?.updated_at || 0) + 1);
+      quizPayload = {
+        ...quizPayload,
+        bundle_version: Math.max(Number(quizPayload.bundle_version || 0), currentBundleVer),
+        updated_at: Math.max(Number(quizPayload.updated_at || 0), minUpdatedAt),
+      };
+
       try {
         await fetch('/api/kuiz-mingguan', {
           method: 'PUT',
@@ -1263,7 +1271,11 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
     setSyncingCloud(true);
     setStatus(null);
     try {
-      const payload = { ...kuizMingguan, updated_at: Date.now() };
+      const payload = {
+        ...kuizMingguan,
+        bundle_version: Math.max(Number(kuizMingguan?.bundle_version || 0), Number(kuizMingguanLalai?.bundle_version || 0)),
+        updated_at: Math.max(Date.now(), Number(kuizMingguanLalai?.updated_at || 0) + 1),
+      };
       const res = await fetch('/api/kuiz-mingguan', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -1302,7 +1314,8 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
         month: 'long',
         year: 'numeric',
       }),
-      updated_at: Date.now(),
+      bundle_version: Math.max(Number(kuizMingguan?.bundle_version || 0), Number(kuizMingguanLalai?.bundle_version || 0)),
+      updated_at: Math.max(Date.now(), Number(kuizMingguanLalai?.updated_at || 0) + 1),
       soalan_objektif: updatedQuestions.map((q, idx) => ({ ...q, id: idx + 1 })),
     };
 
@@ -3395,11 +3408,29 @@ export default function App() {
     return {
       quiz: {
         ...quizObj,
-        updated_at: Date.now(),
+        bundle_version: Math.max(Number(quizObj?.bundle_version || 0), Number(kuizMingguanLalai?.bundle_version || 0)),
+        updated_at: Math.max(Date.now(), Number(kuizMingguanLalai?.updated_at || 0) + 1),
         soalan_objektif: nextQuestions,
       },
       replaced: true,
     };
+  }, []);
+
+  const isQuizNewer = useCallback((candidate, current) => {
+    if (!candidate || !Array.isArray(candidate.soalan_objektif) || candidate.soalan_objektif.length === 0) {
+      return false;
+    }
+    if (!current || !Array.isArray(current.soalan_objektif) || current.soalan_objektif.length === 0) {
+      return true;
+    }
+    const candVer = Number(candidate.bundle_version || 0);
+    const currVer = Number(current.bundle_version || 0);
+    if (candVer > currVer) return true;
+    if (currVer > candVer) return false;
+    const candTime = Number(candidate.updated_at || 0);
+    const currTime = Number(current.updated_at || 0);
+    if (candTime !== currTime) return candTime > currTime;
+    return candidate.soalan_objektif.length > current.soalan_objektif.length;
   }, []);
 
   // Muat data kuiz mingguan daripada localStorage jika ada, agar tidak hilang selepas refresh/deploy
@@ -3411,9 +3442,10 @@ export default function App() {
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed && parsed.tajuk_mingguan && Array.isArray(parsed.soalan_objektif)) {
-            // PENTING: Jika kuiz fail projek (kuizMingguanLalai) mempunyai lebih banyak soalan (cth: 30 soalan)
-            // berbanding cache peranti yang lama (2/20 soalan), gantikan cache peranti secara automatik!
-            if (cleanDefault?.soalan_objektif?.length > parsed.soalan_objektif.length) {
+            // PENTING: Jika kuiz fail projek (kuizMingguanLalai) mempunyai bundle_version / updated_at
+            // atau bilangan soalan lebih baharu (cth: 30 soalan Mid-Term) berbanding cache lama (20 soalan),
+            // gantikan cache peranti secara automatik!
+            if (isQuizNewer(cleanDefault, parsed)) {
               try {
                 localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(cleanDefault));
               } catch {}
@@ -3457,12 +3489,13 @@ export default function App() {
 
   // Fungsi muat semula kuiz daripada fail projek lalai & storan pelayan
   const handleResetKuizKeLalai = () => {
+    const cleanDefault = sanitizeMidtermQuiz(kuizMingguanLalai).quiz;
     try {
       localStorage.removeItem('qawaid_kuiz_mingguan');
     } catch {}
-    setKuizMingguan(kuizMingguanLalai);
+    setKuizMingguan(cleanDefault);
     try {
-      localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(kuizMingguanLalai));
+      localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(cleanDefault));
     } catch {}
     fetch(`/api/kuiz-mingguan?t=${Date.now()}`, { cache: 'no-store' })
       .then((res) => (res.ok ? res.json() : null))
@@ -3470,6 +3503,14 @@ export default function App() {
         const rawQuiz = data?.data || data;
         if (rawQuiz?.tajuk_mingguan && Array.isArray(rawQuiz.soalan_objektif) && rawQuiz.soalan_objektif.length > 0) {
           const { quiz, replaced } = sanitizeMidtermQuiz(rawQuiz);
+          if (isQuizNewer(cleanDefault, quiz)) {
+            fetch('/api/kuiz-mingguan', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(cleanDefault),
+            }).catch(() => {});
+            return;
+          }
           setKuizMingguan(quiz);
           try {
             localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(quiz));
@@ -3488,6 +3529,7 @@ export default function App() {
 
   // Tarik data kuiz mingguan terkini dari backend (Fasa 4) tanpa cache pelayar mobile
   useEffect(() => {
+    const cleanDefault = sanitizeMidtermQuiz(kuizMingguanLalai).quiz;
     fetch(`/api/kuiz-mingguan?t=${Date.now()}`, { cache: 'no-store' })
       .then((res) => {
         if (res.ok) return res.json();
@@ -3497,6 +3539,16 @@ export default function App() {
         const rawQuiz = (data && data.data) ? data.data : data;
         if (rawQuiz && rawQuiz.tajuk_mingguan && Array.isArray(rawQuiz.soalan_objektif) && rawQuiz.soalan_objektif.length > 0) {
           const { quiz, replaced } = sanitizeMidtermQuiz(rawQuiz);
+          // Jika data pelayan masih versi lama (cth: 20 soalan lama tanpa bundle_version),
+          // jangan timpa kuiz 30 soalan baharu; sebaliknya sinkronkan kuiz baharu ke awan!
+          if (isQuizNewer(cleanDefault, quiz)) {
+            fetch('/api/kuiz-mingguan', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(cleanDefault),
+            }).catch(() => {});
+            return;
+          }
           if (replaced) {
             fetch('/api/kuiz-mingguan', {
               method: 'PUT',
@@ -3505,12 +3557,13 @@ export default function App() {
             }).catch(() => {});
           }
           setKuizMingguan((prev) => {
-            // Lindungi daripada ditimpa oleh fail sandaran statik (2 soalan) sahaja;
-            // jika pelayan mengembalikan kuiz sebenar (> 2 soalan) atau lebih baharu (updated_at), terima kemas kini!
+            // 1. Lindungi daripada ditimpa oleh fail sandaran statik (2 soalan)
             const isFallbackStatic = quiz.soalan_objektif.length <= 2 && (prev?.soalan_objektif?.length || 0) > 2;
-            const prevTime = Number(prev?.updated_at || 0);
-            const serverTime = Number(quiz?.updated_at || 0);
-            if (isFallbackStatic && serverTime <= prevTime) {
+            if (isFallbackStatic && !isQuizNewer(quiz, prev)) {
+              return prev;
+            }
+            // 2. Lindungi kuiz tempatan yang lebih baharu (cth: baru dijana/diedit) daripada ditimpa oleh data lama pelayan
+            if (isQuizNewer(prev, quiz)) {
               return prev;
             }
             try {
@@ -3523,7 +3576,7 @@ export default function App() {
       .catch((err) => {
         console.log('Menggunakan data kuiz mingguan sedia ada:', err.message);
       });
-  }, [sanitizeMidtermQuiz]);
+  }, [sanitizeMidtermQuiz, isQuizNewer]);
 
   const [matchScore, setMatchScore] = useState(0);
   const [matchIndex, setMatchIndex] = useState(0);
