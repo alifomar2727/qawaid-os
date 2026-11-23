@@ -628,6 +628,10 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
   const [showManualImport, setShowManualImport] = useState(false);
   const [manualJsonText, setManualJsonText] = useState('');
   const [loadingImport, setLoadingImport] = useState(false);
+  const [showQuestionManager, setShowQuestionManager] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(null); // number | 'NEW' | null
+  const [editDraft, setEditDraft] = useState(null);
+  const [savingEdit, setSavingEdit] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null); // { type: 'success' | 'error', text: '' }
@@ -1246,6 +1250,133 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
     }
   };
 
+  // Helper simpan perubahan soalan (Edit / Buang / Tambah) tanpa jana semula AI
+  const persistEditedQuiz = async (updatedQuestions, successMessage) => {
+    setSavingEdit(true);
+    setStatus(null);
+    const updatedQuiz = {
+      ...(kuizMingguan || {}),
+      tajuk_mingguan: kuizMingguan?.tajuk_mingguan || tajuk.trim() || 'Ulang Kaji Mid-Term',
+      tarikh_kemaskini: new Date().toLocaleDateString('ms-MY', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }),
+      updated_at: Date.now(),
+      soalan_objektif: updatedQuestions.map((q, idx) => ({ ...q, id: idx + 1 })),
+    };
+
+    try {
+      await fetch('/api/kuiz-mingguan', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedQuiz),
+      });
+    } catch {}
+
+    try {
+      localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(updatedQuiz));
+    } catch {}
+
+    if (onKemaskiniKuiz) {
+      onKemaskiniKuiz(updatedQuiz);
+    }
+
+    setStatus({ type: 'success', text: successMessage });
+    setSavingEdit(false);
+  };
+
+  const openEditQuestion = (idx) => {
+    const q = kuizMingguan?.soalan_objektif?.[idx];
+    if (!q) return;
+    const pilihan = [0, 1, 2, 3].map((i) => q.pilihan?.[i] || '');
+    const pilihanAr = [0, 1, 2, 3].map((i) => q.pilihan_ar?.[i] || '');
+    const correctIdx = Math.max(0, pilihan.findIndex((p) => p === q.jawapan_betul));
+    setEditingIndex(idx);
+    setEditDraft({
+      soalan_ar: q.soalan_ar || '',
+      soalan: q.soalan || '',
+      pilihan_ar: pilihanAr,
+      pilihan,
+      correctIdx,
+      huraian_ar: q.huraian_ar || '',
+      huraian: q.huraian || '',
+    });
+  };
+
+  const openAddQuestion = () => {
+    setEditingIndex('NEW');
+    setEditDraft({
+      soalan_ar: '',
+      soalan: '',
+      pilihan_ar: ['', '', '', ''],
+      pilihan: ['', '', '', ''],
+      correctIdx: 0,
+      huraian_ar: '',
+      huraian: '',
+    });
+  };
+
+  const handleSaveEditedQuestion = async () => {
+    if (!editDraft) return;
+    if (!editDraft.soalan.trim() && !editDraft.soalan_ar.trim()) {
+      setStatus({ type: 'error', text: 'Sila isi sekurang-kurangnya teks soalan (Melayu atau Arab).' });
+      return;
+    }
+
+    const cleanedPilihan = editDraft.pilihan.map((p, idx) =>
+      p.trim() || editDraft.pilihan_ar[idx]?.trim() || `Pilihan ${['A', 'B', 'C', 'D'][idx]}`
+    );
+    const cleanedPilihanAr = editDraft.pilihan_ar.map((p) => p.trim());
+    const hasArabicOptions = cleanedPilihanAr.some(Boolean);
+    const correctIndex = Math.min(Math.max(Number(editDraft.correctIdx) || 0, 0), 3);
+
+    const formattedItem = {
+      soalan: editDraft.soalan.trim() || editDraft.soalan_ar.trim(),
+      ...(editDraft.soalan_ar.trim() ? { soalan_ar: editDraft.soalan_ar.trim() } : {}),
+      pilihan: cleanedPilihan,
+      ...(hasArabicOptions ? { pilihan_ar: cleanedPilihanAr } : {}),
+      jawapan_betul: cleanedPilihan[correctIndex],
+      huraian: editDraft.huraian.trim() || 'Tiada huraian tambahan.',
+      ...(editDraft.huraian_ar.trim() ? { huraian_ar: editDraft.huraian_ar.trim() } : {}),
+    };
+
+    const currentList = [...(kuizMingguan?.soalan_objektif || [])];
+    if (editingIndex === 'NEW') {
+      currentList.push(formattedItem);
+      await persistEditedQuiz(
+        currentList,
+        `✅ Soalan baharu #${currentList.length} berjaya ditambah & disimpan terus ke laman web!`
+      );
+    } else if (typeof editingIndex === 'number' && currentList[editingIndex]) {
+      currentList[editingIndex] = formattedItem;
+      await persistEditedQuiz(
+        currentList,
+        `✅ Soalan #${editingIndex + 1} berjaya dikemas kini & disimpan ke laman web (tanpa jana semula AI)!`
+      );
+    }
+
+    setEditingIndex(null);
+    setEditDraft(null);
+  };
+
+  const handleDeleteQuestion = async (idx) => {
+    const currentList = [...(kuizMingguan?.soalan_objektif || [])];
+    if (currentList.length <= 1) {
+      setStatus({ type: 'error', text: 'Tidak boleh buang soalan terakhir. Sila edit/gantikan soalan tersebut.' });
+      return;
+    }
+    currentList.splice(idx, 1);
+    if (editingIndex === idx) {
+      setEditingIndex(null);
+      setEditDraft(null);
+    }
+    await persistEditedQuiz(
+      currentList,
+      `🗑️ Soalan #${idx + 1} berjaya dibuang! Baki ${currentList.length} soalan telah disimpan ke laman web.`
+    );
+  };
+
   return (
     <div
       style={{
@@ -1350,7 +1481,32 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
               {kuizMingguan?.soalan_objektif?.length || 0} Soalan
             </span>
             {kuizMingguan?.soalan_objektif?.length > 0 && (
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowQuestionManager((s) => !s);
+                    setEditingIndex(null);
+                    setEditDraft(null);
+                  }}
+                  className="lg-btn-glass"
+                  title="Edit, ganti, tambah atau buang mana-mana soalan tanpa perlu jana semula AI"
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '0.72rem',
+                    borderRadius: 'var(--r-pill)',
+                    cursor: 'pointer',
+                    color: '#fef08a',
+                    borderColor: showQuestionManager ? '#fbbf24' : 'rgba(251, 191, 36, 0.45)',
+                    background: showQuestionManager ? 'rgba(245, 158, 11, 0.25)' : 'rgba(245, 158, 11, 0.12)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontWeight: 700,
+                  }}
+                >
+                  <span>{showQuestionManager ? '▲ Tutup Editor' : '✏️ Edit / Buang Soalan'}</span>
+                </button>
                 <button
                   type="button"
                   onClick={handleCopyKuizJson}
@@ -1395,6 +1551,381 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
             )}
           </div>
         </div>
+
+        {/* PENGURUS SOALAN AKTIF: EDIT / GANTI / BUANG / TAMBAH TANPA JANA SEMULA */}
+        {showQuestionManager && (
+          <div
+            className="lg-inner-well"
+            style={{
+              marginBottom: '20px',
+              padding: '16px',
+              borderRadius: 'var(--r-lg)',
+              border: '1px solid rgba(251, 191, 36, 0.4)',
+              background: 'rgba(6, 14, 32, 0.88)',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '8px',
+                marginBottom: '12px',
+              }}
+            >
+              <div>
+                <strong style={{ fontSize: '0.92rem', color: '#fef08a', display: 'block' }}>
+                  ✏️ Pengurus Soalan Aktif ({kuizMingguan?.soalan_objektif?.length || 0} Soalan)
+                </strong>
+                <span style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>
+                  Edit, ganti atau buang mana-mana soalan terus ke laman web &amp; Firebase tanpa jana semula AI.
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={savingEdit}
+                onClick={openAddQuestion}
+                className="lg-btn-glass"
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: '#6ee7b7',
+                  borderColor: 'rgba(16, 185, 129, 0.5)',
+                  background: 'rgba(16, 185, 129, 0.16)',
+                  borderRadius: 'var(--r-pill)',
+                }}
+              >
+                ➕ Tambah Soalan Ganti
+              </button>
+            </div>
+
+            {/* Borang Edit / Tambah Soalan */}
+            {editDraft && (
+              <div
+                style={{
+                  padding: '14px',
+                  marginBottom: '14px',
+                  borderRadius: 'var(--r-md)',
+                  border: '1px solid rgba(16, 185, 129, 0.5)',
+                  background: 'rgba(10, 24, 48, 0.92)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <strong style={{ fontSize: '0.84rem', color: '#6ee7b7' }}>
+                    {editingIndex === 'NEW' ? '➕ Tambah Soalan Baharu' : `✏️ Edit / Ganti Soalan #${editingIndex + 1}`}
+                  </strong>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingIndex(null);
+                      setEditDraft(null);
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#94a3b8',
+                      cursor: 'pointer',
+                      fontSize: '0.78rem',
+                    }}
+                  >
+                    ✕ Batal
+                  </button>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.72rem', color: '#fde68a', marginBottom: '4px', fontWeight: 700 }}>
+                    Soalan (Bahasa Arab — Pilihan):
+                  </label>
+                  <textarea
+                    rows={2}
+                    dir="rtl"
+                    value={editDraft.soalan_ar}
+                    onChange={(e) => setEditDraft((d) => ({ ...d, soalan_ar: e.target.value }))}
+                    placeholder="اكتب السؤال باللغة العربية..."
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255,255,255,0.18)',
+                      background: 'rgba(4,10,24,0.85)',
+                      color: '#fef08a',
+                      fontSize: '0.96rem',
+                      fontFamily: "'Amiri', 'Noto Naskh Arabic', serif",
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.72rem', color: '#e2e8f0', marginBottom: '4px', fontWeight: 700 }}>
+                    Soalan (Bahasa Melayu):
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={editDraft.soalan}
+                    onChange={(e) => setEditDraft((d) => ({ ...d, soalan: e.target.value }))}
+                    placeholder="Taip soalan dalam Bahasa Melayu..."
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255,255,255,0.18)',
+                      background: 'rgba(4,10,24,0.85)',
+                      color: '#ffffff',
+                      fontSize: '0.84rem',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.72rem', color: '#6ee7b7', marginBottom: '6px', fontWeight: 700 }}>
+                    Pilihan Jawapan A–D (Tandakan bulatan pada jawapan betul):
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {['A', 'B', 'C', 'D'].map((huruf, oIdx) => (
+                      <div
+                        key={huruf}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'auto 1fr',
+                          gap: '8px',
+                          alignItems: 'center',
+                          padding: '8px',
+                          borderRadius: '8px',
+                          border:
+                            editDraft.correctIdx === oIdx
+                              ? '1px solid #10b981'
+                              : '1px solid rgba(255,255,255,0.12)',
+                          background:
+                            editDraft.correctIdx === oIdx
+                              ? 'rgba(16, 185, 129, 0.14)'
+                              : 'rgba(4, 10, 24, 0.55)',
+                        }}
+                      >
+                        <label
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            cursor: 'pointer',
+                            fontSize: '0.78rem',
+                            fontWeight: 800,
+                            color: editDraft.correctIdx === oIdx ? '#6ee7b7' : '#cbd5e1',
+                          }}
+                        >
+                          <input
+                            type="radio"
+                            name="correctOptionDraft"
+                            checked={editDraft.correctIdx === oIdx}
+                            onChange={() => setEditDraft((d) => ({ ...d, correctIdx: oIdx }))}
+                          />
+                          <span>{huruf}</span>
+                        </label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                          <input
+                            type="text"
+                            dir="rtl"
+                            value={editDraft.pilihan_ar[oIdx]}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditDraft((d) => {
+                                const next = [...d.pilihan_ar];
+                                next[oIdx] = val;
+                                return { ...d, pilihan_ar: next };
+                              });
+                            }}
+                            placeholder={`Pilihan ${huruf} (Arab — pilihan)`}
+                            style={{
+                              width: '100%',
+                              padding: '6px 8px',
+                              borderRadius: '6px',
+                              border: '1px solid rgba(255,255,255,0.14)',
+                              background: 'rgba(4,10,24,0.85)',
+                              color: '#ffffff',
+                              fontSize: '0.9rem',
+                              fontFamily: "'Amiri', 'Noto Naskh Arabic', serif",
+                              boxSizing: 'border-box',
+                            }}
+                          />
+                          <input
+                            type="text"
+                            value={editDraft.pilihan[oIdx]}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditDraft((d) => {
+                                const next = [...d.pilihan];
+                                next[oIdx] = val;
+                                return { ...d, pilihan: next };
+                              });
+                            }}
+                            placeholder={`Pilihan ${huruf} (Bahasa Melayu)`}
+                            style={{
+                              width: '100%',
+                              padding: '6px 8px',
+                              borderRadius: '6px',
+                              border: '1px solid rgba(255,255,255,0.14)',
+                              background: 'rgba(4,10,24,0.85)',
+                              color: '#e2e8f0',
+                              fontSize: '0.8rem',
+                              boxSizing: 'border-box',
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.72rem', color: '#a7f3d0', marginBottom: '4px', fontWeight: 700 }}>
+                      Huraian (Arab — Pilihan):
+                    </label>
+                    <textarea
+                      rows={2}
+                      dir="rtl"
+                      value={editDraft.huraian_ar}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, huraian_ar: e.target.value }))}
+                      placeholder="الشرح المختصر..."
+                      style={{
+                        width: '100%',
+                        padding: '7px 9px',
+                        borderRadius: '6px',
+                        border: '1px solid rgba(255,255,255,0.14)',
+                        background: 'rgba(4,10,24,0.85)',
+                        color: '#d1fae5',
+                        fontSize: '0.88rem',
+                        fontFamily: "'Amiri', 'Noto Naskh Arabic', serif",
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.72rem', color: '#a7f3d0', marginBottom: '4px', fontWeight: 700 }}>
+                      Huraian (Bahasa Melayu):
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={editDraft.huraian}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, huraian: e.target.value }))}
+                      placeholder="Penerangan ringkas jawapan..."
+                      style={{
+                        width: '100%',
+                        padding: '7px 9px',
+                        borderRadius: '6px',
+                        border: '1px solid rgba(255,255,255,0.14)',
+                        background: 'rgba(4,10,24,0.85)',
+                        color: '#ffffff',
+                        fontSize: '0.8rem',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    disabled={savingEdit}
+                    onClick={handleSaveEditedQuestion}
+                    className="lg-btn-primary"
+                    style={{ padding: '9px 16px', fontSize: '0.82rem', fontWeight: 700 }}
+                  >
+                    {savingEdit ? 'Menyimpan...' : '💾 Simpan Perubahan Terus ke Web'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Senarai Semua Soalan Semasa */}
+            <div style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
+              {(kuizMingguan?.soalan_objektif || []).map((q, qIdx) => (
+                <div
+                  key={`${q.id || qIdx}-${qIdx}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    gap: '10px',
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    background:
+                      editingIndex === qIdx
+                        ? 'rgba(16, 185, 129, 0.14)'
+                        : 'rgba(255, 255, 255, 0.03)',
+                    border:
+                      editingIndex === qIdx
+                        ? '1px solid #10b981'
+                        : '1px solid rgba(255, 255, 255, 0.1)',
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#34d399', marginBottom: '2px' }}>
+                      Soalan #{qIdx + 1}
+                    </div>
+                    {q.soalan_ar && (
+                      <div
+                        dir="rtl"
+                        style={{
+                          fontSize: '0.9rem',
+                          color: '#fef08a',
+                          fontFamily: "'Amiri', 'Noto Naskh Arabic', serif",
+                          marginBottom: '2px',
+                          textAlign: 'right',
+                        }}
+                      >
+                        {q.soalan_ar}
+                      </div>
+                    )}
+                    <div style={{ fontSize: '0.79rem', color: '#e2e8f0', lineHeight: 1.4 }}>
+                      {q.soalan}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                    <button
+                      type="button"
+                      disabled={savingEdit}
+                      onClick={() => openEditQuestion(qIdx)}
+                      className="lg-btn-glass"
+                      style={{
+                        padding: '5px 9px',
+                        fontSize: '0.71rem',
+                        color: '#93c5fd',
+                        borderColor: 'rgba(59, 130, 246, 0.45)',
+                        background: 'rgba(59, 130, 246, 0.12)',
+                        borderRadius: 'var(--r-pill)',
+                      }}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      type="button"
+                      disabled={savingEdit}
+                      onClick={() => handleDeleteQuestion(qIdx)}
+                      className="lg-btn-glass"
+                      style={{
+                        padding: '5px 9px',
+                        fontSize: '0.71rem',
+                        color: '#fca5a5',
+                        borderColor: 'rgba(239, 68, 68, 0.45)',
+                        background: 'rgba(239, 68, 68, 0.12)',
+                        borderRadius: 'var(--r-pill)',
+                      }}
+                    >
+                      🗑️ Buang
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Borang Input Admin */}
         <form onSubmit={handleJanaKuiz} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -2737,6 +3268,59 @@ export default function App() {
     }
   };
 
+  // Auto-ganti soalan silabus/peratusan markah (cth: Soalan #2) dengan soalan Kaedah Fiqh vs Dhabit Fiqh (Dwi-Bahasa)
+  const sanitizeMidtermQuiz = useCallback((quizObj) => {
+    if (!quizObj || !Array.isArray(quizObj.soalan_objektif)) {
+      return { quiz: quizObj, replaced: false };
+    }
+    let replaced = false;
+    const replacementQ = {
+      soalan_ar: 'مَا الْفَرْقُ الْأَسَاسِيُّ بَيْنَ الْقَاعِدَةِ الْفِقْهِيَّةِ وَالضَّابِطِ الْفِقْهِيِّ؟',
+      soalan: 'Apakah perbezaan asas antara al-Qaidah al-Fiqhiyyah (Kaedah Fiqh) dengan al-Dhabit al-Fiqhi (Dhabit Fiqh)?',
+      pilihan_ar: [
+        'الْقَاعِدَةُ تَخْتَصُّ بِبَابٍ وَاحِدٍ وَالضَّابِطُ يَشْمَلُ أَبْوَاباً مُتَعَدِّدَةً',
+        'الْقَاعِدَةُ تَجْمَعُ فُرُوعاً مِنْ أَبْوَابٍ فِقْهِيَّةٍ مُتَعَدِّدَةٍ، وَالضَّابِطُ يَخْتَصُّ بِبَابٍ فِقْهِيٍّ وَاحِدٍ',
+        'الْقَاعِدَةُ لَا تَقْبَلُ الِاسْتِثْنَاءَ، وَالضَّابِطُ يَقْبَلُ الِاسْتِثْنَاءَ دَائِماً',
+        'لَا يُوجَدُ أَيُّ فَرْقٍ بَيْنَهُمَا عِنْدَ جُمْهُورِ الْفُقَهَاءِ',
+      ],
+      pilihan: [
+        'Kaedah hanya khusus untuk satu bab fiqh, manakala Dhabit merangkumi pelbagai bab',
+        'Kaedah menghimpunkan cabang daripada pelbagai bab fiqh, manakala Dhabit khusus untuk satu bab fiqh sahaja',
+        'Kaedah tidak menerima pengecualian, manakala Dhabit sentiasa mempunyai pengecualian',
+        'Tiada sebarang perbezaan antara kedua-duanya di sisi jumhur fuqaha',
+      ],
+      jawapan_betul:
+        'Kaedah menghimpunkan cabang daripada pelbagai bab fiqh, manakala Dhabit khusus untuk satu bab fiqh sahaja',
+      huraian_ar:
+        'الْقَاعِدَةُ الْفِقْهِيَّةُ أَعَمُّ وَأَشْمَلُ لِأَنَّهَا تَنْطَبِقُ عَلَى أَبْوَابٍ شَتَّى كَالْعِبَادَاتِ وَالْمُعَامَلَاتِ، أَمَّا الضَّابِطُ فَيَقْتَصِرُ عَلَى بَابٍ وَاحِدٍ فَقَطْ كَبَابِ الطَّهَارَةِ أَوِ الْبَيْعِ.',
+      huraian:
+        'Kaedah fiqh bersifat lebih umum kerana merangkumi pelbagai bab seperti ibadah, muamalat dan munakahat, sedangkan dhabit fiqh hanya terhad kepada satu bab fiqh tertentu sahaja seperti bab taharah atau jual beli.',
+    };
+
+    const nextQuestions = quizObj.soalan_objektif.map((q, idx) => {
+      const combined = `${q?.soalan || ''} ${q?.soalan_ar || ''}`.toLowerCase();
+      const isMarkahQ =
+        combined.includes('peratusan markah') ||
+        combined.includes('النسبة المئوية لدرجة اختبار') ||
+        (combined.includes('mid-term test') && combined.includes('kaedah penilaian'));
+      if (isMarkahQ) {
+        replaced = true;
+        return { id: q?.id || idx + 1, ...replacementQ };
+      }
+      return q;
+    });
+
+    if (!replaced) return { quiz: quizObj, replaced: false };
+    return {
+      quiz: {
+        ...quizObj,
+        updated_at: Date.now(),
+        soalan_objektif: nextQuestions,
+      },
+      replaced: true,
+    };
+  }, []);
+
   // Muat data kuiz mingguan daripada localStorage jika ada, agar tidak hilang selepas refresh/deploy
   const [kuizMingguan, setKuizMingguan] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -2754,7 +3338,13 @@ export default function App() {
               return kuizMingguanLalai;
             }
             if (parsed.soalan_objektif.length > 0) {
-              return parsed;
+              const { quiz: cleaned, replaced } = sanitizeMidtermQuiz(parsed);
+              if (replaced) {
+                try {
+                  localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(cleaned));
+                } catch {}
+              }
+              return cleaned;
             }
           }
         }
@@ -2781,12 +3371,20 @@ export default function App() {
     fetch('/api/kuiz-mingguan')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        const quiz = data?.data || data;
-        if (quiz?.tajuk_mingguan && Array.isArray(quiz.soalan_objektif) && quiz.soalan_objektif.length > 0) {
+        const rawQuiz = data?.data || data;
+        if (rawQuiz?.tajuk_mingguan && Array.isArray(rawQuiz.soalan_objektif) && rawQuiz.soalan_objektif.length > 0) {
+          const { quiz, replaced } = sanitizeMidtermQuiz(rawQuiz);
           setKuizMingguan(quiz);
           try {
             localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(quiz));
           } catch {}
+          if (replaced) {
+            fetch('/api/kuiz-mingguan', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(quiz),
+            }).catch(() => {});
+          }
         }
       })
       .catch(() => {});
@@ -2800,11 +3398,23 @@ export default function App() {
         throw new Error('Gagal mengambil kuiz mingguan');
       })
       .then((data) => {
-        const quiz = (data && data.data) ? data.data : data;
-        if (quiz && quiz.tajuk_mingguan && Array.isArray(quiz.soalan_objektif) && quiz.soalan_objektif.length > 0) {
+        const rawQuiz = (data && data.data) ? data.data : data;
+        if (rawQuiz && rawQuiz.tajuk_mingguan && Array.isArray(rawQuiz.soalan_objektif) && rawQuiz.soalan_objektif.length > 0) {
+          const { quiz, replaced } = sanitizeMidtermQuiz(rawQuiz);
+          if (replaced) {
+            fetch('/api/kuiz-mingguan', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(quiz),
+            }).catch(() => {});
+          }
           setKuizMingguan((prev) => {
-            // Jika dalam peranti sudah ada kuiz penuh yang dijana (cth: 20 soalan) tetapi server kembalikan 2 soalan (fallback), kekalkan kuiz 20 soalan!
-            if (prev?.soalan_objektif?.length > quiz.soalan_objektif.length) {
+            // Lindungi daripada ditimpa oleh fail sandaran statik (2 soalan) sahaja;
+            // jika pelayan mengembalikan kuiz sebenar (> 2 soalan) atau lebih baharu (updated_at), terima kemas kini!
+            const isFallbackStatic = quiz.soalan_objektif.length <= 2 && (prev?.soalan_objektif?.length || 0) > 2;
+            const prevTime = Number(prev?.updated_at || 0);
+            const serverTime = Number(quiz?.updated_at || 0);
+            if (isFallbackStatic && serverTime <= prevTime) {
               return prev;
             }
             try {
@@ -2817,7 +3427,7 @@ export default function App() {
       .catch((err) => {
         console.log('Menggunakan data kuiz mingguan sedia ada:', err.message);
       });
-  }, []);
+  }, [sanitizeMidtermQuiz]);
 
   const [matchScore, setMatchScore] = useState(0);
   const [matchIndex, setMatchIndex] = useState(0);
