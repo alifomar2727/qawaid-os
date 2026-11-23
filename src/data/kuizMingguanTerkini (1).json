@@ -1,0 +1,608 @@
+{
+  "tajuk_mingguan": "Ulang Kaji Midterm (4 Slaid Kuliah)",
+  "tarikh_kemaskini": "24 November 2026",
+  "dwi_bahasa": true,
+  "soalan_objektif": [
+    {
+      "id": 1,
+      "soalan": "Apakah maksud fiqh dari sudut bahasa?",
+      "soalan_ar": "ما هو تعريف الفقه لغةً؟",
+      "pilihan": [
+        "Ilmu mengenai hukum-hukum syarak",
+        "Mutlak kefahaman dan kepintaran (kefahaman yang mendalam)",
+        "Perkara kulli yang terpakai ke atas semua juzuknya",
+        "Qadiah kulli yang merangkumi pelbagai cabang fiqh"
+      ],
+      "pilihan_ar": [
+        "العلم بالأحكام الشرعية",
+        "مطلق الفهم والفطنة",
+        "الأمر الكلي المنطبق على جزئياته",
+        "قضية كلية تندرج تحتها فروع فقهية"
+      ],
+      "jawapan_betul": "Mutlak kefahaman dan kepintaran (kefahaman yang mendalam)",
+      "huraian": "Berdasarkan slaid kuliah, maksud fiqh dari sudut bahasa merujuk kepada mutlak kefahaman dan kepintaran.",
+      "huraian_ar": "معنى الفقه في اللغة هو مطلق الفهم والفطنة."
+    },
+    {
+      "id": 2,
+      "soalan": "Berapakah peratusan markah bagi ujian pertengahan semester (Mid-term Test) mengikut kaedah penilaian?",
+      "soalan_ar": "ما هي النسبة المئوية لدرجة اختبار منتصف الفصل الدراسي (Mid-term Test) حسب طرق التقييم؟",
+      "pilihan": [
+        "10%",
+        "20%",
+        "30%",
+        "40%"
+      ],
+      "pilihan_ar": [
+        "10%",
+        "20%",
+        "30%",
+        "40%"
+      ],
+      "jawapan_betul": "20%",
+      "huraian": "Ujian pertengahan semester menyumbang sebanyak 20% daripada jumlah keseluruhan penilaian berdasarkan slaid pengenalan kursus.",
+      "huraian_ar": "تبلغ نسبة اختبار منتصف الفصل 20% وفقاً لطرق التقييم في المادة."
+    },
+    {
+      "id": 3,
+      "soalan": "Apakah perbezaan asas antara kaedah fiqh (القاعدة الفقهية) dan dhabith fiqh (الضابط الفقهي) dari sudut skop merangkumi?",
+      "soalan_ar": "ما هو الفرق الأساسي بين القاعدة الفقهية والضابط الفقي من حيث الشمول؟",
+      "pilihan": [
+        "Kaedah fiqh hanya khusus untuk satu bab fiqh sahaja manakala dhabith merangkumi pelbagai bab",
+        "Kaedah fiqh menghimpunkan cabang-cabang daripada pelbagai bab yang berbeza, manakala dhabith menghimpunkan cabang-cabang daripada satu bab fiqh yang sama",
+        "Kedua-duanya menghimpunkan cabang daripada satu bab sahaja",
+        "Kedua-duanya menghimpunkan cabang daripada semua bab fiqh tanpa terkecuali"
+      ],
+      "pilihan_ar": [
+        "القاعدة الفقهية تختص بباب فقهي واحد فقط والضابط يجمع أبواباً شتى",
+        "القاعدة الفقهية تجمع فروعاً من أبواب شتى، والضابط يجمع فروعاً من باب فقهي واحد",
+        "كلاهما يجمعان فروعاً من باب واحد فقط",
+        "كلاهما يجمعان فروعاً من جميع أبواب الفقه بلا استثناء"
+      ],
+      "jawapan_betul": "Kaedah fiqh menghimpunkan cabang-cabang daripada pelbagai bab yang berbeza, manakala dhabith menghimpunkan cabang-cabang daripada satu bab fiqh yang sama",
+      "huraian": "Kaedah fiqh bersifat umum merentasi pelbagai bab, manakala dhabith fiqh khusus terikat pada satu bab fiqh tertentu (seperti bab solat atau taharah sahaja).",
+      "huraian_ar": "القاعدة الفقهية تجمع فروعاً من أبواب فقهية مختلفة، بينما الضابط الفقهي يختص بباب فقهي واحد."
+    },
+    {
+      "id": 4,
+      "soalan": "Antara berikut, yang manakah dikategorikan sebagai sumber bagi kaedah fiqh melalui cara istinbat ijtihadi?",
+      "soalan_ar": "أي مما يلي يُعد من مصادر القواعد الفقهية بالاستنباط الاجتهادي؟",
+      "pilihan": [
+        "Teks hadis Nabi secara langsung sahaja",
+        "Illat pensyariatan (ta'lil) bagi teks-teks syarak selepas proses istiqra' (kajian menyeluruh)",
+        "Pendapat sahabat Nabi sahaja tanpa selain mereka",
+        "Fatwa ulama semasa sahaja"
+      ],
+      "pilihan_ar": [
+        "نصوص الأحاديث النبوية المباشرة فقط",
+        "تعليل التشريعي للنصوص الواردة بعد الاستقراء",
+        "أقوال الصحابة وحدهم دون غيرهم",
+        "فتاوى العلماء المعاصرين فقط"
+      ],
+      "jawapan_betul": "Illat pensyariatan (ta'lil) bagi teks-teks syarak selepas proses istiqra' (kajian menyeluruh)",
+      "huraian": "Sebahagian kaedah fiqh diistinbatkan melalui penalaran dan illat pensyariatan terhadap pelbagai teks selepas kajian menyeluruh (istiqra').",
+      "huraian_ar": "تُستنبط بعض القواعد بالتعليل التشريعي للنصوص بعد الاستقراء مثل قاعدة الأمور بمقاصدها."
+    },
+    {
+      "id": 5,
+      "soalan": "Apakah klasifikasi bagi kaedah (اليقين لا يزال بالشك - Keyakinan tidak hilang dengan syak) dari sudut skop keluasan dan keumumannya?",
+      "soalan_ar": "ما هو تصنيف قاعدة (اليقين لا يزال بالشك) من حيث الشمول والكلية؟",
+      "pilihan": [
+        "Al-Qawaid al-Kulliyyah al-Kubra (Kaedah Kulli Utama yang Enam)",
+        "Al-Qawaid al-Kulliyyah al-Sughra (Kaedah Kulli Kecil)",
+        "Al-Qawaid al-Khassah (Kaedah Khusus)",
+        "Al-Qawaid al-Tabi'ah (Kaedah Tabi'ah/Ikutan)"
+      ],
+      "pilihan_ar": [
+        "القواعد الكلية الكبرى",
+        "القواعد الكلية الصغرى",
+        "القواعد الخاصة",
+        "القواعد التابعة"
+      ],
+      "jawapan_betul": "Al-Qawaid al-Kulliyyah al-Kubra (Kaedah Kulli Utama yang Enam)",
+      "huraian": "Kaedah ini termasuk dalam enam kaedah kulli utama (al-qawaid al-kubra) yang merangkumi pelbagai masalah daripada seluruh bab fiqh.",
+      "huraian_ar": "تُعتبر القواعد الكبرى مثل اليقين لا يزال بالشك من القواعد التي ترجع إليها مسائل كثيرة من جميع أبواب الفقه."
+    },
+    {
+      "id": 6,
+      "soalan": "Apakah sumber bagi kaedah (Tidak boleh melakukan mudarat dan tidak boleh membalas mudarat dengan mudarat) dari sudut sumber perundangannya?",
+      "soalan_ar": "ما هو مصدر قاعدة (لا ضرر ولا ضرار) من حيث المصادر الفقهية؟",
+      "pilihan": [
+        "Teks syarak (Hadis Nabawi)",
+        "Istinbat ijtihadi",
+        "Qias usuli",
+        "Ijmak mutlak"
+      ],
+      "pilihan_ar": [
+        "النص الشرعي (الأحاديث النبوية)",
+        "الاستنباط الاجتهادي",
+        "القياس الأصولي",
+        "الإجماع المطلق"
+      ],
+      "jawapan_betul": "Teks syarak (Hadis Nabawi)",
+      "huraian": "Kaedah ini diambil secara langsung daripada teks syarak terutamanya hadis-hadis Nabi SAW.",
+      "huraian_ar": "هذه القاعدة مأخوذة مباشرة من النصوص الشرعية وتحديداً من الأحاديث النبوية الشريفة."
+    },
+    {
+      "id": 7,
+      "soalan": "Di bawah jenis manakah kaedah (Kesusahan itu menarik kepada kemudahan) dikategorikan dari sudut kepelbagaian dan keumumannya?",
+      "soalan_ar": "تحت أي نوع من أنواع القواعد الفقهية تندرج قاعدة (المشقة تجلب التيسير)؟",
+      "pilihan": [
+        "Qawaid Kulliyyah Sughra (Kecil)",
+        "Qawaid Khasah (Khusus)",
+        "Qawaid Kulliyyah Kubra (Besar/Utama)",
+        "Dawabit Fiqhiyyah"
+      ],
+      "pilihan_ar": [
+        "القواعد الكلية الصغرى",
+        "القواعد الخاصة",
+        "القواعد الكلية الكبرى",
+        "الضوابط الفقهية"
+      ],
+      "jawapan_betul": "Qawaid Kulliyyah Kubra (Besar/Utama)",
+      "huraian": "Kaedah ini dianggap sebagai salah satu kaedah kulliyyah kubra (utama) yang merangkumi pelbagai masalah daripada seluruh bab fiqh.",
+      "huraian_ar": "تعد هذه القاعدة من القواعد الكلية الكبرى التي ترجع إليها مسائل كثيرة من جميع أبواب الفقه."
+    },
+    {
+      "id": 8,
+      "soalan": "Apakah definisi bagi kaedah fiqh yang bertaraf 'tabi'ah' (mengikut kaedah lain)?",
+      "soalan_ar": "ما هو تعريف القواعد الفقهية التابعة لغيرها؟",
+      "pilihan": [
+        "Kaedah yang tidak menjadi syarat atau qaid kepada kaedah lain",
+        "Kaedah yang berkhidmat kepada kaedah lain dan mewakili sebahagian aspek bagi kaedah besar seperti kaedah (Setiap perkara mengikut tujuannya)",
+        "Kaedah yang khusus untuk satu bab fiqh sahaja",
+        "Kaedah yang diistinbat terus daripada nas selepas istiqra'"
+      ],
+      "pilihan_ar": [
+        "القواعد التي لم تكن قيداً أو شرطاً في قاعدة أخرى",
+        "القواعد الخادمة لغيرها من القواعد التي تمثل جانباً من جوانب القاعدة الكبرى مثل (الأمور بمقاصدها)",
+        "القواعد التي تختص بباب فقهي واحد فقط",
+        "القواعد المستنبطة مباشرة من النصوص بعد الاستقراء"
+      ],
+      "jawapan_betul": "Kaedah yang berkhidmat kepada kaedah lain dan mewakili sebahagian aspek bagi kaedah besar seperti kaedah (Setiap perkara mengikut tujuannya)",
+      "huraian": "Kaedah tabi'ah ialah kaedah yang berkhidmat kepada kaedah kubra, mewakili sebahagian daripadanya, atau menjadi qaid (ikatan) dan pengecualian.",
+      "huraian_ar": "القواعد التابعة هي التي تخدم القواعد الكبرى وتمثل جانباً منها أو تكون قيداً أو استثناءً لها."
+    },
+    {
+      "id": 9,
+      "soalan": "Berapakah bilangan kaedah fiqh utama (kubra) yang dipersetujui oleh semua mazhab?",
+      "soalan_ar": "كم عدد القواعد الفقهية الكبرى المتفق عليها بين جميع المذاهب؟",
+      "pilihan": [
+        "5 kaedah",
+        "6 kaedah",
+        "19 kaedah",
+        "40 kaedah"
+      ],
+      "pilihan_ar": [
+        "خمس قواعد",
+        "ست قواعد",
+        "تسع عشرة قاعدة",
+        "أربعون قاعدة"
+      ],
+      "jawapan_betul": "6 kaedah",
+      "huraian": "Kaedah yang disepakati di kalangan semua mazhab fiqh ialah 6 kaedah kubra.",
+      "huraian_ar": "القواعد المتفق عليها بين جميع المذاهب الفقهية هي القواعد الست الكبرى."
+    },
+    {
+      "id": 10,
+      "soalan": "Kategori manakah bagi kaedah (Ijtihad tidak boleh dibatalkan dengan ijtihad yang lain) dari sudut keumuman dan kecairannya?",
+      "soalan_ar": "إلى أي نوع تنتمي قاعدة (لا تنقض الاجتهاد بالاجتهاد) بحسب شمولها وكليتها؟",
+      "pilihan": [
+        "Qawaid Kulliyyah Kubra",
+        "Qawaid Kulliyyah Sughra",
+        "Qawaid Khasah",
+        "Qawaid Mustanbitah"
+      ],
+      "pilihan_ar": [
+        "القواعد الكلية الكبرى",
+        "القواعد الكلية الصغرى",
+        "القواعد الخاصة",
+        "القواعد المستنبطة"
+      ],
+      "jawapan_betul": "Qawaid Kulliyyah Sughra",
+      "huraian": "Kaedah ini tergolong di bawah qawaid kulliyyah sughra, di mana ia berdiri sendiri tetapi ruang lingkupnya lebih sempit berbanding kaedah kubra.",
+      "huraian_ar": "هذه القاعدة تندرج تحت القواعد الكلية الكبرى، وهي المستقلة عنها ومجالها أضيق من سابقتها."
+    },
+    {
+      "id": 11,
+      "soalan": "Apakah kitab yang dianggap sebagai karya dalam bidang \"Al-Furuq al-Fiqhiyyah\" (Perbezaan Fiqh)?",
+      "soalan_ar": "مَا هُوَ الْكِتَابُ الَّذِي يُعَدُّ مِنَ الْمُؤَلَّفَاتِ فِي \"الْفُرُوقِ الْفِقْهِيَّةِ\"؟",
+      "pilihan": [
+        "Usul al-Karkhi",
+        "Al-Furuq oleh al-Qarafi",
+        "Al-Ashbah wa al-Naza'ir",
+        "Al-Qawa'id al-Nuraniyyah"
+      ],
+      "pilihan_ar": [
+        "أُصُولُ الْكَرْخِيِّ",
+        "الْفُرُوقُ لِلْقَرَافِيِّ",
+        "الْأَشْبَاهُ وَالنَّظَائِرُ",
+        "الْقَوَاعِدُ النُّورَانِيَّةُ"
+      ],
+      "jawapan_betul": "Al-Furuq oleh al-Qarafi",
+      "huraian": "Kitab \"Anwar al-Buruq fi Anwa' al-Furuq\" yang dikenali sebagai kitab al-Furuq merupakan karya agung al-Qarafi dalam bidang perbezaan fiqh.",
+      "huraian_ar": "كِتَابُ \"أَنْوَارُ الْبُرُوقِ فِي أَنْوَاءِ الْفُرُوقِ\" هُوَ مِنْ أَشْهَرِ كُتُبِ الْفُرُوقِ لِلْقَرَافِيِّ."
+    },
+    {
+      "id": 12,
+      "soalan": "Apakah metodologi yang muncul pada era moden untuk menghimpunkan semua kaedah fiqh?",
+      "soalan_ar": "مَا هُوَ الْمَنْهَجُ الَّذِي ظَهَرَ فِي الْعَصْرِ الْحَدِيثِ لِجَمْعِ كُلِّ الْقَوَاعِدِ الْفِقْهِيَّةِ؟",
+      "pilihan": [
+        "Metodologi Ensiklopedia (Mawsu'i)",
+        "Metodologi Takhrij",
+        "Metodologi Tahqiq",
+        "Metodologi Kajian Teori"
+      ],
+      "pilihan_ar": [
+        "الْمَنْهَجُ الْمَوْسُوعِيُّ",
+        "مَنْهَجُ التَّخْرِيجِ",
+        "مَنْهَجُ التَّحْقِيقِ",
+        "مَنْهَجُ الدِّرَاسَةِ النَّظَرِيَّةِ"
+      ],
+      "jawapan_betul": "Metodologi Ensiklopedia (Mawsu'i)",
+      "huraian": "Metodologi ensiklopedia (mawsu'i) digunakan untuk menghimpunkan dan menyusun kaedah-kaedah fiqh secara menyeluruh dalam bentuk ensiklopedia.",
+      "huraian_ar": "الْمَنْهَجُ الْمَوْسُوعِيُّ هُوَ الَّذِي يَهْدِفُ إِلَى حَصْرِ وَجَمْعِ الْقَوَاعِدِ الْفِقْهِيَّةِ فِي مُؤَلَّفَاتٍ شَامِلَةٍ."
+    },
+    {
+      "id": 13,
+      "soalan": "Kitab manakah yang tergolong dalam mazhab Hanbali dalam klasifikasi kaedah fiqh?",
+      "soalan_ar": "أَيُّ كِتَابٍ يَنْتَمِي إِلَى الْمَذْهَبِ الْحَنْبَلِيِّ فِي تَصْنِيفِ الْقَوَاعِدِ الْفِقْهِيَّةِ؟",
+      "pilihan": [
+        "Idah al-Masalik",
+        "Al-Manthur fi Tartib al-Qawa'id",
+        "Al-Qawa'id al-Nuraniyyah",
+        "Usul al-Karkhi"
+      ],
+      "pilihan_ar": [
+        "إِيضَاحُ الْمَسَالِكِ",
+        "الْمَنْثُورُ فِي تَرْتِيبِ الْقَوَاعِدِ",
+        "الْقَوَاعِدُ النُّورَانِيَّةُ",
+        "أُصُولُ الْكَرْخِيِّ"
+      ],
+      "jawapan_betul": "Al-Qawa'id al-Nuraniyyah",
+      "huraian": "Kitab al-Qawa'id al-Nuraniyyah merupakan karya terkenal Ibnu Taymiyyah yang menjadi rujukan utama dalam mazhab Hanbali.",
+      "huraian_ar": "كِتَابُ الْقَوَاعِدِ النُّورَانِيَّةِ هُوَ مِنْ مُؤَلَّفَاتِ ابْنِ تَيْمِيَّةَ فِي الْمَذْهَبِ الْحَنْبَلِيِّ."
+    },
+    {
+      "id": 14,
+      "soalan": "Apakah maksud \"Al-Ashbah wa al-Naza'ir\" dalam ilmu kaedah fiqh?",
+      "soalan_ar": "مَا الْمَقْصُودُ بِـ \"الْأَشْبَاهِ وَالنَّظَائِرِ\" فِي عِلْمِ الْقَوَاعِدِ الْفِقْهِيَّةِ؟",
+      "pilihan": [
+        "Mengetahui masalah yang serupa dari segi sudut pandang",
+        "Mengeluarkan cabang hukum berdasarkan usul",
+        "Menghimpunkan kaedah dalam satu topik",
+        "Tahqiq manuskrip lama"
+      ],
+      "pilihan_ar": [
+        "مَعْرِفَةُ الْمَسَائِلِ الْمُتَشَابِهَةِ فِي الْأَوْجُهِ",
+        "تَخْرِيجُ الْفُرُوعِ عَلَى الْأُصُولِ",
+        "حَصْرُ الْقَوَاعِدِ فِي مَوْضُوعٍ وَاحِدٍ",
+        "تَحْقِيقُ الْمَخْطُوطَاتِ الْقَدِيمَةِ"
+      ],
+      "jawapan_betul": "Mengetahui masalah yang serupa dari segi sudut pandang",
+      "huraian": "Istilah ini merujuk kepada perbincangan mengenai masalah-masalah fiqh yang mempunyai persamaan dari sudut tertentu tetapi berbeza pada sudut yang lain.",
+      "huraian_ar": "الْأَشْبَاهُ وَالنَّظَائِرُ تَعْنِي الْمَسَائِلَ الَّتِي تَجْتَمِعُ فِي بَعْضِ الْأَوْجُهِ وَتَفْتَرِقُ فِي أُخْرَى."
+    },
+    {
+      "id": 15,
+      "soalan": "Apakah kitab yang dianggap sebagai karya dalam bidang \"Penggabungan antara Kaedah Fiqh dan Usul Fiqh\"?",
+      "soalan_ar": "مَا هُوَ الْكِتَابُ الَّذِي يُعَدُّ مِنَ الْمُؤَلَّفَاتِ فِي \"الْجَمْعِ بَيْنَ الْقَوَاعِدِ الْفِقْهِيَّةِ وَأُصُولِ الْفِقْهِ\"؟",
+      "pilihan": [
+        "Ta'sis al-Nazar",
+        "Al-Furuq oleh al-Juwayni",
+        "Al-Ashbah wa al-Naza'ir oleh Ibnu Nujaim",
+        "Al-Qawa'id oleh Ibnu Rajab"
+      ],
+      "pilihan_ar": [
+        "تَأْسِيسُ النَّظَرِ",
+        "الْفُرُوقُ لِلْجُوَيْنِيِّ",
+        "الْأَشْبَاهُ وَالنَّظَائِرُ لِابْنِ نُجَيْمٍ",
+        "الْقَوَاعِدُ لِابْنِ رَجَبٍ"
+      ],
+      "jawapan_betul": "Ta'sis al-Nazar",
+      "huraian": "Kitab Ta'sis al-Nazar oleh al-Dabusi merupakan antara karya terawal yang menggabungkan perbincangan kaedah fiqh dengan prinsip usul fiqh.",
+      "huraian_ar": "كِتَابُ \"تَأْسِيسُ النَّظَرِ\" لِأَبِي زَيْدٍ الدَّبُوسِيِّ يَهْتَمُّ بِالْجَمْعِ بَيْنَ الْقَوَاعِدِ وَأُصُولِ الْفِقْهِ."
+    },
+    {
+      "id": 16,
+      "soalan": "Apakah pandangan yang menyatakan keharusan berdalil dengan kaedah fiqh sekiranya ia tidak bercanggah dengan nas yang qat'i?",
+      "soalan_ar": "مَا هُوَ الرَّأْيُ الَّذِي يَرَى جَوَازَ الِاسْتِدْلَالِ بِالْقَوَاعِدِ الْفِقْهِيَّةِ إِذَا لَمْ يُعَارِضْهَا أَصْلٌ مَقْطُوعٌ بِهِ؟",
+      "pilihan": [
+        "Pandangan pertama",
+        "Pandangan kedua",
+        "Pandangan ketiga",
+        "Tiada pandangan mengenai perkara itu"
+      ],
+      "pilihan_ar": [
+        "الرَّأْيُ الْأَوَّلُ",
+        "الرَّأْيُ الثَّانِي",
+        "الرَّأْيُ الثَّالِثُ",
+        "لَا رَأْيَ فِي ذَلِكَ"
+      ],
+      "jawapan_betul": "Pandangan kedua",
+      "huraian": "Pandangan kedua berpendapat bahawa kaedah fiqh boleh dijadikan hujah selagi ia tidak bercanggah dengan nas atau prinsip syarak yang qat'i.",
+      "huraian_ar": "الرَّأْيُ الثَّانِي يَرَى أَنَّ الْقَوَاعِدَ الْفِقْهِيَّةَ حُجَّةٌ مَا لَمْ تُعَارِضْ أَصْلًا شَرْعِيًّا قَطْعِيًّا."
+    },
+    {
+      "id": 17,
+      "soalan": "Apakah syarat asas bagi sesuatu kaedah fiqh untuk menjadi hujah syarie?",
+      "soalan_ar": "مَا هُوَ الشَّرْطُ الْأَسَاسِيُّ لِكَوْنِ الْقَاعِدَةِ الْفِقْهِيَّةِ حُجَّةً شَرْعِيَّةً؟",
+      "pilihan": [
+        "Ia mestilah dibina atas pendapat fuqaha semata-mata",
+        "Ia mestilah bersumberkan nas atau dalalah daripada al-Quran dan as-Sunnah",
+        "Ia mestilah wujud dalam semua mazhab",
+        "Ia mestilah sangat lama"
+      ],
+      "pilihan_ar": [
+        "أَنْ تَكُونَ مَبْنِيَّةً عَلَى رَأْيِ الْفَقِيهِ فَقَطْ",
+        "أَنْ تَكُونَ مُسْتَنِدَةً إِلَى نَصٍّ أَوْ دَلَالَةٍ مِنَ الْقُرْآنِ وَالسُّنَّةِ",
+        "أَنْ تَكُونَ مَوْجُودَةً فِي جَمِيعِ الْمَذَاهِبِ",
+        "أَنْ تَكُونَ قَدِيمَةً جِدًّا"
+      ],
+      "jawapan_betul": "Ia mestilah bersumberkan nas atau dalalah daripada al-Quran dan as-Sunnah",
+      "huraian": "Syarat utama kehujahan kaedah fiqh adalah ia mestilah berakar umbi daripada nas syarak atau dalil-dalil yang disepakati.",
+      "huraian_ar": "يَجِبُ أَنْ يَكُونَ أَصْلُ الْقَاعِدَةِ مُسْتَمَدًّا مِنَ النُّصُوصِ الشَّرْعِيَّةِ أَوْ مَا تَعَاضَدَتْ عَلَيْهِ الْأَدِلَّةُ."
+    },
+    {
+      "id": 18,
+      "soalan": "Apakah pendirian pandangan ketiga mengenai berdalil dengan kaedah fiqh?",
+      "soalan_ar": "مَا هُوَ مَوْقِفُ الرَّأْيِ الثَّالِثِ مِنْ الِاسْتِدْلَالِ بِالْقَوَاعِدِ الْفِقْهِيَّةِ؟",
+      "pilihan": [
+        "Harus secara mutlak",
+        "Tidak harus kecuali jika terdapat nas yang jelas daripada al-Kitab atau as-Sunnah",
+        "Harus bagi orang awam sahaja",
+        "Tidak harus sama sekali"
+      ],
+      "pilihan_ar": [
+        "يَجُوزُ مُطْلَقًا",
+        "لَا يَجُوزُ إِلَّا إِذَا وُجِدَ نَصٌّ صَرِيحٌ مِنَ الْكِتَابِ أَوِ السُّنَّةِ",
+        "يَجُوزُ لِلْعَامَّةِ فَقَطْ",
+        "لَا يَجُوزُ أَبَدًا"
+      ],
+      "jawapan_betul": "Tidak harus kecuali jika terdapat nas yang jelas daripada al-Kitab atau as-Sunnah",
+      "huraian": "Pandangan ketiga mengehadkan penggunaan kaedah fiqh dengan mensyaratkan kewujudan nas yang jelas sebagai sandaran utama.",
+      "huraian_ar": "يَرَى الرَّأْيُ الثَّالِثُ أَنَّ الْقَوَاعِدَ لَا تُسْتَعْمَلُ كَدَلِيلٍ مُسْتَقِلٍّ بَلْ يَجِبُ وُجُودُ نَصٍّ صَرِيحٍ."
+    },
+    {
+      "id": 19,
+      "soalan": "Apakah yang perlu diambil kira oleh seseorang yang ingin berdalil dengan kaedah fiqh?",
+      "soalan_ar": "مَاذَا يَنْبَغِي عَلَى الْمُسْتَدِلِّ بِالْقَاعِدَةِ الْفِقْهِيَّةِ أَنْ يُرَاعِيَ؟",
+      "pilihan": [
+        "Maslahah zaman, uruf, dan maqasid syariah",
+        "Pendapat orang ramai pada zaman moden",
+        "Kaedah bahasa sahaja",
+        "Keinginan peribadi"
+      ],
+      "pilihan_ar": [
+        "مَصَالِحَ الزَّمَانِ وَأَعْرَافَهُ وَمَقَاصِدَ الشَّرِيعَةِ",
+        "رَأْيَ النَّاسِ فِي الْعَصْرِ الْحَدِيثِ",
+        "الْقَوَاعِدَ اللُّغَوِيَّةَ فَقَطْ",
+        "الْأَهْوَاءَ الشَّخْصِيَّةَ"
+      ],
+      "jawapan_betul": "Maslahah zaman, uruf, dan maqasid syariah",
+      "huraian": "Seorang mujtahid atau mustadil perlu memahami maqasid syariah serta mengambil kira perubahan zaman dan uruf yang muktabar.",
+      "huraian_ar": "يَجِبُ عَلَى الْمُسْتَدِلِّ مَعْرِفَةُ مَقَاصِدِ الشَّرِيعَةِ وَمُرَاعَاةُ مَصَالِحِ الزَّمَانِ وَأَعْرَافِهِ."
+    },
+    {
+      "id": 20,
+      "soalan": "Apakah hukum berdalil dengan kaedah yang mempunyai sandaran daripada al-Quran dan as-Sunnah secara bersama?",
+      "soalan_ar": "مَا هُوَ حُكْمُ الِاسْتِدْلَالِ بِالْقَوَاعِدِ الَّتِي لَهَا أَصْلٌ فِي الْقُرْآنِ وَالسُّنَّةِ مُجْتَمِعَةً؟",
+      "pilihan": [
+        "Dilarang",
+        "Diragui",
+        "Hujah yang jelas dan tidak syak lagi",
+        "Makruh"
+      ],
+      "pilihan_ar": [
+        "مَمْنُوعٌ",
+        "مَشْكُوكٌ فِيهِ",
+        "حُجَّةٌ وَاضِحَةٌ لَا غُبَارَ عَلَيْهَا",
+        "مَكْرُوهٌ"
+      ],
+      "jawapan_betul": "Hujah yang jelas dan tidak syak lagi",
+      "huraian": "Kaedah yang disokong oleh nas al-Quran dan as-Sunnah secara bersama merupakan hujah yang sangat kuat dan tidak dipertikaikan.",
+      "huraian_ar": "الْقَوَاعِدُ الْمُسْتَنِدَةُ إِلَى نُصُوصٍ شَرْعِيَّةٍ مُتَظَاهِرَةٍ تُعَدُّ حُجَّةً قَطْعِيَّةً لَا شَكَّ فِيهَا."
+    },
+    {
+      "id": 21,
+      "soalan": "Apakah maksud keseluruhan bagi kaedah \"الأمور بمقاصدها\" (Segala perkara bergantung kepada tujuannya)?",
+      "soalan_ar": "ما هو المعنى الإجمالي لقاعدة \"الأمور بمقاصدها\"؟",
+      "pilihan": [
+        "Hukum bagi sesuatu tindakan berubah mengikut niat dan tujuan seseorang.",
+        "Asal bagi ibadat adalah berhenti dan mengikut (tawakkuf).",
+        "Tiada pahala melainkan dengan niat.",
+        "Pengiraan dalam akad adalah pada bentuk luaran bukan pada makna."
+      ],
+      "pilihan_ar": [
+        "تتغير أحكام التصرفات باختلاف قصد الإنسان ونيته.",
+        "الأصل في العبادات التوقف والاتباع.",
+        "لا ثواب إلا بالنية.",
+        "العبرة في العقود للمباني لا للمعاني."
+      ],
+      "jawapan_betul": "Hukum bagi sesuatu tindakan berubah mengikut niat dan tujuan seseorang.",
+      "huraian": "Kerana niat seseorang mukallaf adalah penentu kepada sifat sesuatu tindakan dan hukum syaraknya.",
+      "huraian_ar": "لأن نية المكلف هي التي تحدد طبيعة التصرف وحكمه الشرعي."
+    },
+    {
+      "id": 22,
+      "soalan": "Apakah definisi \"القصد\" (tujuan/niat) menurut istilah fuqaha?",
+      "soalan_ar": "ما هو تعريف \"القصد\" في اصطلاح الفقهاء؟",
+      "pilihan": [
+        "Melakukan sesuatu dan bertujuan melakukannya.",
+        "Iaitu keazaman yang menuju ke arah melakukan sesuatu perbuatan.",
+        "Ragu-ragu dalam melakukan ibadat.",
+        "Meninggalkan perbuatan secara keseluruhan."
+      ],
+      "pilihan_ar": [
+        "إتيان الشيء وقصده.",
+        "هو العزم المتجه نحو إنشاء فعل.",
+        "التردد في فعل العبادة.",
+        "ترك العمل بالكلية."
+      ],
+      "jawapan_betul": "Iaitu keazaman yang menuju ke arah melakukan sesuatu perbuatan.",
+      "huraian": "Kerana niat (qasd) adalah pendorong yang membuatkan seseorang mukallaf bertindak ke atas apa yang dilakukannya.",
+      "huraian_ar": "لأن القصد هو الدافع الذي يجعل المكلف يتجه بما يصدر عنه."
+    },
+    {
+      "id": 23,
+      "soalan": "Bagaimanakah niat membezakan antara adat (kebiasaan) dan ibadat?",
+      "soalan_ar": "كيف تميز النية بين العادات والعبادات؟",
+      "pilihan": [
+        "Niat menukarkan adat kepada ibadat jika diniatkan untuk mendekatkan diri kepada Allah.",
+        "Niat tidak memberi kesan langsung kepada adat.",
+        "Niat menjadikan ibadat sebagai adat.",
+        "Niat hanya syarat dalam ibadat sahaja tanpa adat."
+      ],
+      "pilihan_ar": [
+        "النية تحول العادة إلى عبادة إذا قصد بها التقرب إلى الله.",
+        "النية لا تؤثر في العادات أبداً.",
+        "النية تجعل العبادة عادة.",
+        "النية شرط في العبادات فقط دون العادات."
+      ],
+      "jawapan_betul": "Niat menukarkan adat kepada ibadat jika diniatkan untuk mendekatkan diri kepada Allah.",
+      "huraian": "Kerana niat adalah kayu ukur yang membezakan antara perbuatan harus (mubah) dengan perbuatan mendekatkan diri kepada Allah (qurbah).",
+      "huraian_ar": "لأن النية هي المعيار الذي يفرق بين الفعل المباح وبين القربة."
+    },
+    {
+      "id": 24,
+      "soalan": "Apakah hukum bagi orang yang mandi untuk menyejukkan badan pada hari panas tanpa niat ibadat?",
+      "soalan_ar": "ما حكم من اغتسل للتبرد في يوم حار دون نية العبادة؟",
+      "pilihan": [
+        "Diberi pahala seolah-olah solat.",
+        "Dianggap sebagai perbuatan harus yang tiada pahala ibadat.",
+        "Berdosa melakukan perbuatan ini.",
+        "Wajib ke atasnya mengulangi mandi."
+      ],
+      "pilihan_ar": [
+        "يؤجر عليه كأنه صلاة.",
+        "يعتبر فعلاً مباحاً لا ثواب فيه كعبادة.",
+        "يأثم على هذا الفعل.",
+        "يجب عليه إعادة الغسل."
+      ],
+      "jawapan_betul": "Dianggap sebagai perbuatan harus yang tiada pahala ibadat.",
+      "huraian": "Kerana perkara harus tidak menjadi ibadat melainkan jika disertai dengan niat untuk mendekatkan diri kepada Allah.",
+      "huraian_ar": "لأن المباحات لا تصير عبادات إلا إذا اقترنت بنية التقرب."
+    },
+    {
+      "id": 25,
+      "soalan": "Apakah dalil daripada al-Quran bagi kaedah \"الأمور بمقاصدها\"?",
+      "soalan_ar": "ما هو الدليل من القرآن الكريم على قاعدة \"الأمور بمقاصدها\"؟",
+      "pilihan": [
+        "Dan mereka tidak diperintahkan melainkan supaya menyembah Allah dengan mengikhlaskan ketaatan kepada-Nya.",
+        "Dan dirikanlah solat serta tunaikanlah zakat.",
+        "Wahai orang-orang yang beriman, bertakwalah kepada Allah.",
+        "Dan janganlah kamu menghampiri zina."
+      ],
+      "pilihan_ar": [
+        "وَمَا أُمِرُوا إِلَّا لِيَعْبُدُوا اللَّهَ مُخْلِصِينَ لَهُ الدِّينَ.",
+        "وَأَقِيمُوا الصَّلَاةَ وَآتُوا الزَّكَاةَ.",
+        "يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ.",
+        "وَلَا تَقْرَبُوا الزِّنَا."
+      ],
+      "jawapan_betul": "Dan mereka tidak diperintahkan melainkan supaya menyembah Allah dengan mengikhlaskan ketaatan kepada-Nya.",
+      "huraian": "Kerana keikhlasan dalam beragama adalah teras kepada tujuan (qasd) dan niat dalam ibadat.",
+      "huraian_ar": "لأن الإخلاص في الدين هو جوهر القصد والنية في العبادة."
+    },
+    {
+      "id": 26,
+      "soalan": "Apakah hukum syarak bagi seseorang yang mentalakkan isterinya di dalam hati tanpa melafazkannya?",
+      "soalan_ar": "ما هو الحكم الشرعي فيمن طلق زوجته في قلبه دون أن يتلفظ بالطلاق؟",
+      "pilihan": [
+        "Talak jatuh",
+        "Talak tidak jatuh",
+        "Talak jatuh dengan kafarah",
+        "Talak jatuh dengan takzir"
+      ],
+      "pilihan_ar": [
+        "يقع الطلاق",
+        "لا يقع الطلاق",
+        "يقع الطلاق مع الكفارة",
+        "يقع الطلاق مع التعزير"
+      ],
+      "jawapan_betul": "Talak tidak jatuh",
+      "huraian": "Kerana niat yang kosong daripada lafaz tidak mempunyai kesan dalam hukum duniawi.",
+      "huraian_ar": "لأن النية المجردة عن اللفظ لا أثر لها في الأحكام الدنيوية."
+    },
+    {
+      "id": 27,
+      "soalan": "Apakah kayu ukur bagi terbatalnya wuduk dengan menyentuh wanita menurut mazhab Maliki dan Hanbali?",
+      "soalan_ar": "ما هو المعيار في انتقاض الوضوء بلمس المرأة عند المالكية والحنابلة؟",
+      "pilihan": [
+        "Sekadar sentuhan",
+        "Niat syahwat",
+        "Sentuhan dengan tangan",
+        "Sentuhan di dalam masjid"
+      ],
+      "pilihan_ar": [
+        "مجرد اللمس",
+        "قصد الشهوة",
+        "اللمس باليد",
+        "اللمس في المسجد"
+      ],
+      "jawapan_betul": "Niat syahwat",
+      "huraian": "Kerana kayu ukur bagi terbatalnya wuduk dengan sentuhan adalah kewujudan niat syahwat.",
+      "huraian_ar": "لأن المعيار في انتقاض الوضوء باللمس هو وجود قصد الشهوة."
+    },
+    {
+      "id": 28,
+      "soalan": "Apakah kaedah cabang yang bermaksud bahawa wasilah (perantara) mungkin dimaafkan pada perkara yang tidak dimaafkan pada maqasid (tujuan)?",
+      "soalan_ar": "ما هي القاعدة الفرعية التي تعني أن الوسائل قد يُتسامح فيها ما لا يُتسامح في المقاصد؟",
+      "pilihan": [
+        "Dimaafkan pada wasilah apa yang tidak dimaafkan pada maqasid",
+        "Tiada pahala melainkan dengan niat",
+        "Pengiraan dalam akad adalah pada makna bukan lafaz",
+        "Asalnya niat jika kosong daripada amal tidak memberi kesan"
+      ],
+      "pilihan_ar": [
+        "يُغتفر في الوسائل ما لا يُغتفر في المقاصد",
+        "لا ثواب إلا بالنية",
+        "العبرة في العقود للمعاني لا للألفاظ",
+        "الأصل أن النية إذا تجردت عن العمل لا تكون مؤثرة"
+      ],
+      "jawapan_betul": "Dimaafkan pada wasilah apa yang tidak dimaafkan pada maqasid",
+      "huraian": "Kerana hukum perantara (wasilah) berbeza dengan hukum matlamat dan tujuan (maqasid).",
+      "huraian_ar": "لأن حكم الوسيلة يختلف عن حكم الغاية والمقصد."
+    },
+    {
+      "id": 29,
+      "soalan": "Jika seseorang berkata kepada orang lain: 'Saya hadiahkan telefon ini dengan harga 100 ringgit', apakah akad yang muktabar secara syarak?",
+      "soalan_ar": "إذا قال شخص لآخر: 'أهديك هذا الهاتف بـ 100 رينجيت'، فما هو العقد المعتبر شرعاً؟",
+      "pilihan": [
+        "Akad hibah",
+        "Akad jual beli",
+        "Akad sewaan",
+        "Akad simpanan"
+      ],
+      "pilihan_ar": [
+        "عقد هبة",
+        "عقد بيع",
+        "عقد إجارة",
+        "عقد وديعة"
+      ],
+      "jawapan_betul": "Akad jual beli",
+      "huraian": "Kerana pengiraan dalam akad adalah pada makna bukan lafaz, dan kewujudan bayaran (iwad) menjadikannya jual beli.",
+      "huraian_ar": "لأن العبرة في العقود للمعاني لا للألفاظ، ووجود العوض يجعلها بيعاً."
+    },
+    {
+      "id": 30,
+      "soalan": "Apakah syarat sah niat dalam ibadat?",
+      "soalan_ar": "ما هو شرط صحة النية في العبادات؟",
+      "pilihan": [
+        "Niat mestilah selepas amal",
+        "Niat mestilah bersandarkan kepada ilmu yang yakin atau sangkaan yang kuat",
+        "Niat mestilah dengan lidah sahaja",
+        "Niat mestilah pada urusan dunia"
+      ],
+      "pilihan_ar": [
+        "أن تكون النية بعد العمل",
+        "أن تكون النية مستندة إلى علم جازم أو ظن راجح",
+        "أن تكون النية باللسان فقط",
+        "أن تكون النية في أمور الدنيا"
+      ],
+      "jawapan_betul": "Niat mestilah bersandarkan kepada ilmu yang yakin atau sangkaan yang kuat",
+      "huraian": "Kerana niat tidak dapat dibayangkan arah tujuannya melainkan kepada perkara yang diketahui atau disangkakan.",
+      "huraian_ar": "لأن النية لا يتصور توجيهها إلا إلى معلوم أو مظنون."
+    }
+  ],
+  "model_penjana": "gemini-3.1-flash-lite"
+}
