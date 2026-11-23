@@ -116,20 +116,21 @@ ${nota?.trim() ? `\nTeks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
 
     parts.push({ text: arahanPrompt });
 
-    // 3. Senarai model Google Gemini AKTIF (Pelbagai siri untuk elak kesesakan 503 serentak)
+    // 3. Senarai model Google Gemini AKTIF (Utamakan model yang kurang sesak & kuota berbeza)
     const modelsToTry = [
-      'gemini-3.5-flash-lite',
-      'gemini-3.7-flash',
       'gemini-3.6-flash',
-      'gemini-3.8-flash',
-      'gemini-3.1-flash-lite',
       'gemini-2.0-flash-lite',
+      'gemini-3.5-flash-lite',
+      'gemini-3.1-flash-lite',
       'gemini-flash-latest',
+      'gemini-3.7-flash',
+      'gemini-3.8-flash',
     ];
 
     let rawOutputText = '';
     let successModel = '';
     const errorLogs = [];
+    const startedAt = Date.now();
 
     const callGeminiModel = async (model, useMinimalThinking, signal) => {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
@@ -139,7 +140,7 @@ ${nota?.trim() ? `\nTeks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
         maxOutputTokens: 12288,
         responseMimeType: 'application/json',
       };
-      if (useMinimalThinking) {
+      if (useMinimalThinking && model.startsWith('gemini-3')) {
         generationConfig.thinkingConfig = { thinkingLevel: 'MINIMAL' };
       }
 
@@ -165,8 +166,13 @@ ${nota?.trim() ? `\nTeks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
 
     const tryModelList = async (list, timeoutMs) => {
       for (const model of list) {
+        // Berhenti awal jika baki masa pelayan Vercel < 8 saat supaya tidak kena 504
+        const remainingMs = 54000 - (Date.now() - startedAt);
+        if (remainingMs < 8000) break;
+
+        const effectiveTimeout = Math.min(timeoutMs, remainingMs);
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        const timeoutId = setTimeout(() => controller.abort(), effectiveTimeout);
 
         try {
           let response = await callGeminiModel(model, true, controller.signal);
@@ -201,7 +207,7 @@ ${nota?.trim() ? `\nTeks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
 
             // Jika server Google 503 (sesak), beri jeda ringkas sebelum model seterusnya
             if (response.status === 503) {
-              await new Promise((r) => setTimeout(r, 450));
+              await new Promise((r) => setTimeout(r, 350));
             }
           }
         } catch (err) {
@@ -212,13 +218,13 @@ ${nota?.trim() ? `\nTeks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
       return false;
     };
 
-    // Pusingan 1: Cuba semua model aktif
-    await tryModelList(modelsToTry, 18000);
+    // Pusingan 1: Beri had 38 saat supaya model aktif (cth: gemini-3.6-flash) sempat selesai menjana JSON penuh
+    await tryModelList(modelsToTry, 38000);
 
-    // Pusingan 2: Jika masih gagal akibat lonjakan trafik 503 sementara, tunggu 2 saat & cuba semula
-    if (!rawOutputText && errorLogs.some((e) => e.includes('(503)'))) {
-      await new Promise((r) => setTimeout(r, 2000));
-      await tryModelList(['gemini-3.5-flash-lite', 'gemini-3.7-flash', 'gemini-2.0-flash-lite'], 15000);
+    // Pusingan 2: Hanya jika masih banyak masa berbaki dan ada 503 (bukan 429 kuota habis)
+    if (!rawOutputText && Date.now() - startedAt < 32000 && errorLogs.some((e) => e.includes('(503)'))) {
+      await new Promise((r) => setTimeout(r, 1500));
+      await tryModelList(['gemini-3.6-flash', 'gemini-2.0-flash-lite', 'gemini-3.5-flash-lite'], 22000);
     }
 
     if (!rawOutputText) {
