@@ -3268,33 +3268,35 @@ export default function App() {
     }
   };
 
-  // Auto-ganti soalan silabus/peratusan markah (cth: Soalan #2) dengan soalan Kaedah Fiqh vs Dhabit Fiqh (Dwi-Bahasa)
+  // Auto-ganti soalan silabus/peratusan markah (atau soalan gantian terdahulu di #2) dengan Cadangan C (Sumber Kaedah, tanpa tashkeel)
   const sanitizeMidtermQuiz = useCallback((quizObj) => {
     if (!quizObj || !Array.isArray(quizObj.soalan_objektif)) {
       return { quiz: quizObj, replaced: false };
     }
     let replaced = false;
     const replacementQ = {
-      soalan_ar: 'مَا الْفَرْقُ الْأَسَاسِيُّ بَيْنَ الْقَاعِدَةِ الْفِقْهِيَّةِ وَالضَّابِطِ الْفِقْهِيِّ؟',
-      soalan: 'Apakah perbezaan asas antara al-Qaidah al-Fiqhiyyah (Kaedah Fiqh) dengan al-Dhabit al-Fiqhi (Dhabit Fiqh)?',
+      soalan_ar:
+        'أي القواعد الآتية مأخوذة مباشرة من النص الشرعي (الحديث النبوي) وليست بالاستنباط الاجتهادي؟',
+      soalan:
+        'Antara kaedah berikut, manakah yang diambil secara langsung daripada nas syarak (Hadis Nabi SAW), bukan melalui istinbat ijtihadi?',
       pilihan_ar: [
-        'الْقَاعِدَةُ تَخْتَصُّ بِبَابٍ وَاحِدٍ وَالضَّابِطُ يَشْمَلُ أَبْوَاباً مُتَعَدِّدَةً',
-        'الْقَاعِدَةُ تَجْمَعُ فُرُوعاً مِنْ أَبْوَابٍ فِقْهِيَّةٍ مُتَعَدِّدَةٍ، وَالضَّابِطُ يَخْتَصُّ بِبَابٍ فِقْهِيٍّ وَاحِدٍ',
-        'الْقَاعِدَةُ لَا تَقْبَلُ الِاسْتِثْنَاءَ، وَالضَّابِطُ يَقْبَلُ الِاسْتِثْنَاءَ دَائِماً',
-        'لَا يُوجَدُ أَيُّ فَرْقٍ بَيْنَهُمَا عِنْدَ جُمْهُورِ الْفُقَهَاءِ',
+        'الأمور بمقاصدها',
+        'المشقة تجلب التيسير',
+        'لا ضرر ولا ضرار',
+        'الاجتهاد لا ينقض بالاجتهاد',
       ],
       pilihan: [
-        'Kaedah hanya khusus untuk satu bab fiqh, manakala Dhabit merangkumi pelbagai bab',
-        'Kaedah menghimpunkan cabang daripada pelbagai bab fiqh, manakala Dhabit khusus untuk satu bab fiqh sahaja',
-        'Kaedah tidak menerima pengecualian, manakala Dhabit sentiasa mempunyai pengecualian',
-        'Tiada sebarang perbezaan antara kedua-duanya di sisi jumhur fuqaha',
+        'Al-Umur bi Maqasidiha (Setiap perkara dinilai berdasarkan niat)',
+        'Al-Masyaqqah Tajlib al-Taysir (Kesukaran membawa keringanan)',
+        'La Darar wa La Dirar (Tidak boleh memudaratkan diri dan orang lain)',
+        'Al-Ijtihad La Yunqad bi al-Ijtihad (Ijtihad tidak terbatal dengan ijtihad lain)',
       ],
       jawapan_betul:
-        'Kaedah menghimpunkan cabang daripada pelbagai bab fiqh, manakala Dhabit khusus untuk satu bab fiqh sahaja',
+        'La Darar wa La Dirar (Tidak boleh memudaratkan diri dan orang lain)',
       huraian_ar:
-        'الْقَاعِدَةُ الْفِقْهِيَّةُ أَعَمُّ وَأَشْمَلُ لِأَنَّهَا تَنْطَبِقُ عَلَى أَبْوَابٍ شَتَّى كَالْعِبَادَاتِ وَالْمُعَامَلَاتِ، أَمَّا الضَّابِطُ فَيَقْتَصِرُ عَلَى بَابٍ وَاحِدٍ فَقَطْ كَبَابِ الطَّهَارَةِ أَوِ الْبَيْعِ.',
+        'قاعدة (لا ضرر ولا ضرار) مأخوذة مباشرة من لفظ الحديث النبوي، أما القواعد الأخرى فمستنبطة بالاستقراء والتعليل التشريعي.',
       huraian:
-        'Kaedah fiqh bersifat lebih umum kerana merangkumi pelbagai bab seperti ibadah, muamalat dan munakahat, sedangkan dhabit fiqh hanya terhad kepada satu bab fiqh tertentu sahaja seperti bab taharah atau jual beli.',
+        'Kaedah "La Darar wa La Dirar" diambil secara langsung daripada nas hadis Nabi SAW, manakala kaedah-kaedah lain dirumuskan melalui istinbat ijtihadi dan penelitian dalil-dalil syarak (Slaid 29).',
     };
 
     const nextQuestions = quizObj.soalan_objektif.map((q, idx) => {
@@ -3302,7 +3304,11 @@ export default function App() {
       const isMarkahQ =
         combined.includes('peratusan markah') ||
         combined.includes('النسبة المئوية لدرجة اختبار') ||
-        (combined.includes('mid-term test') && combined.includes('kaedah penilaian'));
+        (combined.includes('mid-term test') && combined.includes('kaedah penilaian')) ||
+        q?.soalan ===
+          'Apakah perbezaan asas antara al-Qaidah al-Fiqhiyyah (Kaedah Fiqh) dengan al-Dhabit al-Fiqhi (Dhabit Fiqh)?' ||
+        q?.soalan ===
+          'Apakah hukum berhujah dengan Qawaid Fiqhiyyah semata-mata secara tersendiri sebagai dalil dalam mengistinbat hukum syarak menurut jumhur fuqaha?';
       if (isMarkahQ) {
         replaced = true;
         return { id: q?.id || idx + 1, ...replacementQ };
@@ -4236,6 +4242,28 @@ export default function App() {
                 >
                   <LucideIcon name="dices" size={18} strokeWidth={2} />
                   <span>Uji Minda Rawak</span>
+                </button>
+                <button
+                  type="button"
+                  className="hero-btn-secondary"
+                  style={{
+                    borderColor: 'rgba(16, 185, 129, 0.5)',
+                    background: 'rgba(16, 185, 129, 0.14)',
+                    color: '#a7f3d0',
+                  }}
+                  onClick={() => {
+                    setWeeklyQuizIndex(0);
+                    setWeeklySelectedAnswer(null);
+                    setWeeklyScore(0);
+                    setQuizSubMode('MINGGUAN');
+                    setViewMode('QUIZ');
+                    if (typeof window !== 'undefined') {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                  }}
+                >
+                  <LucideIcon name="brain" size={18} strokeWidth={2} color="#34d399" />
+                  <span>Kuiz Ulang Kaji Mid-Term</span>
                 </button>
                 <button
                   type="button"
