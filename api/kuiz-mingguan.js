@@ -3,9 +3,22 @@
 
 import fs from 'fs';
 import path from 'path';
-import defaultKuiz from '../src/data/kuizMingguanTerkini.json';
+
+function loadDefaultKuiz() {
+  try {
+    const fileUrl = new URL('../src/data/kuizMingguanTerkini.json', import.meta.url);
+    return JSON.parse(fs.readFileSync(fileUrl, 'utf-8'));
+  } catch {
+    return {
+      tajuk_mingguan: 'Ulang Kaji Mid-Term',
+      tarikh_kemaskini: '',
+      soalan_objektif: [],
+    };
+  }
+}
 
 export default async function handler(req, res) {
+  const defaultKuiz = loadDefaultKuiz();
   // CORS Headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -27,27 +40,46 @@ export default async function handler(req, res) {
         return res.status(400).json({ success: false, error: 'Format data kuiz tidak sah.' });
       }
 
+      const payloadToSave = {
+        ...payload,
+        updated_at: payload.updated_at || Date.now(),
+      };
+
       // 1. Simpan ke Firebase Realtime Database jika ada URL
+      let savedToFirebase = false;
+      let firebaseError = null;
       const fbUrl = process.env.FIREBASE_DATABASE_URL;
       if (fbUrl) {
-        const endpoint = fbUrl.replace(/\/$/, '') + '/kuiz_mingguan.json';
-        await fetch(endpoint, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+        try {
+          const endpoint = fbUrl.replace(/\/$/, '') + '/kuiz_mingguan.json';
+          const fbRes = await fetch(endpoint, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payloadToSave),
+          });
+          savedToFirebase = fbRes.ok;
+          if (!fbRes.ok) {
+            firebaseError = `Firebase HTTP ${fbRes.status}`;
+          }
+        } catch (fbErr) {
+          firebaseError = fbErr.message;
+        }
       }
 
       // 2. Simpan ke fail sementara /tmp
       try {
         const tmpPath = path.join('/tmp', 'kuizMingguanTerkini.json');
-        fs.writeFileSync(tmpPath, JSON.stringify(payload, null, 2), 'utf-8');
+        fs.writeFileSync(tmpPath, JSON.stringify(payloadToSave, null, 2), 'utf-8');
       } catch {}
 
       return res.status(200).json({
         success: true,
-        message: 'Data kuiz berjaya disimpan.',
-        data: payload,
+        savedToFirebase,
+        firebaseError,
+        message: savedToFirebase
+          ? 'Data kuiz berjaya disimpan ke awan (Firebase) untuk semua peranti.'
+          : 'Data kuiz disimpan pada pelayan sementara (tetapkan FIREBASE_DATABASE_URL untuk sinkronisasi awan kekal).',
+        data: payloadToSave,
       });
     } catch (err) {
       return res.status(500).json({ success: false, error: err.message });
