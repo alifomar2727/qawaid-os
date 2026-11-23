@@ -937,66 +937,112 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
     };
 
     try {
-      const totalPayloadChars = filesData.reduce(
-        (sum, f) => sum + (f.base64 ? f.base64.length : 0) + (f.textContent ? f.textContent.length : 0),
-        0
-      );
+      // Pecahkan kepada batch kecil (maks 1 fail & 10 soalan dwi-bahasa setiap panggilan)
+      // supaya setiap panggilan siap dalam ~5-10 saat dan tidak pernah kena timeout 504 di Vercel!
+      const maxPerCall = bilingual ? 10 : 15;
+      const jobs = [];
+
+      if (filesData.length > 0) {
+        const basePerFile = Math.floor(questionCount / filesData.length);
+        let remainder = questionCount - basePerFile * filesData.length;
+
+        filesData.forEach((f) => {
+          const share = Math.max(5, basePerFile + (remainder > 0 ? 1 : 0));
+          if (remainder > 0) remainder -= 1;
+
+          const subChunks = Math.ceil(share / maxPerCall);
+          const subBase = Math.floor(share / subChunks);
+          let subRem = share - subBase * subChunks;
+
+          for (let c = 0; c < subChunks; c += 1) {
+            const countThis = subBase + (subRem > 0 ? 1 : 0);
+            if (subRem > 0) subRem -= 1;
+            jobs.push({
+              file: f,
+              count: countThis,
+              label: subChunks > 1 ? `${f.name} (Bhg ${c + 1}/${subChunks})` : f.name,
+              batchInstruction:
+                subChunks > 1
+                  ? `Ini ialah Bahagian ${c + 1} daripada ${subChunks} untuk slaid "${f.name}". Fokuskan kepada bahagian ${c === 0 ? 'awal' : c === subChunks - 1 ? 'akhir & aplikasi' : 'pertengahan'} slaid supaya tiada soalan berulang.`
+                  : `Fokuskan soalan tepat daripada isi utama slaid "${f.name}".`,
+            });
+          }
+        });
+      } else {
+        const subChunks = Math.ceil(questionCount / maxPerCall);
+        const subBase = Math.floor(questionCount / subChunks);
+        let subRem = questionCount - subBase * subChunks;
+
+        for (let c = 0; c < subChunks; c += 1) {
+          const countThis = subBase + (subRem > 0 ? 1 : 0);
+          if (subRem > 0) subRem -= 1;
+          jobs.push({
+            file: null,
+            count: countThis,
+            label: `Nota Kuliah (Bhg ${c + 1}/${subChunks})`,
+            batchInstruction:
+              subChunks > 1
+                ? `Bahagian ${c + 1} daripada ${subChunks}. Hasilkan soalan baharu yang berbeza daripada bahagian lain.`
+                : '',
+          });
+        }
+      }
 
       let finalQuizData = null;
 
-      // Jika <= 1 fail atau jumlah gabungan <= ~2.5 MB, hantar sekali gus dalam 1 panggilan
-      if (filesData.length <= 1 || totalPayloadChars <= 3400000) {
+      if (jobs.length === 1) {
+        const job = jobs[0];
         setProgressText(
-          filesData.length > 1
-            ? `Sedang membaca ${filesData.length} slaid serentak & menjana ${questionCount} soalan ${bilingual ? 'Dwi-Bahasa (Arab & Melayu)' : 'Melayu'}...`
-            : `Sedang menjana ${questionCount} soalan ${bilingual ? 'Dwi-Bahasa (Arab & Melayu)' : 'Melayu'}...`
+          `Sedang menjana ${job.count} soalan ${bilingual ? 'Dwi-Bahasa (Arab & Melayu)' : 'Melayu'}...`
         );
 
         const result = await callJanaEndpoint({
           tajuk: tajuk.trim(),
           nota: nota.trim(),
-          filesData: filesData.map((f) => ({
-            name: f.name,
-            type: f.type,
-            size: f.size,
-            base64: f.base64,
-            textContent: f.textContent,
-          })),
-          questionCount,
+          filesData: job.file
+            ? [
+                {
+                  name: job.file.name,
+                  type: job.file.type,
+                  size: job.file.size,
+                  base64: job.file.base64,
+                  textContent: job.file.textContent,
+                },
+              ]
+            : [],
+          questionCount: job.count,
           bilingual,
+          batchInstruction: job.batchInstruction,
         });
         finalQuizData = result.data;
       } else {
-        // Jika 2-4 fail PDF agak besar (>2.5 MB gabungan), proses satu demi satu & gabungkan soalan untuk elak had 4.5 MB Vercel!
-        const perFileBase = Math.max(5, Math.floor(questionCount / filesData.length));
-        let remainder = Math.max(0, questionCount - perFileBase * filesData.length);
         const combinedQuestions = [];
         let lastModel = '';
 
-        for (let i = 0; i < filesData.length; i += 1) {
-          const f = filesData[i];
-          const countForThis = perFileBase + (remainder > 0 ? 1 : 0);
-          if (remainder > 0) remainder -= 1;
-
+        for (let i = 0; i < jobs.length; i += 1) {
+          const job = jobs[i];
           setProgressText(
-            `Memproses Slaid ${i + 1}/${filesData.length}: "${f.name}" (${countForThis} soalan ${bilingual ? 'Arab + Melayu' : 'Melayu'})...`
+            `Memproses ${i + 1}/${jobs.length}: ${job.label} (${job.count} soalan ${bilingual ? 'Arab + BM' : 'BM'})...`
           );
 
           const sliceResult = await callJanaEndpoint({
-            tajuk: `${tajuk.trim()} (${f.name})`,
+            tajuk: `${tajuk.trim()} — ${job.label}`,
             nota: nota.trim(),
-            filesData: [
-              {
-                name: f.name,
-                type: f.type,
-                size: f.size,
-                base64: f.base64,
-                textContent: f.textContent,
-              },
-            ],
-            questionCount: countForThis,
+            filesData: job.file
+              ? [
+                  {
+                    name: job.file.name,
+                    type: job.file.type,
+                    size: job.file.size,
+                    base64: job.file.base64,
+                    textContent: job.file.textContent,
+                  },
+                ]
+              : [],
+            questionCount: job.count,
             bilingual,
             skipSave: true,
+            batchInstruction: job.batchInstruction,
           });
 
           if (sliceResult?.data?.model_penjana) {
