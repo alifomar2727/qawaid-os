@@ -166,9 +166,9 @@ ${nota?.trim() ? `\nTeks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
 
     const tryModelList = async (list, timeoutMs) => {
       for (const model of list) {
-        // Berhenti awal jika baki masa pelayan Vercel < 8 saat supaya tidak kena 504
-        const remainingMs = 54000 - (Date.now() - startedAt);
-        if (remainingMs < 8000) break;
+        // Berhenti awal jika baki masa pelayan Vercel < 6 saat supaya tidak kena 504
+        const remainingMs = 56000 - (Date.now() - startedAt);
+        if (remainingMs < 6000) break;
 
         const effectiveTimeout = Math.min(timeoutMs, remainingMs);
         const controller = new AbortController();
@@ -218,8 +218,8 @@ ${nota?.trim() ? `\nTeks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
       return false;
     };
 
-    // Pusingan 1: Beri had 38 saat supaya model aktif (cth: gemini-3.6-flash) sempat selesai menjana JSON penuh
-    await tryModelList(modelsToTry, 38000);
+    // Pusingan 1: Beri had 48 saat supaya model aktif (cth: gemini-3.6-flash) sempat selesai menjana JSON penuh
+    await tryModelList(modelsToTry, 48000);
 
     // Pusingan 2: Hanya jika masih banyak masa berbaki dan ada 503 (bukan 429 kuota habis)
     if (!rawOutputText && Date.now() - startedAt < 32000 && errorLogs.some((e) => e.includes('(503)'))) {
