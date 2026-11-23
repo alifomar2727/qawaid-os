@@ -30,6 +30,7 @@ export default async function handler(req, res) {
     questionCount = 20,
     bilingual = true,
     skipSave = false,
+    batchInstruction = '',
   } = req.body || {};
 
   // Sokong kedua-dua format: 1 fail (fileData) atau sehingga 4 fail (filesData)
@@ -83,14 +84,14 @@ Output mestilah HANYA dalam format array JSON tulen (tanpa teks tambahan di luar
 - "pilihan": Array mengandungi TEPAT 4 pilihan jawapan dalam Bahasa Melayu yang sepadan 1-dengan-1 mengikut susunan indeks (0, 1, 2, 3) dengan "pilihan_ar".
 - "jawapan_betul_index": Nombor bulat (integer) 0, 1, 2, atau 3 yang menunjukkan indeks jawapan betul.
 - "jawapan_betul": Teks tepat daripada "pilihan[jawapan_betul_index]".
-- "huraian_ar": Huraian ringkas sebab jawapan tepat dalam Bahasa Arab.
-- "huraian": Huraian lengkap pengukuhan konsep dalam Bahasa Melayu.
+- "huraian_ar": Huraian sangat ringkas (1 ayat) sebab jawapan tepat dalam Bahasa Arab.
+- "huraian": Huraian ringkas dan padat (1-2 ayat) pengukuhan konsep dalam Bahasa Melayu.
 JANGAN gunakan simbol dollar ($) atau kod LaTeX.
-
+${batchInstruction ? `\nArahan Kumpulan Soalan: ${String(batchInstruction).trim()}\n` : ''}
 Tajuk Kuiz: ${tajuk.trim()}
 ${nota?.trim() ? `\nTeks Slaid / Nota Kuliah Tambahan:\n${nota.trim()}` : ''}`
-      : `Anda adalah pakar fiqh. Berdasarkan ${rawFilesList.length > 1 ? `kesemua ${rawFilesList.length} slaid/dokumen yang dilampirkan (${fileNamesSummary}) serta ` : ''}nota ini, hasilkan tepat ${targetCount} soalan objektif (A, B, C, D) dalam bahasa Melayu. Output mestilah HANYA dalam format array JSON tulen dengan key: 'soalan', 'pilihan' (array 4 pilihan), 'jawapan_betul_index' (0-3), 'jawapan_betul', dan 'huraian'. Jangan beri penerangan lain.
-
+      : `Anda adalah pakar fiqh. Berdasarkan ${rawFilesList.length > 1 ? `kesemua ${rawFilesList.length} slaid/dokumen yang dilampirkan (${fileNamesSummary}) serta ` : ''}nota ini, hasilkan tepat ${targetCount} soalan objektif (A, B, C, D) dalam bahasa Melayu. Output mestilah HANYA dalam format array JSON tulen dengan key: 'soalan', 'pilihan' (array 4 pilihan), 'jawapan_betul_index' (0-3), 'jawapan_betul', dan 'huraian' (1-2 ayat padat). Jangan beri penerangan lain.
+${batchInstruction ? `\nArahan Kumpulan Soalan: ${String(batchInstruction).trim()}\n` : ''}
 Tajuk Kuiz: ${tajuk.trim()}
 ${nota?.trim() ? `\nTeks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
 
@@ -128,36 +129,49 @@ ${nota?.trim() ? `\nTeks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
     let successModel = '';
     const errorLogs = [];
 
+    const callGeminiModel = async (model, useMinimalThinking, signal) => {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const generationConfig = {
+        temperature: 0.2,
+        topP: 0.95,
+        maxOutputTokens: 12288,
+        responseMimeType: 'application/json',
+      };
+      if (useMinimalThinking) {
+        generationConfig.thinkingConfig = { thinkingLevel: 'MINIMAL' };
+      }
+
+      return fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey,
+        },
+        signal,
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts }],
+          generationConfig,
+          safetySettings: [
+            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+          ],
+        }),
+      });
+    };
+
     for (const model of modelsToTry) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 48000); // 48s had masa untuk multi-PDF dwi-bahasa
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s had masa pantas setiap model
 
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-        
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey,
-          },
-          signal: controller.signal,
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts }],
-            generationConfig: {
-              temperature: 0.2,
-              topP: 0.95,
-              maxOutputTokens: 16384,
-              responseMimeType: 'application/json',
-            },
-            safetySettings: [
-              { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-              { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-              { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-              { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-            ],
-          }),
-        });
+        let response = await callGeminiModel(model, true, controller.signal);
+
+        // Jika model tidak menyokong thinkingConfig, cuba semula tanpa thinkingConfig
+        if (!response.ok && response.status === 400) {
+          response = await callGeminiModel(model, false, controller.signal);
+        }
 
         clearTimeout(timeoutId);
 
