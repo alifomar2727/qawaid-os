@@ -76,6 +76,7 @@ export default async function handler(req, res) {
     // 1. Prompt Rasmi (Sokong Multi-Slaid sehingga 4 fail & Dwi-Bahasa Arab + Melayu)
     const arahanPrompt = isBilingual
       ? `Anda adalah pakar fiqh dan usul fiqh. Berdasarkan ${rawFilesList.length > 1 ? `kesemua ${rawFilesList.length} slaid/dokumen yang dilampirkan (${fileNamesSummary}) serta ` : ''}nota ini, hasilkan tepat ${targetCount} soalan objektif (A, B, C, D) dalam DWI-BAHASA (Bahasa Arab DAN Bahasa Melayu).
+PENTING: JANGAN buat soalan pentadbiran/silabus kursus (seperti peratusan markah peperiksaan/midterm, jadual kuliah, nama pensyarah, atau kod kursus). Fokuskan 100% kepada ilmu Qawaid Fiqhiyyah, konsep, syarat, dalil, pengecualian dan aplikasi hukum.
 ${rawFilesList.length > 1 ? 'PENTING: Pastikan soalan dibahagikan secara seimbang merangkumi isi penting daripada kesemua slaid yang dilampirkan untuk ulang kaji peperiksaan.\n' : ''}
 Output mestilah HANYA dalam format array JSON tulen (tanpa teks tambahan di luar JSON) dengan struktur setiap objek mengandungi key tepat berikut:
 - "soalan_ar": Soalan lengkap dan jelas dalam Bahasa Arab (sertakan baris/tashkeel pada kaedah fiqh atau istilah penting).
