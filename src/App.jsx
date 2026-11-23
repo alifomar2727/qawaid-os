@@ -638,6 +638,7 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
   const [editingIndex, setEditingIndex] = useState(null); // number | 'NEW' | null
   const [editDraft, setEditDraft] = useState(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [syncingCloud, setSyncingCloud] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null); // { type: 'success' | 'error', text: '' }
@@ -1257,6 +1258,39 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
   };
 
   // Helper simpan perubahan soalan (Edit / Buang / Tambah) tanpa jana semula AI
+  const handleSyncCloudKuiz = async () => {
+    if (!kuizMingguan?.soalan_objektif?.length) return;
+    setSyncingCloud(true);
+    setStatus(null);
+    try {
+      const payload = { ...kuizMingguan, updated_at: Date.now() };
+      const res = await fetch('/api/kuiz-mingguan', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || `HTTP ${res.status}`);
+      }
+      if (json.savedToFirebase) {
+        setStatus({
+          type: 'success',
+          text: `☁️ Berjaya! ${payload.soalan_objektif.length} soalan telah disegerakkan ke Firebase. Muat semula telefon anda sekarang untuk melihat soalan terkini!`,
+        });
+      } else {
+        setStatus({
+          type: 'error',
+          text: `⚠️ Pelayan menerima data, tetapi Firebase tidak aktif (${json.firebaseError || 'FIREBASE_DATABASE_URL belum ditetapkan di Vercel'}). Sila guna "Muat Turun JSON" dan gantikan src/data/kuizMingguanTerkini.json di GitHub.`,
+        });
+      }
+    } catch (err) {
+      setStatus({ type: 'error', text: `Ralat segerak awan: ${err.message}` });
+    } finally {
+      setSyncingCloud(false);
+    }
+  };
+
   const persistEditedQuiz = async (updatedQuestions, successMessage) => {
     setSavingEdit(true);
     setStatus(null);
@@ -1488,6 +1522,28 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
             </span>
             {kuizMingguan?.soalan_objektif?.length > 0 && (
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  disabled={syncingCloud}
+                  onClick={handleSyncCloudKuiz}
+                  className="lg-btn-glass"
+                  title="Hantar kuiz aktif dari peranti ini terus ke awan (Firebase) supaya semua telefon menerima soalan terkini"
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '0.72rem',
+                    borderRadius: 'var(--r-pill)',
+                    cursor: syncingCloud ? 'not-allowed' : 'pointer',
+                    color: '#a5f3fc',
+                    borderColor: 'rgba(6, 182, 212, 0.5)',
+                    background: 'rgba(6, 182, 212, 0.16)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontWeight: 700,
+                  }}
+                >
+                  <span>{syncingCloud ? '⏳ Menyegerak...' : '☁️ Segerak ke Telefon'}</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -3348,19 +3404,20 @@ export default function App() {
 
   // Muat data kuiz mingguan daripada localStorage jika ada, agar tidak hilang selepas refresh/deploy
   const [kuizMingguan, setKuizMingguan] = useState(() => {
+    const cleanDefault = sanitizeMidtermQuiz(kuizMingguanLalai).quiz;
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('qawaid_kuiz_mingguan');
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed && parsed.tajuk_mingguan && Array.isArray(parsed.soalan_objektif)) {
-            // PENTING: Jika kuiz fail projek (kuizMingguanLalai) mempunyai lebih banyak soalan (cth: 20 soalan)
-            // berbanding cache peranti yang lama (2 soalan), gantikan cache peranti secara automatik!
-            if (kuizMingguanLalai?.soalan_objektif?.length > parsed.soalan_objektif.length) {
+            // PENTING: Jika kuiz fail projek (kuizMingguanLalai) mempunyai lebih banyak soalan (cth: 30 soalan)
+            // berbanding cache peranti yang lama (2/20 soalan), gantikan cache peranti secara automatik!
+            if (cleanDefault?.soalan_objektif?.length > parsed.soalan_objektif.length) {
               try {
-                localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(kuizMingguanLalai));
+                localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(cleanDefault));
               } catch {}
-              return kuizMingguanLalai;
+              return cleanDefault;
             }
             if (parsed.soalan_objektif.length > 0) {
               const { quiz: cleaned, replaced } = sanitizeMidtermQuiz(parsed);
@@ -3377,7 +3434,7 @@ export default function App() {
         console.warn('Ralat membaca kuiz dari localStorage:', e);
       }
     }
-    return kuizMingguanLalai;
+    return cleanDefault;
   });
 
   const [weeklyQuizIndex, setWeeklyQuizIndex] = useState(0);
