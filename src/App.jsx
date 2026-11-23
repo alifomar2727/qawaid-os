@@ -906,34 +906,68 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
     setStatus(null);
     setProgressText('');
 
-    const callJanaEndpoint = async (payloadBody) => {
-      const response = await fetch('/api/jana-kuiz-mingguan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payloadBody),
-      });
+    const callJanaEndpoint = async (payloadBody, stepLabel = '') => {
+      const maxAttempts = 3;
+      let lastErr = null;
 
-      if (response.status === 413) {
-        throw new Error('Fail PDF terlalu besar untuk pelayan (had 4.5 MB). Sila mampatkan PDF atau muat naik saiz lebih kecil');
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        try {
+          const response = await fetch('/api/jana-kuiz-mingguan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payloadBody),
+          });
+
+          if (response.status === 413) {
+            throw new Error('Fail PDF terlalu besar untuk pelayan (had 4.5 MB). Sila mampatkan PDF atau muat naik saiz lebih kecil');
+          }
+
+          const rawText = await response.text();
+          let result;
+          try {
+            result = JSON.parse(rawText);
+          } catch {
+            throw new Error(
+              response.status === 504
+                ? 'Pelayan mengambil masa terlalu lama (timeout). Cuba PDF yang lebih kecil'
+                : `Respons pelayan tidak sah (HTTP ${response.status})`
+            );
+          }
+
+          if (!response.ok || !result.success) {
+            const errMsg = result.error || result.message || 'Gagal menjana kuiz dari AI';
+            const isTransient =
+              response.status === 503 ||
+              response.status === 504 ||
+              /503|high demand|overloaded|timeout/i.test(errMsg);
+            if (isTransient && attempt < maxAttempts) {
+              const waitSec = attempt * 3;
+              setProgressText(
+                `${stepLabel ? `${stepLabel} — ` : ''}Pelayan Gemini sedang sesak (503). Mencuba semula dalam ${waitSec}s (${attempt + 1}/${maxAttempts})...`
+              );
+              await new Promise((r) => setTimeout(r, waitSec * 1000));
+              continue;
+            }
+            throw new Error(errMsg);
+          }
+
+          return result;
+        } catch (err) {
+          lastErr = err;
+          const isTransient = /503|high demand|overloaded|timeout|Failed to fetch/i.test(err.message || '');
+          if (isTransient && attempt < maxAttempts) {
+            const waitSec = attempt * 3;
+            setProgressText(
+              `${stepLabel ? `${stepLabel} — ` : ''}Sambungan/Gemini sibuk. Mencuba semula dalam ${waitSec}s (${attempt + 1}/${maxAttempts})...`
+            );
+            await new Promise((r) => setTimeout(r, waitSec * 1000));
+            continue;
+          }
+          throw err;
+        }
       }
 
-      const rawText = await response.text();
-      let result;
-      try {
-        result = JSON.parse(rawText);
-      } catch {
-        throw new Error(
-          response.status === 504
-            ? 'Pelayan mengambil masa terlalu lama (timeout). Cuba PDF yang lebih kecil'
-            : `Respons pelayan tidak sah (HTTP ${response.status})`
-        );
-      }
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || result.message || 'Gagal menjana kuiz dari AI');
-      }
-
-      return result;
+      throw lastErr || new Error('Gagal menjana kuiz dari AI');
     };
 
     try {
