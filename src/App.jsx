@@ -3407,7 +3407,7 @@ export default function App() {
     try {
       localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(kuizMingguanLalai));
     } catch {}
-    fetch('/api/kuiz-mingguan')
+    fetch(`/api/kuiz-mingguan?t=${Date.now()}`, { cache: 'no-store' })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         const rawQuiz = data?.data || data;
@@ -3429,9 +3429,9 @@ export default function App() {
       .catch(() => {});
   };
 
-  // Tarik data kuiz mingguan terkini dari backend (Fasa 4) dengan perlindungan localStorage
+  // Tarik data kuiz mingguan terkini dari backend (Fasa 4) tanpa cache pelayar mobile
   useEffect(() => {
-    fetch('/api/kuiz-mingguan')
+    fetch(`/api/kuiz-mingguan?t=${Date.now()}`, { cache: 'no-store' })
       .then((res) => {
         if (res.ok) return res.json();
         throw new Error('Gagal mengambil kuiz mingguan');
