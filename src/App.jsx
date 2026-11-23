@@ -625,6 +625,9 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
   const [questionCount, setQuestionCount] = useState(20);
   const [bilingual, setBilingual] = useState(true);
   const [progressText, setProgressText] = useState('');
+  const [showManualImport, setShowManualImport] = useState(false);
+  const [manualJsonText, setManualJsonText] = useState('');
+  const [loadingImport, setLoadingImport] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null); // { type: 'success' | 'error', text: '' }
@@ -971,9 +974,9 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
     };
 
     try {
-      // Pecahkan kepada batch kecil (maks 1 fail & 10 soalan dwi-bahasa setiap panggilan)
-      // supaya setiap panggilan siap dalam ~5-10 saat dan tidak pernah kena timeout 504 di Vercel!
-      const maxPerCall = bilingual ? 10 : 15;
+      // Pecahkan kepada batch kecil (maks 1 fail & 7 soalan dwi-bahasa setiap panggilan)
+      // supaya setiap panggilan selesai laju pada gemini-3.6-flash / gemini-2.0-flash-lite tanpa kena abort/timeout!
+      const maxPerCall = bilingual ? 7 : 12;
       const jobs = [];
 
       if (filesData.length > 0) {
@@ -1136,6 +1139,83 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
     } finally {
       setLoading(false);
       setProgressText('');
+    }
+  };
+
+  // Fungsi Sandaran: Import JSON Kuiz secara manual (tanpa perlu kuota API Gemini)
+  const handleImportManualJson = async () => {
+    const raw = manualJsonText.trim();
+    if (!raw) {
+      setStatus({ type: 'error', text: 'Sila tampal kod JSON kuiz dahulu sebelum menyimpan.' });
+      return;
+    }
+
+    setLoadingImport(true);
+    setStatus(null);
+    try {
+      const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+      const parsed = JSON.parse(cleaned);
+
+      let quizPayload = null;
+      if (Array.isArray(parsed)) {
+        quizPayload = {
+          tajuk_mingguan: tajuk.trim() || 'Ulang Kaji Mid-Term (Dwi-Bahasa)',
+          tarikh_kemaskini: new Date().toLocaleDateString('ms-MY', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          }),
+          dwi_bahasa: true,
+          soalan_objektif: parsed.map((q, idx) => ({ ...q, id: idx + 1 })),
+          model_penjana: 'manual-import',
+        };
+      } else if (parsed && Array.isArray(parsed.soalan_objektif)) {
+        quizPayload = {
+          ...parsed,
+          tajuk_mingguan: parsed.tajuk_mingguan || tajuk.trim() || 'Ulang Kaji Mid-Term (Dwi-Bahasa)',
+          tarikh_kemaskini:
+            parsed.tarikh_kemaskini ||
+            new Date().toLocaleDateString('ms-MY', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            }),
+          soalan_objektif: parsed.soalan_objektif.map((q, idx) => ({ ...q, id: idx + 1 })),
+        };
+      } else {
+        throw new Error('Struktur JSON tidak sah. Mesti mengandungi array soalan atau "soalan_objektif".');
+      }
+
+      if (quizPayload.soalan_objektif.length === 0) {
+        throw new Error('Senarai soalan dalam JSON kosong.');
+      }
+
+      try {
+        await fetch('/api/kuiz-mingguan', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(quizPayload),
+        });
+      } catch {}
+
+      try {
+        localStorage.setItem('qawaid_kuiz_mingguan', JSON.stringify(quizPayload));
+      } catch {}
+
+      if (onKemaskiniKuiz) {
+        onKemaskiniKuiz(quizPayload);
+      }
+
+      setManualJsonText('');
+      setShowManualImport(false);
+      setStatus({
+        type: 'success',
+        text: `🎉 Berjaya! ${quizPayload.soalan_objektif.length} soalan untuk "${quizPayload.tajuk_mingguan}" telah disimpan & diterbitkan terus ke laman web!`,
+      });
+    } catch (err) {
+      setStatus({ type: 'error', text: `Ralat JSON: ${err.message}` });
+    } finally {
+      setLoadingImport(false);
     }
   };
 
@@ -1669,6 +1749,78 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
             </button>
           </div>
         </form>
+
+        {/* SANDARAN: IMPORT JSON KUIZ MANUAL (JIKA KUOTA PERCUMA API PENUH / 429) */}
+        <div
+          style={{
+            marginTop: '14px',
+            padding: '12px 14px',
+            borderRadius: 'var(--r-md)',
+            border: '1px dashed rgba(251, 191, 36, 0.35)',
+            background: 'rgba(245, 158, 11, 0.06)',
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setShowManualImport((s) => !s)}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'none',
+              border: 'none',
+              color: '#fde68a',
+              fontSize: '0.80rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            <span>📥 Sandaran: Import / Tampal JSON Kuiz Manual (Tanpa Kuota API)</span>
+            <span>{showManualImport ? '▲ Tutup' : '▼ Buka'}</span>
+          </button>
+
+          {showManualImport && (
+            <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <textarea
+                rows={5}
+                value={manualJsonText}
+                onChange={(e) => setManualJsonText(e.target.value)}
+                placeholder='Tampal fail/teks JSON kuiz (format { "tajuk_mingguan": "...", "soalan_objektif": [...] } atau array [...]) di sini...'
+                disabled={loadingImport}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: 'var(--r-sm)',
+                  border: '1px solid rgba(251, 191, 36, 0.35)',
+                  background: 'rgba(6, 12, 28, 0.85)',
+                  color: '#ffffff',
+                  fontSize: '0.78rem',
+                  fontFamily: 'monospace',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <button
+                type="button"
+                disabled={loadingImport}
+                onClick={handleImportManualJson}
+                className="lg-btn-glass"
+                style={{
+                  justifyContent: 'center',
+                  padding: '10px 14px',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  color: '#fef08a',
+                  borderColor: 'rgba(251, 191, 36, 0.5)',
+                  background: 'rgba(245, 158, 11, 0.2)',
+                }}
+              >
+                {loadingImport ? 'Menyimpan JSON Kuiz...' : '✅ Simpan & Terbitkan JSON Kuiz Terus ke Web'}
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* ================================================================= */}
         {/* FASA 1: BAHAGIAN TETAPAN TEKS WEB (MINI CMS)                     */}
