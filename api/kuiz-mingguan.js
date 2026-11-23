@@ -17,6 +17,20 @@ function loadDefaultKuiz() {
   }
 }
 
+function isBundleNewerThan(defaultKuiz, existing) {
+  if (!defaultKuiz || !Array.isArray(defaultKuiz.soalan_objektif) || defaultKuiz.soalan_objektif.length === 0) {
+    return false;
+  }
+  if (!existing || !Array.isArray(existing.soalan_objektif) || existing.soalan_objektif.length === 0) {
+    return true;
+  }
+  const defVer = Number(defaultKuiz.bundle_version || 0);
+  const extVer = Number(existing.bundle_version || 0);
+  if (defVer > extVer) return true;
+  if (extVer > defVer) return false;
+  return Number(defaultKuiz.updated_at || 0) > Number(existing.updated_at || 0);
+}
+
 export default async function handler(req, res) {
   const defaultKuiz = loadDefaultKuiz();
   // CORS Headers
@@ -40,9 +54,17 @@ export default async function handler(req, res) {
         return res.status(400).json({ success: false, error: 'Format data kuiz tidak sah.' });
       }
 
+      const minVersion = Math.max(Number(payload.bundle_version || 0), Number(defaultKuiz.bundle_version || 0));
+      const minUpdatedAt = Math.max(
+        Date.now(),
+        Number(payload.updated_at || 0),
+        Number(defaultKuiz.updated_at || 0) + 1
+      );
+
       const payloadToSave = {
         ...payload,
-        updated_at: payload.updated_at || Date.now(),
+        bundle_version: minVersion,
+        updated_at: minUpdatedAt,
       };
 
       // 1. Simpan ke Firebase Realtime Database jika ada URL
@@ -102,6 +124,28 @@ export default async function handler(req, res) {
           if (fbRes.ok) {
             const fbData = await fbRes.json();
             if (fbData && fbData.tajuk_mingguan && Array.isArray(fbData.soalan_objektif)) {
+              // Jika fail projek yang baru dideploy lebih baharu (cth: bundle_version 2 / 30 soalan Mid-Term),
+              // naik taraf Firebase secara automatik agar semua PC & telefon terus mendapat kuiz terkini!
+              if (isBundleNewerThan(defaultKuiz, fbData)) {
+                try {
+                  await fetch(endpoint, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(defaultKuiz),
+                  });
+                } catch {}
+                try {
+                  const tmpPath = path.join('/tmp', 'kuizMingguanTerkini.json');
+                  fs.writeFileSync(tmpPath, JSON.stringify(defaultKuiz, null, 2), 'utf-8');
+                } catch {}
+                return res.status(200).json({
+                  success: true,
+                  source: 'default-upgraded-firebase',
+                  ...defaultKuiz,
+                  data: defaultKuiz,
+                });
+              }
+
               return res.status(200).json({
                 success: true,
                 source: 'firebase',
@@ -121,7 +165,7 @@ export default async function handler(req, res) {
         if (fs.existsSync(tmpPath)) {
           const content = fs.readFileSync(tmpPath, 'utf-8');
           const dataTmp = JSON.parse(content);
-          if (dataTmp && dataTmp.tajuk_mingguan) {
+          if (dataTmp && dataTmp.tajuk_mingguan && !isBundleNewerThan(defaultKuiz, dataTmp)) {
             return res.status(200).json({
               success: true,
               source: 'tmp',
