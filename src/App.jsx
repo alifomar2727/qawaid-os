@@ -4,6 +4,12 @@ import SprintGame from './SprintGame';
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import qawaidData from './data/Matriks_Qawaid_Fiqh.json';
 import kuizMingguanLalai from './data/kuizMingguanTerkini.json';
+import {
+  QuizEffectsOverlay,
+  SmoothMorphContainer,
+  TactileAnswerButton,
+  QuizResultsCelebration,
+} from './QuizEffectsOverlay';
 
 /* Crisp Lucide SVG Line Icons (Zero external runtime dependency) */
 function LucideIcon({ name, size = 16, strokeWidth = 1.85, filled = false, color, style }) {
@@ -2717,8 +2723,10 @@ function AdminPasswordModal({ isOpen, onClose, onSuccess }) {
 // =========================================================================
 // FASA 3: MODAL UJI MINDA RAWAK (80 SOALAN UMUM AL-ZUHAILI - LIQUID GLASS POPUP)
 // =========================================================================
-function ModalUjiMindaRawak({ rawakSoalan, onClose, onSoalanLain }) {
+function ModalUjiMindaRawak({ rawakSoalan, onClose, onSoalanLain, onBurstRect }) {
   const [pilihanUser, setPilihanUser] = useState(null);
+  const [pulseKey, setPulseKey] = useState(0);
+  const [rawakStreak, setRawakStreak] = useState(0);
 
   useEffect(() => {
     setPilihanUser(null);
@@ -2823,172 +2831,169 @@ function ModalUjiMindaRawak({ rawakSoalan, onClose, onSoalanLain }) {
           </button>
         </div>
 
-        {/* Soalan / Senario Kes */}
-        <div>
-          <div
-            style={{
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              color: '#60a5fa',
-              marginBottom: '8px',
-            }}
-          >
-            Senario Isu Semasa:
-          </div>
-          <p
-            style={{
-              margin: 0,
-              fontSize: '0.94rem',
-              lineHeight: 1.65,
-              color: 'var(--text-strong, #ffffff)',
-              fontWeight: 500,
-            }}
-          >
-            {rawakSoalan.isu_kontemporari}
-          </p>
-        </div>
-
-        {/* 4 Pilihan Jawapan */}
-        <div>
-          <div
-            style={{
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              color: 'var(--text-muted)',
-              marginBottom: '10px',
-            }}
-          >
-            Pilih Kaedah Fiqh Yang Tepat:
-          </div>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr',
-              gap: '10px',
-            }}
-          >
-            {rawakSoalan.options?.map((opt, oIdx) => {
-              const isPicked = pilihanUser === opt.kaedah_ranting_ar;
-              const isCorrect = opt.kaedah_ranting_ar === rawakSoalan.kaedah_ranting_ar;
-
-              let borderCol = 'rgba(255, 255, 255, 0.12)';
-              let bgCol = 'rgba(255, 255, 255, 0.04)';
-
-              if (pilihanUser) {
-                if (isCorrect) {
-                  borderCol = '#10b981';
-                  bgCol = 'rgba(16, 185, 129, 0.22)';
-                } else if (isPicked) {
-                  borderCol = '#ef4444';
-                  bgCol = 'rgba(239, 68, 68, 0.22)';
-                }
-              }
-
-              return (
-                <button
-                  key={oIdx}
-                  type="button"
-                  onClick={() => {
-                    if (!pilihanUser) {
-                      setPilihanUser(opt.kaedah_ranting_ar);
-                    }
-                  }}
-                  className="lg-inner-well"
-                  style={{
-                    textAlign: 'left',
-                    cursor: pilihanUser ? 'default' : 'pointer',
-                    borderColor: borderCol,
-                    background: bgCol,
-                    padding: '12px 16px',
-                    borderRadius: 'var(--r-md, 14px)',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <div
-                    dir="rtl"
-                    style={{
-                      fontFamily: '"Noto Naskh Arabic", "Amiri", serif',
-                      fontSize: '1.15rem',
-                      fontWeight: 700,
-                      lineHeight: 1.6,
-                      color: '#ffffff',
-                      marginBottom: '4px',
-                    }}
-                  >
-                    {opt.kaedah_ranting_ar}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '0.82rem',
-                      color: 'var(--text-body, #cbd5e1)',
-                      lineHeight: 1.45,
-                    }}
-                  >
-                    {opt.kaedah_ranting_bm}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Huraian & Rujukan Kitab jika pengguna sudah memilih */}
-        {pilihanUser && (
-          <div
-            className="lg-inner-well"
-            style={{
-              borderColor: 'rgba(56, 189, 248, 0.45)',
-              background: 'rgba(8, 25, 54, 0.65)',
-              padding: '14px 16px',
-              borderRadius: 'var(--r-md, 14px)',
-            }}
-          >
-            <div
-              style={{
-                fontSize: '0.74rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                color: '#67e8f9',
-                marginBottom: '6px',
-              }}
-            >
-              📖 Huraian &amp; Rujukan Kitab ({rawakSoalan.jilid_halaman || 'Jil. 1'}):
-            </div>
-            <p
-              style={{
-                margin: '0 0 10px 0',
-                fontSize: '0.85rem',
-                lineHeight: 1.6,
-                color: 'var(--text-strong, #ffffff)',
-              }}
-            >
-              {rawakSoalan.huraian_jawapan}
-            </p>
-            {rawakSoalan.urlShamela && (
-              <a
-                href={rawakSoalan.urlShamela}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="lg-btn-glass"
+        {/* Soalan + 4 Pilihan Jawapan + Huraian dengan Smooth Height Morph */}
+        <SmoothMorphContainer morphKey={rawakSoalan.id || rawakSoalan.kaedah_ranting_ar}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <div
                 style={{
-                  fontSize: '0.74rem',
-                  padding: '5px 12px',
-                  textDecoration: 'none',
-                  display: 'inline-flex',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  color: '#60a5fa',
+                  marginBottom: '8px',
                 }}
               >
-                <LucideIcon name="external" size={13} />
-                <span>Buka Shamela.ws</span>
-              </a>
+                Senario Isu Semasa:
+              </div>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: '0.94rem',
+                  lineHeight: 1.65,
+                  color: 'var(--text-strong, #ffffff)',
+                  fontWeight: 500,
+                }}
+              >
+                {rawakSoalan.isu_kontemporari}
+              </p>
+            </div>
+
+            <div>
+              <div
+                style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  color: 'var(--text-muted)',
+                  marginBottom: '10px',
+                }}
+              >
+                Pilih Kaedah Fiqh Yang Tepat:
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr',
+                  gap: '10px',
+                }}
+              >
+                {rawakSoalan.options?.map((opt, oIdx) => {
+                  const isPicked = pilihanUser === opt.kaedah_ranting_ar;
+                  const isCorrect = opt.kaedah_ranting_ar === rawakSoalan.kaedah_ranting_ar;
+                  const abcd = ['A', 'B', 'C', 'D'][oIdx] || `${oIdx + 1}`;
+
+                  return (
+                    <TactileAnswerButton
+                      key={oIdx}
+                      badgeLabel={abcd}
+                      isAnswered={Boolean(pilihanUser)}
+                      isCorrect={isCorrect}
+                      isPicked={isPicked}
+                      feedbackPulseKey={pulseKey}
+                      onSelect={(rect) => {
+                        if (!pilihanUser) {
+                          setPilihanUser(opt.kaedah_ranting_ar);
+                          setPulseKey((k) => k + 1);
+                          if (isCorrect) {
+                            const nextStreak = rawakStreak + 1;
+                            setRawakStreak(nextStreak);
+                            onBurstRect?.(rect, nextStreak);
+                          } else {
+                            setRawakStreak(0);
+                          }
+                        }
+                      }}
+                      style={{
+                        padding: '12px 16px',
+                        borderRadius: 'var(--r-md, 14px)',
+                      }}
+                    >
+                      <div
+                        dir="rtl"
+                        style={{
+                          fontFamily: '"Noto Naskh Arabic", "Amiri", serif',
+                          fontSize: '1.15rem',
+                          fontWeight: 700,
+                          lineHeight: 1.6,
+                          color: '#ffffff',
+                          marginBottom: '4px',
+                        }}
+                      >
+                        {opt.kaedah_ranting_ar}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '0.82rem',
+                          color: 'var(--text-body, #cbd5e1)',
+                          lineHeight: 1.45,
+                        }}
+                      >
+                        {opt.kaedah_ranting_bm}
+                      </div>
+                    </TactileAnswerButton>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Huraian & Rujukan Kitab jika pengguna sudah memilih */}
+            {pilihanUser && (
+              <div
+                className="lg-inner-well"
+                style={{
+                  borderColor: 'rgba(56, 189, 248, 0.45)',
+                  background: 'rgba(8, 25, 54, 0.65)',
+                  padding: '14px 16px',
+                  borderRadius: 'var(--r-md, 14px)',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    color: '#67e8f9',
+                    marginBottom: '6px',
+                  }}
+                >
+                  📖 Huraian &amp; Rujukan Kitab ({rawakSoalan.jilid_halaman || 'Jil. 1'}):
+                </div>
+                <p
+                  style={{
+                    margin: '0 0 10px 0',
+                    fontSize: '0.85rem',
+                    lineHeight: 1.6,
+                    color: 'var(--text-strong, #ffffff)',
+                  }}
+                >
+                  {rawakSoalan.huraian_jawapan}
+                </p>
+                {rawakSoalan.urlShamela && (
+                  <a
+                    href={rawakSoalan.urlShamela}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="lg-btn-glass"
+                    style={{
+                      fontSize: '0.74rem',
+                      padding: '5px 12px',
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                    }}
+                  >
+                    <LucideIcon name="external" size={13} />
+                    <span>Buka Shamela.ws</span>
+                  </a>
+                )}
+              </div>
             )}
           </div>
-        )}
+        </SmoothMorphContainer>
 
         {/* Modal Actions */}
         <div
@@ -3113,10 +3118,24 @@ export default function App() {
   const [isCondensed, setIsCondensed] = useState(false);
   const [isLogoWeighing, setIsLogoWeighing] = useState(false);
   const weighingTimerRef = useRef(null);
+  const quizEffectsRef = useRef(null);
 
   const [quizIndex, setQuizIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [score, setScore] = useState(0);
+  const [quizStreak, setQuizStreak] = useState(0);
+  const [quizMaxStreak, setQuizMaxStreak] = useState(0);
+  const [quizFinished, setQuizFinished] = useState(false);
+  const [quizPulseKey, setQuizPulseKey] = useState(0);
+  const [quizHistory, setQuizHistory] = useState([]);
+  const [quizIsNewRecord, setQuizIsNewRecord] = useState(false);
+  const [quizBestScore, setQuizBestScore] = useState(() => {
+    try {
+      return Number(localStorage.getItem('qawaid_comp_highscore') || 0);
+    } catch {
+      return 0;
+    }
+  });
 
   // =========================================================================
   // FASA 1: KUIZ MINGGUAN DINAMIK & PERSIMPANGAN MOD KUIZ
@@ -3363,7 +3382,21 @@ export default function App() {
 
   const [weeklyQuizIndex, setWeeklyQuizIndex] = useState(0);
   const [weeklySelectedAnswer, setWeeklySelectedAnswer] = useState(null);
+  const [weeklySelectedIdx, setWeeklySelectedIdx] = useState(null);
   const [weeklyScore, setWeeklyScore] = useState(0);
+  const [weeklyStreak, setWeeklyStreak] = useState(0);
+  const [weeklyMaxStreak, setWeeklyMaxStreak] = useState(0);
+  const [weeklyFinished, setWeeklyFinished] = useState(false);
+  const [weeklyPulseKey, setWeeklyPulseKey] = useState(0);
+  const [weeklyHistory, setWeeklyHistory] = useState([]);
+  const [weeklyIsNewRecord, setWeeklyIsNewRecord] = useState(false);
+  const [weeklyBestScore, setWeeklyBestScore] = useState(() => {
+    try {
+      return Number(localStorage.getItem('qawaid_midterm_highscore') || 0);
+    } catch {
+      return 0;
+    }
+  });
 
   // Fungsi muat semula kuiz daripada fail projek lalai & storan pelayan
   const handleResetKuizKeLalai = () => {
@@ -3705,17 +3738,66 @@ export default function App() {
     return [...pool, currentQuizItem].sort(() => 0.5 - Math.random());
   }, [quizIndex, currentQuizItem]);
 
-  const handleAnswerQuiz = (option) => {
+  const startComprehensiveQuiz = useCallback(() => {
+    setQuizIndex(0);
+    setSelectedAnswer(null);
+    setScore(0);
+    setQuizStreak(0);
+    setQuizMaxStreak(0);
+    setQuizFinished(false);
+    setQuizPulseKey(0);
+    setQuizHistory([]);
+    setQuizIsNewRecord(false);
+    setQuizSubMode('KOMPREHENSIF');
+  }, []);
+
+  const handleAnswerQuiz = (option, rect) => {
     if (selectedAnswer) return;
+    const isCorrect = option.kaedah_ranting_ar === currentQuizItem.kaedah_ranting_ar;
     setSelectedAnswer(option.kaedah_ranting_ar || option.id);
-    if (option.kaedah_ranting_ar === currentQuizItem.kaedah_ranting_ar) {
+    setQuizPulseKey((k) => k + 1);
+
+    if (isCorrect) {
+      const nextStreak = quizStreak + 1;
       setScore((s) => s + 1);
+      setQuizStreak(nextStreak);
+      setQuizMaxStreak((m) => Math.max(m, nextStreak));
+      quizEffectsRef.current?.burstFromRect(rect, nextStreak);
+    } else {
+      setQuizStreak(0);
     }
+
+    setQuizHistory((prev) => {
+      const next = [...prev];
+      next[quizIndex] = {
+        soalan: currentQuizItem.isu_kontemporari,
+        userAnswer: option.kaedah_ranting_bm,
+        correctAnswer: currentQuizItem.kaedah_ranting_bm,
+        correctAnswerAr: currentQuizItem.kaedah_ranting_ar,
+        isCorrect,
+        huraian: currentQuizItem.huraian_jawapan,
+      };
+      return next;
+    });
   };
 
   const nextQuestion = () => {
     setSelectedAnswer(null);
-    setQuizIndex((prev) => (prev + 1) % dataKuiz50.length);
+    if (quizIndex + 1 >= dataKuiz50.length) {
+      const isNewRec = score > quizBestScore;
+      if (isNewRec) {
+        setQuizBestScore(score);
+        setQuizIsNewRecord(true);
+        try {
+          localStorage.setItem('qawaid_comp_highscore', String(score));
+        } catch {}
+      }
+      setQuizFinished(true);
+      const pct = dataKuiz50.length > 0 ? (score / dataKuiz50.length) * 100 : 0;
+      quizEffectsRef.current?.fireDualCannons(isNewRec || pct >= 70);
+      return;
+    }
+    setQuizIndex((prev) => prev + 1);
   };
 
   const prevQuestion = () => {
@@ -3723,29 +3805,86 @@ export default function App() {
     setQuizIndex((prev) => (prev === 0 ? dataKuiz50.length - 1 : prev - 1));
   };
 
-  // Handlers untuk Cabaran Topikal Mingguan (Fasa 1)
+  const startMidtermQuiz = useCallback(() => {
+    setWeeklyQuizIndex(0);
+    setWeeklySelectedAnswer(null);
+    setWeeklySelectedIdx(null);
+    setWeeklyScore(0);
+    setWeeklyStreak(0);
+    setWeeklyMaxStreak(0);
+    setWeeklyFinished(false);
+    setWeeklyPulseKey(0);
+    setWeeklyHistory([]);
+    setWeeklyIsNewRecord(false);
+    setQuizSubMode('MINGGUAN');
+  }, []);
+
+  // Handlers untuk Kuiz Ulang Kaji Mid-Term (Fasa 1 + Tactile Physics)
   const currentWeeklyItem = useMemo(() => {
     const list = kuizMingguan?.soalan_objektif || [];
     if (list.length === 0) return null;
     return list[weeklyQuizIndex % list.length];
   }, [kuizMingguan, weeklyQuizIndex]);
 
-  const handleAnswerWeeklyQuiz = (pilihan) => {
+  const handleAnswerWeeklyQuiz = (pilihan, pIdx, rect) => {
     if (weeklySelectedAnswer || !currentWeeklyItem) return;
+    const isCorrect = pilihan === currentWeeklyItem.jawapan_betul;
+    const correctIdx = (currentWeeklyItem.pilihan || []).findIndex(
+      (p) => p === currentWeeklyItem.jawapan_betul
+    );
     setWeeklySelectedAnswer(pilihan);
-    if (pilihan === currentWeeklyItem.jawapan_betul) {
+    setWeeklySelectedIdx(pIdx);
+    setWeeklyPulseKey((k) => k + 1);
+
+    if (isCorrect) {
+      const nextStreak = weeklyStreak + 1;
       setWeeklyScore((s) => s + 1);
+      setWeeklyStreak(nextStreak);
+      setWeeklyMaxStreak((m) => Math.max(m, nextStreak));
+      quizEffectsRef.current?.burstFromRect(rect, nextStreak);
+    } else {
+      setWeeklyStreak(0);
     }
+
+    setWeeklyHistory((prev) => {
+      const next = [...prev];
+      next[weeklyQuizIndex] = {
+        soalan: currentWeeklyItem.soalan,
+        soalan_ar: currentWeeklyItem.soalan_ar,
+        userAnswer: pilihan,
+        correctAnswer: currentWeeklyItem.jawapan_betul,
+        correctAnswerAr: correctIdx >= 0 ? currentWeeklyItem.pilihan_ar?.[correctIdx] : undefined,
+        isCorrect,
+        huraian: currentWeeklyItem.huraian,
+      };
+      return next;
+    });
   };
 
   const nextWeeklyQuestion = () => {
     setWeeklySelectedAnswer(null);
+    setWeeklySelectedIdx(null);
     const total = kuizMingguan?.soalan_objektif?.length || 1;
-    setWeeklyQuizIndex((prev) => (prev + 1) % total);
+    if (weeklyQuizIndex + 1 >= total) {
+      const isNewRec = weeklyScore > weeklyBestScore;
+      if (isNewRec) {
+        setWeeklyBestScore(weeklyScore);
+        setWeeklyIsNewRecord(true);
+        try {
+          localStorage.setItem('qawaid_midterm_highscore', String(weeklyScore));
+        } catch {}
+      }
+      setWeeklyFinished(true);
+      const pct = total > 0 ? (weeklyScore / total) * 100 : 0;
+      quizEffectsRef.current?.fireDualCannons(isNewRec || pct >= 70);
+      return;
+    }
+    setWeeklyQuizIndex((prev) => prev + 1);
   };
 
   const prevWeeklyQuestion = () => {
     setWeeklySelectedAnswer(null);
+    setWeeklySelectedIdx(null);
     const total = kuizMingguan?.soalan_objektif?.length || 1;
     setWeeklyQuizIndex((prev) => (prev === 0 ? total - 1 : prev - 1));
   };
@@ -4252,10 +4391,7 @@ export default function App() {
                     color: '#a7f3d0',
                   }}
                   onClick={() => {
-                    setWeeklyQuizIndex(0);
-                    setWeeklySelectedAnswer(null);
-                    setWeeklyScore(0);
-                    setQuizSubMode('MINGGUAN');
+                    startMidtermQuiz();
                     setViewMode('QUIZ');
                     if (typeof window !== 'undefined') {
                       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -4659,12 +4795,7 @@ export default function App() {
 
                     <button
                       type="button"
-                      onClick={() => {
-                        setWeeklyQuizIndex(0);
-                        setWeeklySelectedAnswer(null);
-                        setWeeklyScore(0);
-                        setQuizSubMode('MINGGUAN');
-                      }}
+                      onClick={startMidtermQuiz}
                       className="lg-btn-primary"
                       style={{
                         width: '100%',
@@ -4747,12 +4878,7 @@ export default function App() {
 
                     <button
                       type="button"
-                      onClick={() => {
-                        setQuizIndex(0);
-                        setSelectedAnswer(null);
-                        setScore(0);
-                        setQuizSubMode('KOMPREHENSIF');
-                      }}
+                      onClick={startComprehensiveQuiz}
                       className="lg-btn-glass"
                       style={{
                         width: '100%',
@@ -4774,8 +4900,23 @@ export default function App() {
               </div>
             )}
 
-            {/* SUB-MOD 2: CABARAN TOPIKAL MINGGUAN (Berdasarkan Slaid / Nota) */}
-            {quizSubMode === 'MINGGUAN' && currentWeeklyItem && (
+            {/* SUB-MOD 2: KUIZ ULANG KAJI MID-TERM (Dengan Tactile Physics & Grand Celebration) */}
+            {quizSubMode === 'MINGGUAN' && weeklyFinished && (
+              <QuizResultsCelebration
+                title="Ulang Kaji Mid-Term Selesai!"
+                subtitle={kuizMingguan?.tajuk_mingguan}
+                score={weeklyScore}
+                total={kuizMingguan?.soalan_objektif?.length || 0}
+                maxStreak={weeklyMaxStreak}
+                bestScore={weeklyBestScore}
+                isNewRecord={weeklyIsNewRecord}
+                reviewItems={weeklyHistory.filter(Boolean)}
+                onRetry={startMidtermQuiz}
+                onBack={() => setQuizSubMode('SELECTION')}
+              />
+            )}
+
+            {quizSubMode === 'MINGGUAN' && !weeklyFinished && currentWeeklyItem && (
               <div className="lg-panel glass-card">
                 <div
                   className="lg-card-top"
@@ -4798,9 +4939,23 @@ export default function App() {
                       SOALAN {weeklyQuizIndex + 1} / {kuizMingguan.soalan_objektif.length}
                     </span>
                   </div>
-                  <span className="lg-node-chip">
-                    SKOR: {weeklyScore} / {kuizMingguan.soalan_objektif.length}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    {weeklyStreak >= 2 && (
+                      <span
+                        className="lg-node-chip"
+                        style={{
+                          borderColor: 'rgba(251, 191, 36, 0.55)',
+                          background: 'rgba(245, 158, 11, 0.16)',
+                          color: '#fef08a',
+                        }}
+                      >
+                        🔥 {weeklyStreak}x Streak
+                      </span>
+                    )}
+                    <span className="lg-node-chip">
+                      SKOR: {weeklyScore} / {kuizMingguan.soalan_objektif.length}
+                    </span>
+                  </div>
                 </div>
 
                 <div style={{ marginBottom: '10px' }}>
@@ -4809,184 +4964,154 @@ export default function App() {
                   </span>
                 </div>
 
-                <div className="lg-inner-well" style={{ marginBottom: '20px' }}>
-                  {currentWeeklyItem.soalan_ar && (
-                    <p
-                      dir="rtl"
-                      lang="ar"
-                      style={{
-                        margin: currentWeeklyItem.soalan ? '0 0 12px' : 0,
-                        paddingBottom: currentWeeklyItem.soalan ? '12px' : 0,
-                        borderBottom: currentWeeklyItem.soalan ? '1px solid rgba(255, 255, 255, 0.12)' : 'none',
-                        fontFamily: "'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif",
-                        fontSize: '1.22rem',
-                        fontWeight: 700,
-                        lineHeight: 1.9,
-                        textAlign: 'right',
-                        color: '#fef08a',
-                      }}
-                    >
-                      {currentWeeklyItem.soalan_ar}
-                    </p>
-                  )}
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: '0.96rem',
-                      fontWeight: 600,
-                      lineHeight: 1.6,
-                      color: 'var(--text-strong)',
-                    }}
-                  >
-                    {currentWeeklyItem.soalan}
-                  </p>
-                </div>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px',
-                    marginBottom: '20px',
-                  }}
-                >
-                  {currentWeeklyItem.pilihan?.map((pilihan, pIdx) => {
-                    const pilihanAr = currentWeeklyItem.pilihan_ar?.[pIdx];
-                    const isCorrect = pilihan === currentWeeklyItem.jawapan_betul;
-                    const isPicked = weeklySelectedAnswer === pilihan;
-                    let borderCol = undefined;
-                    let bgCol = undefined;
-                    if (weeklySelectedAnswer) {
-                      if (isCorrect) {
-                        borderCol = '#10b981';
-                        bgCol = 'rgba(16, 185, 129, 0.22)';
-                      } else if (isPicked) {
-                        borderCol = '#ef4444';
-                        bgCol = 'rgba(239, 68, 68, 0.22)';
-                      }
-                    }
-                    const abcd = ['A', 'B', 'C', 'D'][pIdx] || `${pIdx + 1}`;
-                    return (
-                      <button
-                        key={pIdx}
-                        type="button"
-                        onClick={() => handleAnswerWeeklyQuiz(pilihan)}
-                        className="lg-inner-well"
-                        style={{
-                          textAlign: 'left',
-                          cursor: 'pointer',
-                          borderColor: borderCol,
-                          background: bgCol,
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: '12px',
-                          padding: '14px 16px',
-                          transition: 'transform 0.2s var(--spring)',
-                        }}
-                      >
-                        <span
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '26px',
-                            height: '26px',
-                            borderRadius: '50%',
-                            background: isPicked ? (isCorrect ? '#10b981' : '#ef4444') : 'rgba(255, 255, 255, 0.1)',
-                            color: '#ffffff',
-                            fontWeight: 800,
-                            fontSize: '0.8rem',
-                            flexShrink: 0,
-                          }}
-                        >
-                          {abcd}
-                        </span>
-                        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          {pilihanAr && (
-                            <span
-                              dir="rtl"
-                              lang="ar"
-                              style={{
-                                display: 'block',
-                                width: '100%',
-                                textAlign: 'right',
-                                fontFamily: "'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif",
-                                fontSize: '1.12rem',
-                                fontWeight: 700,
-                                lineHeight: 1.75,
-                                color: '#ffffff',
-                              }}
-                            >
-                              {pilihanAr}
-                            </span>
-                          )}
-                          <span
-                            style={{
-                              fontSize: pilihanAr ? '0.84rem' : '0.88rem',
-                              fontWeight: pilihanAr ? 500 : 600,
-                              color: pilihanAr ? 'rgba(226, 232, 240, 0.9)' : 'var(--text-strong)',
-                              lineHeight: 1.5,
-                            }}
-                          >
-                            {pilihan}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {weeklySelectedAnswer && (currentWeeklyItem.huraian || currentWeeklyItem.huraian_ar) && (
-                  <div
-                    className="lg-inner-well"
-                    style={{
-                      marginBottom: '18px',
-                      borderColor: 'rgba(16, 185, 129, 0.45)',
-                      background: 'rgba(6, 28, 20, 0.65)',
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: '0.73rem',
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.04em',
-                        color: '#6ee7b7',
-                        marginBottom: '6px',
-                      }}
-                    >
-                      💡 Huraian Jawapan &amp; Pengukuhan Konsep:
-                    </div>
-                    {currentWeeklyItem.huraian_ar && (
+                <SmoothMorphContainer morphKey={weeklyQuizIndex}>
+                  <div className="lg-inner-well" style={{ marginBottom: '20px' }}>
+                    {currentWeeklyItem.soalan_ar && (
                       <p
                         dir="rtl"
                         lang="ar"
                         style={{
-                          margin: currentWeeklyItem.huraian ? '0 0 8px' : 0,
+                          margin: currentWeeklyItem.soalan ? '0 0 12px' : 0,
+                          paddingBottom: currentWeeklyItem.soalan ? '12px' : 0,
+                          borderBottom: currentWeeklyItem.soalan ? '1px solid rgba(255, 255, 255, 0.12)' : 'none',
                           fontFamily: "'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif",
-                          fontSize: '1.05rem',
-                          lineHeight: 1.8,
+                          fontSize: '1.22rem',
+                          fontWeight: 700,
+                          lineHeight: 1.9,
                           textAlign: 'right',
-                          color: '#d1fae5',
+                          color: '#fef08a',
                         }}
                       >
-                        {currentWeeklyItem.huraian_ar}
+                        {currentWeeklyItem.soalan_ar}
                       </p>
                     )}
-                    {currentWeeklyItem.huraian && (
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: '0.86rem',
-                          lineHeight: 1.6,
-                          color: 'var(--text-strong)',
-                        }}
-                      >
-                        {currentWeeklyItem.huraian}
-                      </p>
-                    )}
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '0.96rem',
+                        fontWeight: 600,
+                        lineHeight: 1.6,
+                        color: 'var(--text-strong)',
+                      }}
+                    >
+                      {currentWeeklyItem.soalan}
+                    </p>
                   </div>
-                )}
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px',
+                      marginBottom: '20px',
+                    }}
+                  >
+                    {currentWeeklyItem.pilihan?.map((pilihan, pIdx) => {
+                      const pilihanAr = currentWeeklyItem.pilihan_ar?.[pIdx];
+                      const isCorrect = pilihan === currentWeeklyItem.jawapan_betul;
+                      const isPicked =
+                        weeklySelectedIdx !== null
+                          ? weeklySelectedIdx === pIdx
+                          : weeklySelectedAnswer === pilihan;
+                      const abcd = ['A', 'B', 'C', 'D'][pIdx] || `${pIdx + 1}`;
+
+                      return (
+                        <TactileAnswerButton
+                          key={pIdx}
+                          badgeLabel={abcd}
+                          isAnswered={Boolean(weeklySelectedAnswer)}
+                          isCorrect={isCorrect}
+                          isPicked={isPicked}
+                          feedbackPulseKey={weeklyPulseKey}
+                          onSelect={(rect) => handleAnswerWeeklyQuiz(pilihan, pIdx, rect)}
+                        >
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {pilihanAr && (
+                              <span
+                                dir="rtl"
+                                lang="ar"
+                                style={{
+                                  display: 'block',
+                                  width: '100%',
+                                  textAlign: 'right',
+                                  fontFamily: "'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif",
+                                  fontSize: '1.12rem',
+                                  fontWeight: 700,
+                                  lineHeight: 1.75,
+                                  color: '#ffffff',
+                                }}
+                              >
+                                {pilihanAr}
+                              </span>
+                            )}
+                            <span
+                              style={{
+                                fontSize: pilihanAr ? '0.84rem' : '0.88rem',
+                                fontWeight: pilihanAr ? 500 : 600,
+                                color: pilihanAr ? 'rgba(226, 232, 240, 0.9)' : 'var(--text-strong)',
+                                lineHeight: 1.5,
+                              }}
+                            >
+                              {pilihan}
+                            </span>
+                          </div>
+                        </TactileAnswerButton>
+                      );
+                    })}
+                  </div>
+
+                  {weeklySelectedAnswer && (currentWeeklyItem.huraian || currentWeeklyItem.huraian_ar) && (
+                    <div
+                      className="lg-inner-well quiz-morph-inner"
+                      style={{
+                        marginBottom: '18px',
+                        borderColor: 'rgba(16, 185, 129, 0.45)',
+                        background: 'rgba(6, 28, 20, 0.65)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: '0.73rem',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                          color: '#6ee7b7',
+                          marginBottom: '6px',
+                        }}
+                      >
+                        💡 Huraian Jawapan &amp; Pengukuhan Konsep:
+                      </div>
+                      {currentWeeklyItem.huraian_ar && (
+                        <p
+                          dir="rtl"
+                          lang="ar"
+                          style={{
+                            margin: currentWeeklyItem.huraian ? '0 0 8px' : 0,
+                            fontFamily: "'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif",
+                            fontSize: '1.05rem',
+                            lineHeight: 1.8,
+                            textAlign: 'right',
+                            color: '#d1fae5',
+                          }}
+                        >
+                          {currentWeeklyItem.huraian_ar}
+                        </p>
+                      )}
+                      {currentWeeklyItem.huraian && (
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: '0.86rem',
+                            lineHeight: 1.6,
+                            color: 'var(--text-strong)',
+                          }}
+                        >
+                          {currentWeeklyItem.huraian}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </SmoothMorphContainer>
 
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button
@@ -5004,15 +5129,34 @@ export default function App() {
                     className="lg-btn-primary"
                     style={{ flex: 1, justifyContent: 'center', padding: '12px' }}
                   >
-                    <span>Soalan Seterusnya</span>
+                    <span>
+                      {weeklyQuizIndex + 1 >= kuizMingguan.soalan_objektif.length
+                        ? '🏁 Selesai & Lihat Keputusan'
+                        : 'Soalan Seterusnya'}
+                    </span>
                     <LucideIcon name="arrow-right" size={15} />
                   </button>
                 </div>
               </div>
             )}
 
-            {/* SUB-MOD 3: UJIAN KOMPREHENSIF (50 Soalan — Kitab Zuhaili) */}
-            {quizSubMode === 'KOMPREHENSIF' && (
+            {/* SUB-MOD 3: UJIAN KOMPREHENSIF (80 Soalan — Kitab Zuhaili + Tactile Physics) */}
+            {quizSubMode === 'KOMPREHENSIF' && quizFinished && (
+              <QuizResultsCelebration
+                title="Ujian Komprehensif Selesai!"
+                subtitle="Kitab al-Qawaid al-Fiqhiyyah wa Tatbiqatuha fi al-Madhahib al-Arbaah"
+                score={score}
+                total={dataKuiz50.length}
+                maxStreak={quizMaxStreak}
+                bestScore={quizBestScore}
+                isNewRecord={quizIsNewRecord}
+                reviewItems={quizHistory.filter(Boolean)}
+                onRetry={startComprehensiveQuiz}
+                onBack={() => setQuizSubMode('SELECTION')}
+              />
+            )}
+
+            {quizSubMode === 'KOMPREHENSIF' && !quizFinished && (
               <div className="lg-panel glass-card">
                 <div
                   className="lg-card-top"
@@ -5037,134 +5181,136 @@ export default function App() {
                       </span>
                     )}
                   </div>
-                  <span className="lg-node-chip">
-                    SKOR: {score} / {dataKuiz50.length}
-                  </span>
-                </div>
-
-                <p
-                  style={{
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    color: 'var(--text-muted)',
-                    margin: '0 0 8px',
-                  }}
-                >
-                  Senario Kes &amp; Tatbiqat Mazhab:
-                </p>
-                <div className="lg-inner-well" style={{ marginBottom: '20px' }}>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: '0.94rem',
-                      fontWeight: 600,
-                      lineHeight: 1.6,
-                      color: 'var(--text-strong)',
-                    }}
-                  >
-                    {currentQuizItem.isu_kontemporari}
-                  </p>
-                </div>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px',
-                    marginBottom: '20px',
-                  }}
-                >
-                  {quizOptions.map((opt) => {
-                    const isCorrect = opt.kaedah_ranting_ar === currentQuizItem.kaedah_ranting_ar;
-                    const isPicked = selectedAnswer === opt.kaedah_ranting_ar;
-                    let borderCol = undefined;
-                    let bgCol = undefined;
-                    if (selectedAnswer) {
-                      if (isCorrect) {
-                        borderCol = '#10b981';
-                        bgCol = 'rgba(16, 185, 129, 0.22)';
-                      } else if (isPicked) {
-                        borderCol = '#ef4444';
-                        bgCol = 'rgba(239, 68, 68, 0.22)';
-                      }
-                    }
-                    return (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => handleAnswerQuiz(opt)}
-                        className="lg-inner-well"
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    {quizStreak >= 2 && (
+                      <span
+                        className="lg-node-chip"
                         style={{
-                          textAlign: 'left',
-                          cursor: 'pointer',
-                          borderColor: borderCol,
-                          background: bgCol,
-                          transition: 'transform 0.2s var(--spring)',
+                          borderColor: 'rgba(251, 191, 36, 0.55)',
+                          background: 'rgba(245, 158, 11, 0.16)',
+                          color: '#fef08a',
                         }}
                       >
-                        <div
-                          dir="rtl"
-                          style={{
-                            fontFamily: '"Noto Naskh Arabic", serif',
-                            fontSize: '1.22rem',
-                            fontWeight: 700,
-                            lineHeight: 1.8,
-                            color: 'var(--text-strong)',
-                            marginBottom: '4px',
-                          }}
-                        >
-                          {opt.kaedah_ranting_ar}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: '0.8rem',
-                            fontWeight: 600,
-                            color: 'var(--text-body)',
-                          }}
-                        >
-                          {opt.kaedah_ranting_bm}
-                        </div>
-                      </button>
-                    );
-                  })}
+                        🔥 {quizStreak}x Streak
+                      </span>
+                    )}
+                    <span className="lg-node-chip">
+                      SKOR: {score} / {dataKuiz50.length}
+                    </span>
+                  </div>
                 </div>
 
-                {selectedAnswer && currentQuizItem.huraian_jawapan && (
-                  <div
-                    className="lg-inner-well"
+                <SmoothMorphContainer morphKey={quizIndex}>
+                  <p
                     style={{
-                      marginBottom: '18px',
-                      borderColor: 'rgba(56, 189, 248, 0.45)',
-                      background: 'rgba(8, 25, 54, 0.55)',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      color: 'var(--text-muted)',
+                      margin: '0 0 8px',
                     }}
                   >
-                    <div
-                      style={{
-                        fontSize: '0.73rem',
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.04em',
-                        color: 'var(--text-muted)',
-                        marginBottom: '6px',
-                      }}
-                    >
-                      Huraian &amp; Rujukan Kitab (القواعد الفقهية وتطبيقاتها في المذاهب الأربعة —{' '}
-                      {currentQuizItem.jilid_halaman}):
-                    </div>
+                    Senario Kes &amp; Tatbiqat Mazhab:
+                  </p>
+                  <div className="lg-inner-well" style={{ marginBottom: '20px' }}>
                     <p
                       style={{
                         margin: 0,
-                        fontSize: '0.86rem',
+                        fontSize: '0.94rem',
+                        fontWeight: 600,
                         lineHeight: 1.6,
                         color: 'var(--text-strong)',
                       }}
                     >
-                      {currentQuizItem.huraian_jawapan}
+                      {currentQuizItem.isu_kontemporari}
                     </p>
                   </div>
-                )}
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px',
+                      marginBottom: '20px',
+                    }}
+                  >
+                    {quizOptions.map((opt, optIdx) => {
+                      const isCorrect = opt.kaedah_ranting_ar === currentQuizItem.kaedah_ranting_ar;
+                      const isPicked = selectedAnswer === (opt.kaedah_ranting_ar || opt.id);
+                      const abcd = ['A', 'B', 'C', 'D'][optIdx] || `${optIdx + 1}`;
+                      return (
+                        <TactileAnswerButton
+                          key={opt.id}
+                          badgeLabel={abcd}
+                          isAnswered={Boolean(selectedAnswer)}
+                          isCorrect={isCorrect}
+                          isPicked={isPicked}
+                          feedbackPulseKey={quizPulseKey}
+                          onSelect={(rect) => handleAnswerQuiz(opt, rect)}
+                        >
+                          <div
+                            dir="rtl"
+                            style={{
+                              fontFamily: '"Noto Naskh Arabic", serif',
+                              fontSize: '1.22rem',
+                              fontWeight: 700,
+                              lineHeight: 1.8,
+                              color: 'var(--text-strong)',
+                              marginBottom: '4px',
+                            }}
+                          >
+                            {opt.kaedah_ranting_ar}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: '0.8rem',
+                              fontWeight: 600,
+                              color: 'var(--text-body)',
+                            }}
+                          >
+                            {opt.kaedah_ranting_bm}
+                          </div>
+                        </TactileAnswerButton>
+                      );
+                    })}
+                  </div>
+
+                  {selectedAnswer && currentQuizItem.huraian_jawapan && (
+                    <div
+                      className="lg-inner-well quiz-morph-inner"
+                      style={{
+                        marginBottom: '18px',
+                        borderColor: 'rgba(56, 189, 248, 0.45)',
+                        background: 'rgba(8, 25, 54, 0.55)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: '0.73rem',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                          color: 'var(--text-muted)',
+                          marginBottom: '6px',
+                        }}
+                      >
+                        Huraian &amp; Rujukan Kitab (القواعد الفقهية وتطبيقاتها في المذاهب الأربعة —{' '}
+                        {currentQuizItem.jilid_halaman}):
+                      </div>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: '0.86rem',
+                          lineHeight: 1.6,
+                          color: 'var(--text-strong)',
+                        }}
+                      >
+                        {currentQuizItem.huraian_jawapan}
+                      </p>
+                    </div>
+                  )}
+                </SmoothMorphContainer>
 
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button
@@ -5182,7 +5328,11 @@ export default function App() {
                     className="lg-btn-primary"
                     style={{ flex: 1, justifyContent: 'center', padding: '12px' }}
                   >
-                    <span>Soalan Seterusnya</span>
+                    <span>
+                      {quizIndex + 1 >= dataKuiz50.length
+                        ? '🏁 Selesai & Lihat Keputusan'
+                        : 'Soalan Seterusnya'}
+                    </span>
                     <LucideIcon name="arrow-right" size={15} />
                   </button>
                 </div>
@@ -6423,7 +6573,11 @@ export default function App() {
         rawakSoalan={rawakSoalan}
         onClose={() => setRawakSoalan(null)}
         onSoalanLain={handleUjiMindaRawak}
+        onBurstRect={(rect, st) => quizEffectsRef.current?.burstFromRect(rect, st)}
       />
+
+      {/* Full-Viewport 60 FPS Physical Confetti & Sparkles Overlay */}
+      <QuizEffectsOverlay ref={quizEffectsRef} />
 
       {/* ====================================================================
           FASA 2: PORTAL ADMIN RAHSIA (MODAL)

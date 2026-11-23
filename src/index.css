@@ -6378,6 +6378,245 @@ summary:focus-visible {
   animation: lgPulseDot 1.2s infinite ease-in-out;
 }
 
+/* ==========================================================================
+   KUIZ ULANG KAJI MID-TERM & KOMPREHENSIF — TACTILE PHYSICAL MOTION SYSTEM
+   1. Coordinate-aware Tap Ripple + Spring Press (scale 0.97)
+   2. Drawn SVG Checkmark (260ms) & Sequential Cross (240ms) + Damped Shake
+   3. Concentric Impact Shockwave Rings
+   4. Smooth Height Morph + Question Crossfade Slide
+   5. Staggered Spring Results Celebration
+   ========================================================================== */
+.quiz-tactile-btn {
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms ease,
+    background-color 220ms ease,
+    box-shadow 260ms ease;
+  will-change: transform;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.quiz-tactile-btn.is-pressing {
+  transform: scale(0.97);
+}
+
+.quiz-tactile-btn.is-correct-picked {
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.32), inset 0 1px 0 rgba(254, 240, 138, 0.25);
+}
+
+.quiz-tactile-btn.is-wrong-shake {
+  animation: dampedShake 420ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes dampedShake {
+  0% { transform: translate3d(0, 0, 0); }
+  14% { transform: translate3d(-9px, 0, 0); }
+  30% { transform: translate3d(7px, 0, 0); }
+  46% { transform: translate3d(-5px, 0, 0); }
+  62% { transform: translate3d(3px, 0, 0); }
+  78% { transform: translate3d(-1.5px, 0, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+/* 1. Coordinate-aware radial tap ripple */
+.quiz-tap-ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(110, 231, 183, 0.28) 45%,
+    rgba(16, 185, 129, 0) 75%
+  );
+  pointer-events: none;
+  animation: quizRippleExpand 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes quizRippleExpand {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.45;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.8);
+    opacity: 0;
+  }
+}
+
+/* 2. Animated Inline SVG Checkmark & Cross */
+.quiz-badge-pop {
+  animation: quizBadgePop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes quizBadgePop {
+  0% { transform: scale(0.72); }
+  60% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+.quiz-check-path {
+  stroke-dasharray: 32;
+  stroke-dashoffset: 32;
+  animation: quizSvgDrawCheck 260ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes quizSvgDrawCheck {
+  from { stroke-dashoffset: 32; }
+  to { stroke-dashoffset: 0; }
+}
+
+.quiz-cross-line-1 {
+  stroke-dasharray: 22;
+  stroke-dashoffset: 22;
+  animation: quizSvgDrawCross 120ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.quiz-cross-line-2 {
+  stroke-dasharray: 22;
+  stroke-dashoffset: 22;
+  animation: quizSvgDrawCross 120ms cubic-bezier(0.22, 1, 0.36, 1) 120ms forwards;
+}
+
+@keyframes quizSvgDrawCross {
+  from { stroke-dashoffset: 22; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* 3. Concentric Impact Shockwave Rings */
+.quiz-shockwave-ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.quiz-shockwave-ring.is-correct {
+  border: 3px solid rgba(52, 211, 153, 0.92);
+  box-shadow: 0 0 22px rgba(251, 191, 36, 0.6);
+  animation: quizShockwaveCorrect 480ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.quiz-shockwave-ring.is-wrong {
+  border: 2px solid rgba(239, 68, 68, 0.78);
+  animation: quizShockwaveWrong 360ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes quizShockwaveCorrect {
+  0% {
+    transform: scale(0.75);
+    border-width: 3px;
+    border-color: rgba(52, 211, 153, 0.95);
+    opacity: 0.95;
+  }
+  65% {
+    border-color: rgba(251, 191, 36, 0.85);
+  }
+  100% {
+    transform: scale(1.65);
+    border-width: 1px;
+    border-color: rgba(251, 191, 36, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes quizShockwaveWrong {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
+/* 5. Smooth Height Morph + Question Crossfade Slide */
+.quiz-morph-outer {
+  will-change: height;
+}
+
+.quiz-morph-inner {
+  animation: quizSlideCrossfade 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes quizSlideCrossfade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 6. Grand Results Screen Staggered Spring Reveal */
+.quiz-rank-pop {
+  animation: quizRankSpring 520ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes quizRankSpring {
+  0% {
+    opacity: 0;
+    transform: scale(0.45) rotate(-8deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.08) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.quiz-stagger-item {
+  opacity: 0;
+  animation: quizStaggerIn 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.quiz-stagger-1 { animation-delay: 80ms; }
+.quiz-stagger-2 { animation-delay: 160ms; }
+.quiz-stagger-3 { animation-delay: 240ms; }
+.quiz-stagger-4 { animation-delay: 320ms; }
+
+@keyframes quizStaggerIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quiz-tactile-btn,
+  .quiz-morph-outer,
+  .quiz-morph-inner,
+  .quiz-tap-ripple,
+  .quiz-shockwave-ring,
+  .quiz-badge-pop,
+  .quiz-rank-pop,
+  .quiz-stagger-item,
+  .quiz-tactile-btn.is-wrong-shake {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .quiz-check-path,
+  .quiz-cross-line-1,
+  .quiz-cross-line-2 {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+}
+
+
 
 
 
