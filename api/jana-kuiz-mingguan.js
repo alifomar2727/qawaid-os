@@ -116,13 +116,15 @@ ${nota?.trim() ? `\nTeks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
 
     parts.push({ text: arahanPrompt });
 
-    // 3. Senarai model Google Gemini AKTIF (Diutamakan model laju tanpa kesesakan 503)
+    // 3. Senarai model Google Gemini AKTIF (Pelbagai siri untuk elak kesesakan 503 serentak)
     const modelsToTry = [
       'gemini-3.5-flash-lite',
+      'gemini-3.7-flash',
+      'gemini-3.6-flash',
       'gemini-3.8-flash',
       'gemini-3.1-flash-lite',
+      'gemini-2.0-flash-lite',
       'gemini-flash-latest',
-      'gemini-3.6-flash',
     ];
 
     let rawOutputText = '';
@@ -161,57 +163,73 @@ ${nota?.trim() ? `\nTeks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
       });
     };
 
-    for (const model of modelsToTry) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s had masa pantas setiap model
+    const tryModelList = async (list, timeoutMs) => {
+      for (const model of list) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-      try {
-        let response = await callGeminiModel(model, true, controller.signal);
+        try {
+          let response = await callGeminiModel(model, true, controller.signal);
 
-        // Jika model tidak menyokong thinkingConfig, cuba semula tanpa thinkingConfig
-        if (!response.ok && response.status === 400) {
-          response = await callGeminiModel(model, false, controller.signal);
-        }
-
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          const resJson = await response.json();
-          const candidate = resJson?.candidates?.[0];
-          rawOutputText = (candidate?.content?.parts || [])
-            .filter((p) => !p.thought)
-            .map((p) => p.text || '')
-            .join('')
-            .trim();
-          if (rawOutputText) {
-            successModel = model;
-            break;
+          // Jika model tidak menyokong thinkingConfig, cuba semula tanpa thinkingConfig
+          if (!response.ok && response.status === 400) {
+            response = await callGeminiModel(model, false, controller.signal);
           }
-          errorLogs.push(`${model}: respons kosong (${candidate?.finishReason || 'UNKNOWN'})`);
-        } else {
-          const errText = await response.text();
-          let parsedErr = errText;
-          try {
-            parsedErr = JSON.parse(errText)?.error?.message || errText;
-          } catch {}
-          errorLogs.push(`${model} (${response.status}): ${parsedErr}`);
 
-          // Jika server Google 503 (sesak), beri jeda sekejap sebelum model seterusnya
-          if (response.status === 503) {
-            await new Promise((r) => setTimeout(r, 600));
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const resJson = await response.json();
+            const candidate = resJson?.candidates?.[0];
+            rawOutputText = (candidate?.content?.parts || [])
+              .filter((p) => !p.thought)
+              .map((p) => p.text || '')
+              .join('')
+              .trim();
+            if (rawOutputText) {
+              successModel = model;
+              return true;
+            }
+            errorLogs.push(`${model}: respons kosong (${candidate?.finishReason || 'UNKNOWN'})`);
+          } else {
+            const errText = await response.text();
+            let parsedErr = errText;
+            try {
+              parsedErr = JSON.parse(errText)?.error?.message || errText;
+            } catch {}
+            errorLogs.push(`${model} (${response.status}): ${parsedErr}`);
+
+            // Jika server Google 503 (sesak), beri jeda ringkas sebelum model seterusnya
+            if (response.status === 503) {
+              await new Promise((r) => setTimeout(r, 450));
+            }
           }
+        } catch (err) {
+          clearTimeout(timeoutId);
+          errorLogs.push(`${model}: ${err.message}`);
         }
-      } catch (err) {
-        clearTimeout(timeoutId);
-        errorLogs.push(`${model}: ${err.message}`);
       }
+      return false;
+    };
+
+    // Pusingan 1: Cuba semua model aktif
+    await tryModelList(modelsToTry, 18000);
+
+    // Pusingan 2: Jika masih gagal akibat lonjakan trafik 503 sementara, tunggu 2 saat & cuba semula
+    if (!rawOutputText && errorLogs.some((e) => e.includes('(503)'))) {
+      await new Promise((r) => setTimeout(r, 2000));
+      await tryModelList(['gemini-3.5-flash-lite', 'gemini-3.7-flash', 'gemini-2.0-flash-lite'], 15000);
     }
 
     if (!rawOutputText) {
       // Utamakan ralat yang bukan 404 (model tamat) supaya punca sebenar kelihatan
       const ralatPenting = errorLogs.filter((e) => !e.includes('(404)'));
       const ringkasan = (ralatPenting.length ? ralatPenting : errorLogs).slice(0, 3).join(' | ');
-      throw new Error(`Semua model Gemini gagal menjana kuiz. Butiran: ${ringkasan}`);
+      const isAllBusy = errorLogs.length > 0 && errorLogs.some((e) => e.includes('(503)'));
+      return res.status(isAllBusy ? 503 : 500).json({
+        success: false,
+        error: `Semua model Gemini sedang sibuk / gagal menjana kuiz. Butiran: ${ringkasan}`,
+      });
     }
 
     // 4. Bersihkan dan parse JSON array soalan objektif
