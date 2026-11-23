@@ -1,7 +1,8 @@
-// api/jana-kuiz-mingguan.js
+﻿// qawaid-explorer/api/jana-kuiz-mingguan.js
 // Vercel Serverless Function: FASA 3 - Penjanaan Kuiz Mingguan AI Menggunakan Google Gemini
 
 export default async function handler(req, res) {
+  // Konfigurasi CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
@@ -10,7 +11,9 @@ export default async function handler(req, res) {
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
   );
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
   if (req.method !== 'POST') {
     return res.status(405).json({
@@ -19,18 +22,40 @@ export default async function handler(req, res) {
     });
   }
 
-  const { tajuk, nota, fileData } = req.body || {};
+  const {
+    tajuk,
+    nota,
+    fileData,
+    filesData,
+    questionCount = 20,
+    bilingual = true,
+    skipSave = false,
+  } = req.body || {};
+
+  // Sokong kedua-dua format: 1 fail (fileData) atau sehingga 4 fail (filesData)
+  const rawFilesList = Array.isArray(filesData)
+    ? filesData.slice(0, 4)
+    : fileData
+    ? [fileData]
+    : [];
+  const hasAnyFile = rawFilesList.some((f) => f && (f.base64 || f.textContent));
 
   if (!tajuk || typeof tajuk !== 'string' || !tajuk.trim()) {
-    return res.status(400).json({ success: false, error: 'Ruangan "tajuk" kuiz diperlukan.' });
-  }
-
-  if (!nota?.trim() && !fileData?.base64) {
     return res.status(400).json({
       success: false,
-      error: 'Sila sertakan sama ada teks "nota" atau muat naik fail slaid (PDF).',
+      error: 'Ruangan "tajuk" kuiz diperlukan.',
     });
   }
+
+  if (!nota?.trim() && !hasAnyFile) {
+    return res.status(400).json({
+      success: false,
+      error: 'Sila sertakan sama ada teks "nota" atau muat naik fail slaid (PDF / Teks).',
+    });
+  }
+
+  const targetCount = Math.min(Math.max(parseInt(questionCount, 10) || 20, 5), 40);
+  const isBilingual = bilingual !== false;
 
   const rawKey = process.env.GEMINI_API_KEY || '';
   const apiKey = rawKey.trim().replace(/^['"]|['"]$/g, '');
@@ -38,39 +63,65 @@ export default async function handler(req, res) {
   if (!apiKey) {
     return res.status(500).json({
       success: false,
-      error: 'GEMINI_API_KEY belum dikonfigurasikan di Environment Variables Vercel.',
+      error: 'GEMINI_API_KEY belum dikonfigurasikan di Environment Variables. Sila semak tetapan Vercel / fail .env.',
     });
   }
 
   try {
-    const arahanPrompt = `Anda adalah pakar fiqh. Berdasarkan nota ini, hasilkan 20 soalan objektif (A, B, C, D) dalam bahasa Melayu. Output mestilah HANYA dalam format array JSON tulen dengan key: 'soalan', 'pilihan' (array 4 pilihan), 'jawapan_betul', dan 'huraian'. Jangan beri penerangan lain.
+    const fileNamesSummary = rawFilesList
+      .map((f, idx) => `${idx + 1}. ${f?.name || `Slaid ${idx + 1}`}`)
+      .join(', ');
+
+    // 1. Prompt Rasmi (Sokong Multi-Slaid sehingga 4 fail & Dwi-Bahasa Arab + Melayu)
+    const arahanPrompt = isBilingual
+      ? `Anda adalah pakar fiqh dan usul fiqh. Berdasarkan ${rawFilesList.length > 1 ? `kesemua ${rawFilesList.length} slaid/dokumen yang dilampirkan (${fileNamesSummary}) serta ` : ''}nota ini, hasilkan tepat ${targetCount} soalan objektif (A, B, C, D) dalam DWI-BAHASA (Bahasa Arab DAN Bahasa Melayu).
+${rawFilesList.length > 1 ? 'PENTING: Pastikan soalan dibahagikan secara seimbang merangkumi isi penting daripada kesemua slaid yang dilampirkan untuk ulang kaji peperiksaan.\n' : ''}
+Output mestilah HANYA dalam format array JSON tulen (tanpa teks tambahan di luar JSON) dengan struktur setiap objek mengandungi key tepat berikut:
+- "soalan_ar": Soalan lengkap dan jelas dalam Bahasa Arab (sertakan baris/tashkeel pada kaedah fiqh atau istilah penting).
+- "soalan": Terjemahan tepat bagi soalan tersebut dalam Bahasa Melayu.
+- "pilihan_ar": Array mengandungi TEPAT 4 pilihan jawapan dalam Bahasa Arab.
+- "pilihan": Array mengandungi TEPAT 4 pilihan jawapan dalam Bahasa Melayu yang sepadan 1-dengan-1 mengikut susunan indeks (0, 1, 2, 3) dengan "pilihan_ar".
+- "jawapan_betul_index": Nombor bulat (integer) 0, 1, 2, atau 3 yang menunjukkan indeks jawapan betul.
+- "jawapan_betul": Teks tepat daripada "pilihan[jawapan_betul_index]".
+- "huraian_ar": Huraian ringkas sebab jawapan tepat dalam Bahasa Arab.
+- "huraian": Huraian lengkap pengukuhan konsep dalam Bahasa Melayu.
+JANGAN gunakan simbol dollar ($) atau kod LaTeX.
 
 Tajuk Kuiz: ${tajuk.trim()}
+${nota?.trim() ? `\nTeks Slaid / Nota Kuliah Tambahan:\n${nota.trim()}` : ''}`
+      : `Anda adalah pakar fiqh. Berdasarkan ${rawFilesList.length > 1 ? `kesemua ${rawFilesList.length} slaid/dokumen yang dilampirkan (${fileNamesSummary}) serta ` : ''}nota ini, hasilkan tepat ${targetCount} soalan objektif (A, B, C, D) dalam bahasa Melayu. Output mestilah HANYA dalam format array JSON tulen dengan key: 'soalan', 'pilihan' (array 4 pilihan), 'jawapan_betul_index' (0-3), 'jawapan_betul', dan 'huraian'. Jangan beri penerangan lain.
 
-${fileData ? `[PENTING: Rujuk kandungan slaid PDF yang dilampirkan untuk membina 20 soalan ini]\n` : ''}
-${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
+Tajuk Kuiz: ${tajuk.trim()}
+${nota?.trim() ? `\nTeks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
 
+    // 2. Bina bahagian kandungan (parts) termasuk sehingga 4 dokumen PDF/Teks
     const parts = [];
-    if (fileData?.base64) {
-      const mimeType = fileData.type || 'application/pdf';
-      parts.push({
-        inlineData: {
-          mimeType: mimeType,
-          data: fileData.base64,
-        },
-      });
-    }
+
+    rawFilesList.forEach((f, idx) => {
+      if (!f) return;
+      if (f.base64) {
+        parts.push({
+          inlineData: {
+            mimeType: f.type || 'application/pdf',
+            data: f.base64,
+          },
+        });
+      } else if (f.textContent) {
+        parts.push({
+          text: `\n--- [Kandungan Fail ${idx + 1}: ${f.name || 'Nota'}] ---\n${f.textContent}`,
+        });
+      }
+    });
 
     parts.push({ text: arahanPrompt });
 
-    // Senarai model Gemini: Diutamakan model pantas yang stabil tanpa kesesakan 503
+    // 3. Senarai model Google Gemini AKTIF (Diutamakan model laju tanpa kesesakan 503)
     const modelsToTry = [
-      'gemini-3.1-flash-lite',
       'gemini-3.5-flash-lite',
-      'gemini-flash-lite-latest',
       'gemini-3.8-flash',
-      'gemini-3.6-flash',
+      'gemini-3.1-flash-lite',
       'gemini-flash-latest',
+      'gemini-3.6-flash',
     ];
 
     let rawOutputText = '';
@@ -79,7 +130,7 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
 
     for (const model of modelsToTry) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 35000); // 35s had masa setiap model
+      const timeoutId = setTimeout(() => controller.abort(), 48000); // 48s had masa untuk multi-PDF dwi-bahasa
 
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
@@ -96,9 +147,15 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
             generationConfig: {
               temperature: 0.2,
               topP: 0.95,
-              maxOutputTokens: 8192,
+              maxOutputTokens: 16384,
               responseMimeType: 'application/json',
             },
+            safetySettings: [
+              { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+            ],
           }),
         });
 
@@ -125,7 +182,7 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
           } catch {}
           errorLogs.push(`${model} (${response.status}): ${parsedErr}`);
 
-          // Jika pelayan 503 (sesak), beri jeda sekejap sebelum cuba model seterusnya
+          // Jika server Google 503 (sesak), beri jeda sekejap sebelum model seterusnya
           if (response.status === 503) {
             await new Promise((r) => setTimeout(r, 600));
           }
@@ -137,11 +194,13 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
     }
 
     if (!rawOutputText) {
+      // Utamakan ralat yang bukan 404 (model tamat) supaya punca sebenar kelihatan
       const ralatPenting = errorLogs.filter((e) => !e.includes('(404)'));
       const ringkasan = (ralatPenting.length ? ralatPenting : errorLogs).slice(0, 3).join(' | ');
       throw new Error(`Semua model Gemini gagal menjana kuiz. Butiran: ${ringkasan}`);
     }
 
+    // 4. Bersihkan dan parse JSON array soalan objektif
     const soalanObjektif = parseDanNormalisasiSoalan(rawOutputText);
 
     if (!soalanObjektif || soalanObjektif.length === 0) {
@@ -155,11 +214,13 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
         month: 'long',
         year: 'numeric',
       }),
+      dwi_bahasa: isBilingual,
       soalan_objektif: soalanObjektif,
       model_penjana: successModel,
     };
 
-    // Simpan ke Firebase jika ada
+    // 5. Simpan automatik ke Cloud (Firebase) dan Storan Tempatan (melainkan skipSave untuk mod batch)
+    if (!skipSave) {
     const fbUrl = process.env.FIREBASE_DATABASE_URL;
     if (fbUrl) {
       try {
@@ -169,8 +230,9 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payloadHasil),
         });
+        console.log('âœ… Kuiz berjaya disimpan ke Firebase Realtime Database');
       } catch (fbErr) {
-        console.warn('Gagal menyimpan ke Firebase:', fbErr.message);
+        console.warn('âš ï¸ Gagal menyimpan ke Firebase:', fbErr.message);
       }
     }
 
@@ -180,6 +242,7 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
       const tmpPath = pathModule.default.join('/tmp', 'kuizMingguanTerkini.json');
       fsModule.default.writeFileSync(tmpPath, JSON.stringify(payloadHasil, null, 2), 'utf-8');
     } catch {}
+    }
 
     return res.status(200).json({
       success: true,
@@ -195,10 +258,16 @@ ${nota?.trim() ? `Teks Slaid / Nota Kuliah:\n${nota.trim()}` : ''}`;
   }
 }
 
+/**
+ * Memastikan output JSON dari Gemini diproses dengan selamat dan mematuhi format App.jsx
+ */
 function parseDanNormalisasiSoalan(rawText) {
   let cleaned = String(rawText || '').trim();
+
+  // Buang code blocks markdown jika ada
   cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
+  // Ekstrak bahagian array [ ... ]
   const firstIdx = cleaned.indexOf('[');
   const lastIdx = cleaned.lastIndexOf(']');
   if (firstIdx !== -1 && lastIdx !== -1 && lastIdx > firstIdx) {
@@ -206,6 +275,8 @@ function parseDanNormalisasiSoalan(rawText) {
   }
 
   let parsed = JSON.parse(cleaned);
+
+  // Jika AI membalut dalam objek contoh { soalan: [...] } atau { kuiz: [...] }
   if (!Array.isArray(parsed) && typeof parsed === 'object') {
     const possibleArray = Object.values(parsed).find((val) => Array.isArray(val));
     if (possibleArray) parsed = possibleArray;
@@ -220,6 +291,7 @@ function parseDanNormalisasiSoalan(rawText) {
       ? item.pilihan.map((p) => String(p).trim())
       : [];
 
+    // Pastikan tepat 4 pilihan
     if (pilihan.length < 4) {
       const defaultAbcd = ['A', 'B', 'C', 'D'];
       while (pilihan.length < 4) {
@@ -229,29 +301,64 @@ function parseDanNormalisasiSoalan(rawText) {
       pilihan = pilihan.slice(0, 4);
     }
 
-    let jawapanBetul = String(item.jawapan_betul || pilihan[0]).trim();
-    const matchLetter = jawapanBetul.match(/^([A-D])\b/i);
-    if (matchLetter && !pilihan.includes(jawapanBetul)) {
-      const letterIndex = { A: 0, B: 1, C: 2, D: 3 }[matchLetter[1].toUpperCase()];
-      if (letterIndex !== undefined && pilihan[letterIndex]) {
-        jawapanBetul = pilihan[letterIndex];
+    let pilihanAr = Array.isArray(item.pilihan_ar)
+      ? item.pilihan_ar.map((p) => String(p).trim())
+      : [];
+    if (pilihanAr.length > 4) {
+      pilihanAr = pilihanAr.slice(0, 4);
+    } else if (pilihanAr.length > 0 && pilihanAr.length < 4) {
+      while (pilihanAr.length < 4) {
+        pilihanAr.push('');
       }
-    } else if (!pilihan.includes(jawapanBetul)) {
-      const matched = pilihan.find(
-        (p) =>
-          p.toLowerCase().includes(jawapanBetul.toLowerCase()) ||
-          jawapanBetul.toLowerCase().includes(p.toLowerCase())
-      );
-      if (matched) jawapanBetul = matched;
-      else jawapanBetul = pilihan[0];
+    }
+
+    // Normalisasi jawapan betul (utamakan jawapan_betul_index jika sah untuk dwi-bahasa)
+    let jawapanBetul = '';
+    const idxNum = Number(item.jawapan_betul_index);
+    if (Number.isInteger(idxNum) && idxNum >= 0 && idxNum < 4 && pilihan[idxNum]) {
+      jawapanBetul = pilihan[idxNum];
+    } else {
+      jawapanBetul = String(item.jawapan_betul || pilihan[0]).trim();
+
+      // Jika jawapan betul hanya huruf "A", "B", "C", "D"
+      const matchLetter = jawapanBetul.match(/^([A-D])\b/i);
+      if (matchLetter && !pilihan.includes(jawapanBetul)) {
+        const letterIndex = { A: 0, B: 1, C: 2, D: 3 }[matchLetter[1].toUpperCase()];
+        if (letterIndex !== undefined && pilihan[letterIndex]) {
+          jawapanBetul = pilihan[letterIndex];
+        }
+      } else if (!pilihan.includes(jawapanBetul)) {
+        // Semak jika jawapan_betul dipulangkan dalam bahasa Arab (padan dengan pilihan_ar)
+        const arMatchIdx = pilihanAr.findIndex(
+          (arOpt) =>
+            arOpt &&
+            (arOpt === jawapanBetul ||
+              arOpt.includes(jawapanBetul) ||
+              jawapanBetul.includes(arOpt))
+        );
+        if (arMatchIdx !== -1 && pilihan[arMatchIdx]) {
+          jawapanBetul = pilihan[arMatchIdx];
+        } else {
+          // Cari pilihan Melayu yang sepadan sebahagian
+          const matched = pilihan.find(
+            (p) =>
+              p.toLowerCase().includes(jawapanBetul.toLowerCase()) ||
+              jawapanBetul.toLowerCase().includes(p.toLowerCase())
+          );
+          jawapanBetul = matched || pilihan[0];
+        }
+      }
     }
 
     return {
       id: idx + 1,
       soalan: String(item.soalan || `Soalan ${idx + 1}`).trim(),
+      ...(item.soalan_ar ? { soalan_ar: String(item.soalan_ar).trim() } : {}),
       pilihan: pilihan,
+      ...(pilihanAr.length === 4 && pilihanAr.some(Boolean) ? { pilihan_ar: pilihanAr } : {}),
       jawapan_betul: jawapanBetul,
       huraian: String(item.huraian || 'Tiada huraian tambahan dibekalkan.').trim(),
+      ...(item.huraian_ar ? { huraian_ar: String(item.huraian_ar).trim() } : {}),
     };
   });
 }
