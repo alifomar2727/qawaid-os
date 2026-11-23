@@ -942,11 +942,11 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
             const isTransient =
               response.status === 503 ||
               response.status === 504 ||
-              /503|high demand|overloaded|timeout/i.test(errMsg);
+              /503|high demand|overloaded|timeout|aborted/i.test(errMsg);
             if (isTransient && attempt < maxAttempts) {
               const waitSec = attempt * 3;
               setProgressText(
-                `${stepLabel ? `${stepLabel} — ` : ''}Pelayan Gemini sedang sesak (503). Mencuba semula dalam ${waitSec}s (${attempt + 1}/${maxAttempts})...`
+                `${stepLabel ? `${stepLabel} — ` : ''}Pelayan Gemini sedang sibuk. Mencuba semula dalam ${waitSec}s (${attempt + 1}/${maxAttempts})...`
               );
               await new Promise((r) => setTimeout(r, waitSec * 1000));
               continue;
@@ -957,7 +957,7 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
           return result;
         } catch (err) {
           lastErr = err;
-          const isTransient = /503|high demand|overloaded|timeout|Failed to fetch/i.test(err.message || '');
+          const isTransient = /503|high demand|overloaded|timeout|aborted|Failed to fetch/i.test(err.message || '');
           if (isTransient && attempt < maxAttempts) {
             const waitSec = attempt * 3;
             setProgressText(
@@ -1026,6 +1026,7 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
       }
 
       let finalQuizData = null;
+      const failedLabels = [];
 
       if (jobs.length === 1) {
         const job = jobs[0];
@@ -1033,37 +1034,9 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
           `Sedang menjana ${job.count} soalan ${bilingual ? 'Dwi-Bahasa (Arab & Melayu)' : 'Melayu'}...`
         );
 
-        const result = await callJanaEndpoint({
-          tajuk: tajuk.trim(),
-          nota: nota.trim(),
-          filesData: job.file
-            ? [
-                {
-                  name: job.file.name,
-                  type: job.file.type,
-                  size: job.file.size,
-                  base64: job.file.base64,
-                  textContent: job.file.textContent,
-                },
-              ]
-            : [],
-          questionCount: job.count,
-          bilingual,
-          batchInstruction: job.batchInstruction,
-        });
-        finalQuizData = result.data;
-      } else {
-        const combinedQuestions = [];
-        let lastModel = '';
-
-        for (let i = 0; i < jobs.length; i += 1) {
-          const job = jobs[i];
-          setProgressText(
-            `Memproses ${i + 1}/${jobs.length}: ${job.label} (${job.count} soalan ${bilingual ? 'Arab + BM' : 'BM'})...`
-          );
-
-          const sliceResult = await callJanaEndpoint({
-            tajuk: `${tajuk.trim()} — ${job.label}`,
+        const result = await callJanaEndpoint(
+          {
+            tajuk: tajuk.trim(),
             nota: nota.trim(),
             filesData: job.file
               ? [
@@ -1078,15 +1051,66 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
               : [],
             questionCount: job.count,
             bilingual,
-            skipSave: true,
             batchInstruction: job.batchInstruction,
-          });
+          },
+          job.label
+        );
+        finalQuizData = result.data;
+      } else {
+        const combinedQuestions = [];
+        let lastModel = '';
+        let lastBatchErr = null;
 
-          if (sliceResult?.data?.model_penjana) {
-            lastModel = sliceResult.data.model_penjana;
+        for (let i = 0; i < jobs.length; i += 1) {
+          const job = jobs[i];
+          const stepTag = `${i + 1}/${jobs.length}: ${job.label}`;
+          setProgressText(
+            `Memproses ${stepTag} (${job.count} soalan ${bilingual ? 'Arab + BM' : 'BM'})...`
+          );
+
+          try {
+            const sliceResult = await callJanaEndpoint(
+              {
+                tajuk: `${tajuk.trim()} — ${job.label}`,
+                nota: nota.trim(),
+                filesData: job.file
+                  ? [
+                      {
+                        name: job.file.name,
+                        type: job.file.type,
+                        size: job.file.size,
+                        base64: job.file.base64,
+                        textContent: job.file.textContent,
+                      },
+                    ]
+                  : [],
+                questionCount: job.count,
+                bilingual,
+                skipSave: true,
+                batchInstruction: job.batchInstruction,
+              },
+              stepTag
+            );
+
+            if (sliceResult?.data?.model_penjana) {
+              lastModel = sliceResult.data.model_penjana;
+            }
+            const qs = sliceResult?.data?.soalan_objektif || [];
+            combinedQuestions.push(...qs);
+          } catch (batchErr) {
+            console.warn(`Bahagian ${stepTag} gagal selepas cubaan semula:`, batchErr);
+            lastBatchErr = batchErr;
+            failedLabels.push(stepTag);
           }
-          const qs = sliceResult?.data?.soalan_objektif || [];
-          combinedQuestions.push(...qs);
+
+          // Jeda ringkas 1.2s antara bahagian supaya tidak terkena lonjakan had kadar Google
+          if (i < jobs.length - 1) {
+            await new Promise((r) => setTimeout(r, 1200));
+          }
+        }
+
+        if (combinedQuestions.length === 0) {
+          throw lastBatchErr || new Error('Tiada soalan berjaya dijana oleh AI.');
         }
 
         finalQuizData = {
@@ -1116,7 +1140,10 @@ function AdminDashboard({ onKemaskiniKuiz, onClose, kuizMingguan, tetapanWeb, on
 
       setStatus({
         type: 'success',
-        text: `🎉 Berjaya! Kuiz "${tajuk}" dengan ${finalQuizData?.soalan_objektif?.length || questionCount} soalan (${bilingual ? 'Dwi-Bahasa Arab & Melayu' : 'Melayu'}) telah dijana dan dikemas kini.`,
+        text:
+          failedLabels.length > 0
+            ? `🎉 Berjaya menyimpan ${finalQuizData?.soalan_objektif?.length || 0} soalan (${bilingual ? 'Dwi-Bahasa Arab & Melayu' : 'Melayu'}) untuk "${tajuk}"! (Nota: ${failedLabels.length} bahagian dilepaskan akibat pelayan Gemini sibuk: ${failedLabels.join(', ')}).`
+            : `🎉 Berjaya! Kuiz "${tajuk}" dengan ${finalQuizData?.soalan_objektif?.length || questionCount} soalan (${bilingual ? 'Dwi-Bahasa Arab & Melayu' : 'Melayu'}) telah dijana dan dikemas kini.`,
       });
 
       // Kemas kini state kuiz di frontend & simpan ke storan peranti (localStorage)
